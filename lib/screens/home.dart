@@ -60,6 +60,327 @@ class _HomeScreenState extends State<HomeScreen> {
     return;
   }
 
+  Widget _buildAnnouncementBanner() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4A00E0), Color(0xFF8E2DE2)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'Special Offer!',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  'Get 50% off on all premium courses. Limited time offer!',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Text(
+              'CLAIM NOW',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF4A00E0),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title, VoidCallback onPressed) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(30),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+              decoration: BoxDecoration(
+                color: kSignUpTextColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Row(
+                children: const [
+                  Text(
+                    'View all',
+                    style: TextStyle(
+                      color: kSignUpTextColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(width: 5),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    color: kSignUpTextColor,
+                    size: 16,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCourseCard(dynamic course) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 15.0),
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).pushNamed(
+            CourseDetailScreen.routeName,
+            arguments: course.id,
+          );
+        },
+        borderRadius: BorderRadius.circular(15),
+        child: Container(
+          width: MediaQuery.of(context).size.width * .45,
+          decoration: BoxDecoration(
+            color: kWhiteColor,
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(15),
+                      topRight: Radius.circular(15),
+                    ),
+                    child: FadeInImage.assetNetwork(
+                      placeholder: 'assets/images/loading_animated.gif',
+                      image: course.thumbnail.toString(),
+                      height: 130,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: kDefaultColor,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.star,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            course.average_rating.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 45,
+                      child: Text(
+                        course.title.toString(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.people_alt_outlined,
+                          color: kGreyLightColor,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          '${course.total_reviews} Enrolled',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            color: kGreyLightColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryItem(dynamic category) {
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).pushNamed(
+          CategoryDetailsScreen.routeName,
+          arguments: {
+            'category_id': category.id,
+            'title': category.title,
+          },
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 15),
+        decoration: BoxDecoration(
+          color: kWhiteColor,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: <Widget>[
+            Container(
+              height: 80,
+              width: 80,
+              margin: const EdgeInsets.all(12),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: FadeInImage.assetNetwork(
+                  placeholder: 'assets/images/loading_animated.gif',
+                  image: category.thumbnail.toString(),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      category.title.toString(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '${category.numberOfSubCategories} sub-categories',
+                      style: const TextStyle(
+                        color: kGreyLightColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFEC6800), Color(0xFFD35400)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.arrow_forward_rounded,
+                color: kWhiteColor,
+                size: 18,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height -
@@ -67,611 +388,99 @@ class _HomeScreenState extends State<HomeScreen> {
         kToolbarHeight -
         50;
     return Container(
-      height: MediaQuery.of(context).size.height * 1,
+      height: MediaQuery.of(context).size.height,
       color: kBackGroundColor,
       child: RefreshIndicator(
         onRefresh: refreshList,
         child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           child: FutureBuilder(
-              future: Provider.of<Categories>(context, listen: false)
-                  .fetchCategories(),
-              builder: (ctx, dataSnapshot) {
-                if (dataSnapshot.connectionState == ConnectionState.waiting) {
-                  return SizedBox(
-                    height: height,
-                    child: const Center(
-                      child: CupertinoActivityIndicator(
-                        color: kDefaultColor,
-                      ),
+            future: Provider.of<Categories>(context, listen: false).fetchCategories(),
+            builder: (ctx, dataSnapshot) {
+              if (dataSnapshot.connectionState == ConnectionState.waiting) {
+                return SizedBox(
+                  height: height,
+                  child: const Center(
+                    child: CupertinoActivityIndicator(
+                      color: kDefaultColor,
                     ),
+                  ),
+                );
+              } else {
+                if (dataSnapshot.error != null) {
+                  return Center(
+                    child: Text(dataSnapshot.error.toString()),
                   );
                 } else {
-                  if (dataSnapshot.error != null) {
-                    return Center(
-                      // child: Text('Error Occured'),
-                      child: Text(dataSnapshot.error.toString()),
-                    );
-                  } else {
-                    return Column(
-                      children: [
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 5),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Top Course',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              MaterialButton(
-                                onPressed: () {
-                                  Navigator.of(context).pushNamed(
-                                    CoursesScreen.routeName,
-                                    arguments: {
-                                      'category_id': null,
-                                      'seacrh_query': null,
-                                      'type': CoursesPageData.all,
-                                    },
-                                  );
+                  return Column(
+                    children: [
+                      // Announcement Banner
+                      _buildAnnouncementBanner(),
+                      
+                      // Top Courses Section
+                      _buildSectionTitle('Top Courses', () {
+                        Navigator.of(context).pushNamed(
+                          CoursesScreen.routeName,
+                          arguments: {
+                            'category_id': null,
+                            'seacrh_query': null,
+                            'type': CoursesPageData.all,
+                          },
+                        );
+                      }),
+                      
+                      Container(
+                        height: 260,
+                        margin: const EdgeInsets.only(bottom: 20),
+                        child: topCourses.isEmpty
+                            ? const Center(child: Text('No courses available'))
+                            : ListView.builder(
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                scrollDirection: Axis.horizontal,
+                                itemCount: topCourses.length,
+                                itemBuilder: (ctx, index) {
+                                  return _buildCourseCard(topCourses[index]);
                                 },
-                                padding: const EdgeInsets.all(0),
-                                child: const Row(
-                                  children: [
-                                    Text(
-                                      'All courses',
-                                      style: TextStyle(
-                                        color: kSignUpTextColor,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    Icon(
-                                      Icons.arrow_forward_ios_rounded,
-                                      color: kSignUpTextColor,
-                                      size: 18,
-                                    ),
-                                  ],
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 15.0),
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          height: 255.0,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: topCourses.length,
-                            itemBuilder: (ctx, index) {
-                              final course = topCourses[index];
-                              final courseId = course.id;
-
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
-                                child: InkWell(
-                                  onTap: () {
-                                    Navigator.of(context).pushNamed(
-                                      CourseDetailScreen.routeName,
-                                      arguments: courseId,
-                                    );
-                                    // Navigator.of(context).push(
-                                    //     MaterialPageRoute(
-                                    //         builder: (context) =>
-                                    //             CourseDetailScreen1(
-                                    //               courseId: topCourses[index].id,
-                                    //             )));
-                                  },
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: kBackButtonBorderColor
-                                              .withOpacity(0.023),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 0),
-                                        ),
-                                      ],
-                                    ),
-                                    width:
-                                        MediaQuery.of(context).size.width * .45,
-                                    child: Card(
-                                      color: kWhiteColor,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      elevation: 0,
-                                      shadowColor: kWhiteColor,
-                                      child: Column(
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              child: FadeInImage.assetNetwork(
-                                                placeholder:
-                                                    'assets/images/loading_animated.gif',
-                                                image:
-                                                    course.thumbnail.toString(),
-                                                height: 120,
-                                                width: 200,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8.0),
-                                            child: SizedBox(
-                                              height: 50,
-                                              child: Text(
-                                                '${course.title}...',
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8.0),
-                                            child: Row(
-                                              children: [
-                                                const Expanded(
-                                                  flex: 1,
-                                                  child: Icon(
-                                                    Icons.star,
-                                                    color: kStarColor,
-                                                    size: 18,
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  flex: 1,
-                                                  child: Text(
-                                                    course.average_rating
-                                                        .toString(),
-                                                    style: const TextStyle(
-                                                      fontSize: 12,
-                                                      fontWeight:
-                                                          FontWeight.w400,
-                                                      color: kGreyLightColor,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                    flex: 5,
-                                                    child: Text(
-                                                      '(${course.total_reviews.toString()} Reviews)',
-                                                      style: const TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight:
-                                                            FontWeight.w400,
-                                                        color: kGreyLightColor,
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-
-                        // Container(
-                        //   margin: const EdgeInsets.only(bottom: 15.0),
-                        //   padding: const EdgeInsets.symmetric(horizontal: 20),
-                        //   height: 225.0,
-                        //   // height: MediaQuery.of(context).size.height * .3,
-                        //   child: ListView.builder(
-                        //     scrollDirection: Axis.horizontal,
-                        //     itemCount: topCourses.length,
-                        //     itemBuilder: (ctx, index) {
-                        //       return Padding(
-                        //         padding: const EdgeInsets.only(right: 8.0),
-                        //         child: InkWell(
-                        //           onTap: () {
-                        //             Navigator.of(context).pushNamed(
-                        //                 CourseDetailScreen.routeName,
-                        //                 arguments: topCourses[index].id);
-                        //           },
-                        //           child: Container(
-                        //             decoration: BoxDecoration(
-                        //               boxShadow: [
-                        //                 BoxShadow(
-                        //                   color: kBackButtonBorderColor
-                        //                       .withOpacity(0.023),
-                        //                   blurRadius: 10,
-                        //                   offset: const Offset(0, 0),
-                        //                 ),
-                        //               ],
-                        //             ),
-                        //             // width: 175,
-                        //             width:
-                        //                 MediaQuery.of(context).size.width * .45,
-                        //             child: Card(
-                        //               color: kWhiteColor,
-                        //               shape: RoundedRectangleBorder(
-                        //                 borderRadius: BorderRadius.circular(12),
-                        //               ),
-                        //               elevation: 0,
-                        //               shadowColor: kWhiteColor,
-                        //               child: Column(
-                        //                 children: [
-                        //                   Padding(
-                        //                     padding: const EdgeInsets.all(8.0),
-                        //                     child: ClipRRect(
-                        //                       borderRadius:
-                        //                           BorderRadius.circular(10),
-                        //                       child: FadeInImage.assetNetwork(
-                        //                         placeholder:
-                        //                             'assets/images/loading_animated.gif',
-                        //                         image: topCourses[index]
-                        //                             .thumbnail
-                        //                             .toString(),
-                        //                         height: 120,
-                        //                         width: 200,
-                        //                         fit: BoxFit.cover,
-                        //                       ),
-                        //                     ),
-                        //                   ),
-                        //                   Padding(
-                        //                     padding: const EdgeInsets.symmetric(
-                        //                         horizontal: 8.0),
-                        //                     child: SizedBox(
-                        //                       height: 50,
-                        //                       child: Text(
-                        //                         '${topCourses[index].title}...',
-                        //                         style: const TextStyle(
-                        //                           fontSize: 16,
-                        //                           fontWeight: FontWeight.w500,
-                        //                         ),
-                        //                       ),
-                        //                     ),
-                        //                   ),
-                        //                   Padding(
-                        //                     padding: const EdgeInsets.symmetric(
-                        //                         horizontal: 8.0),
-                        //                     child: Row(
-                        //                       children: [
-                        //                         const Expanded(
-                        //                           flex: 1,
-                        //                           child: Icon(
-                        //                             Icons.star,
-                        //                             color: kStarColor,
-                        //                             size: 18,
-                        //                           ),
-                        //                         ),
-                        //                         Expanded(
-                        //                           flex: 1,
-                        //                           child: Consumer<ReviewProvider>(
-                        //                             builder:
-                        //                                 (ctx, reviewProvider, _) {
-                        //                               final review =
-                        //                                   reviewProvider.review;
-
-                        //                               // Check if review data is available
-                        //                               if (review != null) {
-                        //                                 return Text(
-                        //                                   review.averageRating
-                        //                                       .toStringAsFixed(
-                        //                                           1), // Show average rating
-                        //                                   style: const TextStyle(
-                        //                                     fontSize: 12,
-                        //                                     fontWeight:
-                        //                                         FontWeight.w400,
-                        //                                     color:
-                        //                                         kGreyLightColor,
-                        //                                   ),
-                        //                                 );
-                        //                               } else if (reviewProvider
-                        //                                   .isLoading) {
-                        //                                 return const CircularProgressIndicator(); // Show loading indicator
-                        //                               } else {
-                        //                                 return const Text(
-                        //                                   'No data',
-                        //                                   style: TextStyle(
-                        //                                     fontSize: 12,
-                        //                                     fontWeight:
-                        //                                         FontWeight.w400,
-                        //                                     color:
-                        //                                         kGreyLightColor,
-                        //                                   ),
-                        //                                 );
-                        //                               }
-                        //                             },
-                        //                           ),
-                        //                         ),
-                        //                         Expanded(
-                        //                           flex: 5,
-                        //                           child: Consumer<ReviewProvider>(
-                        //                             builder:
-                        //                                 (ctx, reviewProvider, _) {
-                        //                               final review =
-                        //                                   reviewProvider.review;
-
-                        //                               if (review != null) {
-                        //                                 return Text(
-                        //                                   '(${review.totalReviews} Reviews)', // Show total reviews
-                        //                                   style: const TextStyle(
-                        //                                     fontSize: 12,
-                        //                                     fontWeight:
-                        //                                         FontWeight.w400,
-                        //                                     color:
-                        //                                         kGreyLightColor,
-                        //                                   ),
-                        //                                 );
-                        //                               } else {
-                        //                                 return const SizedBox
-                        //                                     .shrink(); // Show nothing if no data
-                        //                               }
-                        //                             },
-                        //                           ),
-                        //                         ),
-                        //                       ],
-                        //                     ),
-                        //                   ),
-                        //                   // const Padding(
-                        //                   //   padding: EdgeInsets.symmetric(horizontal: 8.0),
-                        //                   //   child: Row(
-                        //                   //     children: [
-                        //                   //       Expanded(
-                        //                   //         flex: 1,
-                        //                   //         child: Icon(
-                        //                   //           Icons.star,
-                        //                   //           color: kStarColor,
-                        //                   //           size: 18,
-                        //                   //         ),
-                        //                   //       ),
-                        //                   //       Expanded(
-                        //                   //         flex: 1,
-                        //                   //         child: Text(
-                        //                   //           "${Provider.of<ReviewProvider>(context, listen: false).fetchReview(courseId)}",
-                        //                   //           style: TextStyle(
-                        //                   //             fontSize: 12,
-                        //                   //             fontWeight: FontWeight.w400,
-                        //                   //             color: kGreyLightColor,
-                        //                   //           ),
-                        //                   //         ),
-                        //                   //       ),
-                        //                   //       Expanded(
-                        //                   //         flex: 5,
-                        //                   //         child: Text(
-                        //                   //           '(30 Reviews)',
-                        //                   //           style: TextStyle(
-                        //                   //             fontSize: 12,
-                        //                   //             fontWeight: FontWeight.w400,
-                        //                   //             color: kGreyLightColor,
-                        //                   //           ),
-                        //                   //         ),
-                        //                   //       ),
-                        //                   //     ],
-                        //                   //   ),
-                        //                   // ),
-                        //                 ],
-                        //               ),
-                        //             ),
-                        //           ),
-                        //         ),
-                        //       );
-                        //     },
-                        //   ),
-                        // ),
-
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Course Categories',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w500,
-                                ),
                               ),
-                              MaterialButton(
-                                onPressed: () {
-                                  Navigator.of(context).pushNamed(
-                                    CoursesScreen.routeName,
-                                    arguments: {
-                                      'category_id': null,
-                                      'seacrh_query': null,
-                                      'type': CoursesPageData.all,
-                                    },
-                                  );
-                                },
-                                padding: const EdgeInsets.all(0),
-                                child: const Row(
-                                  children: [
-                                    Text(
-                                      'All courses',
-                                      style: TextStyle(
-                                        color: kSignUpTextColor,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    Icon(
-                                      Icons.arrow_forward_ios_rounded,
-                                      color: kSignUpTextColor,
-                                      size: 18,
-                                    ),
-                                  ],
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                        Consumer<Categories>(
-                          builder: (context, myCourseData, child) => Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 5),
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: myCourseData.items.length,
-                              padding: EdgeInsets.zero,
-                              itemBuilder: (ctx, index) {
-                                return InkWell(
-                                  onTap: () {
-                                    Navigator.of(context).pushNamed(
-                                      CategoryDetailsScreen.routeName,
-                                      arguments: {
-                                        'category_id':
-                                            myCourseData.items[index].id,
-                                        'title':
-                                            myCourseData.items[index].title,
-                                      },
-                                    );
+                      ),
+                      
+                      // Course Categories Section
+                      _buildSectionTitle('Course Categories', () {
+                        Navigator.of(context).pushNamed(
+                          CoursesScreen.routeName,
+                          arguments: {
+                            'category_id': null,
+                            'seacrh_query': null,
+                            'type': CoursesPageData.all,
+                          },
+                        );
+                      }),
+                      
+                      Consumer<Categories>(
+                        builder: (context, categoriesData, child) => Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: categoriesData.items.isEmpty
+                              ? const Center(child: Text('No categories available'))
+                              : ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: categoriesData.items.length,
+                                  padding: EdgeInsets.zero,
+                                  itemBuilder: (ctx, index) {
+                                    return _buildCategoryItem(categoriesData.items[index]);
                                   },
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: <Widget>[
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      vertical: 10.0),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                child: FadeInImage.assetNetwork(
-                                                  placeholder:
-                                                      'assets/images/loading_animated.gif',
-                                                  image: myCourseData
-                                                      .items[index].thumbnail
-                                                      .toString(),
-                                                  height: 56.38,
-                                                  width: 68.98,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      vertical: 10,
-                                                      horizontal: 20),
-                                              width: double.infinity,
-                                              // height: 80,
-                                              child: Column(
-                                                children: <Widget>[
-                                                  Align(
-                                                    alignment:
-                                                        Alignment.centerLeft,
-                                                    child: Text(
-                                                      '${myCourseData.items[index].numberOfSubCategories} sub-categories',
-                                                      style: const TextStyle(
-                                                          color:
-                                                              kGreyLightColor,
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.w500),
-                                                      textAlign: TextAlign.left,
-                                                    ),
-                                                  ),
-                                                  Align(
-                                                    alignment:
-                                                        Alignment.centerLeft,
-                                                    child: FittedBox(
-                                                      fit: BoxFit.fitWidth,
-                                                      child: Text(
-                                                        myCourseData
-                                                            .items[index].title
-                                                            .toString(),
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                        style: const TextStyle(
-                                                          fontSize: 16,
-                                                          fontFamily: 'Poppins',
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          Center(
-                                            child: Stack(
-                                              children: [
-                                                Positioned.fill(
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
-                                                      gradient:
-                                                          const LinearGradient(
-                                                        colors: [
-                                                          Color(0xFFEC6800),
-                                                          Color(0xFFD35400),
-                                                        ],
-                                                        stops: [0.05, 0.88],
-                                                        begin:
-                                                            Alignment.topLeft,
-                                                        end: Alignment
-                                                            .centerLeft,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const Padding(
-                                                  padding: EdgeInsets.symmetric(
-                                                      vertical: 12.0,
-                                                      horizontal: 12),
-                                                  child: Icon(
-                                                    Icons.arrow_forward_rounded,
-                                                    color: kWhiteColor,
-                                                    size: 18,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      if (index != 9)
-                                        Divider(
-                                          thickness: 1,
-                                          height: 1,
-                                          color:
-                                              kGreyLightColor.withOpacity(0.30),
-                                        ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
+                                ),
                         ),
-                      ],
-                    );
-                  }
+                      ),
+                      
+                      // Add some bottom padding
+                      const SizedBox(height: 20),
+                    ],
+                  );
                 }
-              }),
+              }
+            },
+          ),
         ),
       ),
     );
