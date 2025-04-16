@@ -34,7 +34,7 @@ class _AppBarOneState extends State<AppBarOne> {
               children: [
                 ListTile(
                   leading: Icon(Icons.celebration, color: kPrimaryColor),
-                  title: Text('Welcome to Academy LMS!'),
+                  title: Text('Welcome to Elegance'),
                   subtitle: Text('We are glad to have you here. Explore our courses and start learning today.'),
                 ),
                 Divider(),
