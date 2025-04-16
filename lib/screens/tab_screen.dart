@@ -1,6 +1,7 @@
 import 'package:academy_lms_app/constants.dart';
 import 'package:academy_lms_app/screens/account.dart';
 import 'package:academy_lms_app/screens/cart.dart';
+import 'package:academy_lms_app/screens/explore.dart';
 import 'package:academy_lms_app/screens/filter_screen.dart';
 import 'package:academy_lms_app/screens/home.dart';
 import 'package:academy_lms_app/screens/login.dart';
@@ -83,8 +84,8 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
 
   List<Widget> _pages() {
     return isLoggedIn
-        ? [HomeScreen(), MyCoursesScreen(), CartScreen(), AccountScreen()]
-        : [HomeScreen(), LoginScreen(), LoginScreen(), LoginScreen()];
+        ? [HomeScreen(), ExploreScreen(), MyCoursesScreen(), CartScreen(), AccountScreen()]
+        : [HomeScreen(), ExploreScreen(), LoginScreen(), LoginScreen(), LoginScreen()];
   }
 
   void _selectPage(int index) {
@@ -94,7 +95,7 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
     _pageTransitionController.forward();
     
     _fabAnimationController.reset();
-    if (index != 2) {
+    if (index != 3) { // Changed from 2 to 3 because cart is now at index 3
       _fabAnimationController.forward();
     }
     
@@ -122,7 +123,7 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
               physics: const NeverScrollableScrollPhysics(),
               children: _pages(),
             ),
-      floatingActionButton: _selectedPageIndex != 2
+      floatingActionButton: _selectedPageIndex != 3 // Changed from 2 to 3 because cart is now at index 3
           ? ScaleTransition(
               scale: _fabAnimation,
               child: FloatingActionButton.extended(
@@ -195,6 +196,7 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
             elevation: 0,
             items: [
               _buildNavItem('Home', 'assets/icons/home.svg'),
+              _buildNavItem('Explore', 'assets/icons/explore.svg'),
               _buildNavItem('My Courses', 'assets/icons/my_courses.svg'),
               _buildNavItem('My Cart', 'assets/icons/shopping_bag.svg'),
               _buildNavItem('Account', 'assets/icons/account.svg'),
