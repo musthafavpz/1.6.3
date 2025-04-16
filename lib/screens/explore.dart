@@ -93,33 +93,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
-  Widget _buildCategoryHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Explore Categories',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF333333),
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            'Find the perfect course by category',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildCategoryItem(dynamic category) {
     return InkWell(
       onTap: () {
@@ -211,67 +184,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
-  Widget _buildFeaturedCategory(dynamic category) {
-    return Container(
-      margin: const EdgeInsets.only(right: 15),
-      width: MediaQuery.of(context).size.width * 0.6,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        image: DecorationImage(
-          image: NetworkImage(category.thumbnail.toString()),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            Colors.black.withOpacity(0.5),
-            BlendMode.darken,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () {
-          Navigator.of(context).pushNamed(
-            CategoryDetailsScreen.routeName,
-            arguments: {
-              'category_id': category.id,
-              'title': category.title,
-            },
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(15),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text(
-                category.title.toString(),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                '${category.numberOfSubCategories} sub-categories',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.white70,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height -
@@ -294,46 +206,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildCategoryHeader(),
                 _buildSearchBar(),
                 const SizedBox(height: 15),
-                
-                // Featured Categories
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    'Featured Categories',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[800],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                
-                // Horizontal scrolling featured categories
-                Consumer<Categories>(
-                  builder: (context, categoriesData, child) {
-                    return categoriesData.items.isEmpty
-                        ? const Center(child: CupertinoActivityIndicator())
-                        : SizedBox(
-                            height: 130,
-                            child: ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              scrollDirection: Axis.horizontal,
-                              itemCount: categoriesData.items.length > 5 
-                                  ? 5 
-                                  : categoriesData.items.length,
-                              itemBuilder: (ctx, index) {
-                                return _buildFeaturedCategory(categoriesData.items[index]);
-                              },
-                            ),
-                          );
-                  },
-                ),
-                
-                const SizedBox(height: 20),
                 
                 // All Categories
                 Padding(
@@ -376,7 +250,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   },
                 ),
                 
-                const SizedBox(height: 20),
+                // Add bottom spacing to avoid conflict with navigation menu
+                const SizedBox(height: 80),
               ],
             ),
           ),
