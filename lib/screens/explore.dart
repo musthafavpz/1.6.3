@@ -191,11 +191,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
         kToolbarHeight;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Explore Categories'),
-        backgroundColor: kDefaultColor,
-        elevation: 0,
-      ),
+      appBar: null, // Remove the app bar completely
       body: Container(
         color: const Color(0xFFF8F9FA),
         child: RefreshIndicator(
