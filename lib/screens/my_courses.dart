@@ -13,84 +13,63 @@ class MyCoursesScreen extends StatefulWidget {
   State<MyCoursesScreen> createState() => _MyCoursesScreenState();
 }
 
-class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  
+class _MyCoursesScreenState extends State<MyCoursesScreen> {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    
-    // Fetch courses when screen initializes
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
-    });
-  }
-  
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'My Courses',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: kDefaultColor,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search, color: kDefaultColor),
+            onPressed: () {
+              // Add search functionality here
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.filter_list, color: kDefaultColor),
+            onPressed: () {
+              // Add filter functionality here
+            },
+          ),
+        ],
+      ),
       body: Container(
         height: MediaQuery.of(context).size.height,
         color: kBackGroundColor,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header with improved styling
-                const Text(
-                  'My Courses',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: kDefaultColor,
-                  ),
-                ),
-                
-                const SizedBox(height: 20),
-                
-                // Custom tab bar
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: TabBar(
-                    controller: _tabController,
-                    indicator: BoxDecoration(
-                      borderRadius: BorderRadius.circular(30),
-                      color: kDefaultColor,
-                    ),
-                    labelColor: Colors.white,
-                    unselectedLabelColor: Colors.black54,
-                    tabs: const [
-                      Tab(text: 'In Progress'),
-                      Tab(text: 'Completed'),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 20),
-                
-                // Tab content
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildCourseList(isCompleted: false),
-                      _buildCourseList(isCompleted: true),
-                    ],
-                  ),
-                ),
-              ],
+        child: RefreshIndicator(
+          color: kDefaultColor,
+          onRefresh: () async {
+            await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 10),
+                  _buildCoursesStatus(),
+                  const SizedBox(height: 20),
+                  courseView(),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
         ),
@@ -98,220 +77,173 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
     );
   }
 
-  Widget _buildCourseList({required bool isCompleted}) {
+  Widget _buildCoursesStatus() {
     return Consumer<MyCourses>(
-      builder: (context, myCourseData, child) {
-        if (myCourseData.isLoading) {
-          return const Center(
-            child: CupertinoActivityIndicator(color: kDefaultColor),
-          );
-        }
-        
-        if (myCourseData.error != null) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 60, color: Colors.grey),
-                const SizedBox(height: 16),
-                Text(
-                  'Something went wrong',
-                  style: TextStyle(color: Colors.grey.shade700),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
-                  },
-                  child: const Text('Try Again'),
-                )
-              ],
-            ),
-          );
-        }
-        
-        // Filter courses based on completion status
-        final filteredCourses = myCourseData.items.where(
-          (course) => course.isCompleted == isCompleted
-        ).toList();
-        
-        if (filteredCourses.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  isCompleted ? Icons.school : Icons.menu_book,
-                  size: 80,
-                  color: Colors.grey.shade400,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  isCompleted 
-                      ? 'No completed courses yet'
-                      : 'No courses in progress',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.grey.shade600,
+      builder: (context, myCourseData, _) {
+        return Container(
+          padding: const EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            color: kDefaultColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${myCourseData.items.length} Courses',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  isCompleted 
-                      ? 'Complete your courses to see them here'
-                      : 'Enroll in courses to get started',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade500,
+                  const SizedBox(height: 5),
+                  const Text(
+                    'Continue your learning journey',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
                   ),
+                ],
+              ),
+              CircleAvatar(
+                backgroundColor: kDefaultColor,
+                radius: 24,
+                child: Icon(
+                  Icons.play_arrow,
+                  color: Colors.white,
+                  size: 28,
                 ),
-              ],
-            ),
-          );
-        }
-        
-        return RefreshIndicator(
-          color: kDefaultColor,
-          onRefresh: () => Provider.of<MyCourses>(
-            context, 
-            listen: false
-          ).fetchMyCourses(),
-          child: AlignedGridView.count(
-            crossAxisCount: 2,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            itemCount: filteredCourses.length,
-            padding: const EdgeInsets.only(bottom: 16),
-            itemBuilder: (ctx, index) {
-              return _buildCourseCard(filteredCourses[index]);
-            },
+              ),
+            ],
           ),
         );
       },
     );
   }
 
-  Widget _buildCourseCard(dynamic course) {
-    // Enhanced course card with progress indicator
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Course thumbnail
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            child: AspectRatio(
-              aspectRatio: 16 / 9,
-              child: Image.network(
-                course.imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (ctx, error, _) => Container(
-                  color: Colors.grey.shade300,
-                  alignment: Alignment.center,
-                  child: const Icon(Icons.image_not_supported, color: Colors.grey),
-                ),
+  Widget courseView() {
+    final height = MediaQuery.of(context).size.height - 
+                   MediaQuery.of(context).padding.top - 
+                   kToolbarHeight - 150;
+    
+    return FutureBuilder(
+      future: Provider.of<MyCourses>(context, listen: false).fetchMyCourses(),
+      builder: (ctx, dataSnapshot) {
+        if (dataSnapshot.connectionState == ConnectionState.waiting) {
+          return SizedBox(
+            height: height,
+            child: const Center(
+              child: CupertinoActivityIndicator(color: kDefaultColor),
+            ),
+          );
+        } else {
+          if (dataSnapshot.error != null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.red,
+                    size: 60,
+                  ),
+                  const SizedBox(height: 15),
+                  Text(
+                    'Error occurred: ${dataSnapshot.error.toString()}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 15),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kDefaultColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () {
+                      setState(() {});
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
               ),
-            ),
-          ),
-          
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Course title
-                Text(
-                  course.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                
-                const SizedBox(height: 8),
-                
-                // Lesson progress
-                Row(
-                  children: [
-                    Text(
-                      '${course.completedLessons}/${course.totalLessons} lessons',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
+            );
+          } else {
+            return Consumer<MyCourses>(
+              builder: (context, myCourseData, child) {
+                if (myCourseData.items.isEmpty) {
+                  return SizedBox(
+                    height: height,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.school_outlined,
+                            size: 80,
+                            color: kDefaultColor.withOpacity(0.7),
+                          ),
+                          const SizedBox(height: 20),
+                          const Text(
+                            'No courses yet',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            'Explore and enroll in courses to get started',
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kDefaultColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            onPressed: () {
+                              // Navigate to explore courses screen
+                            },
+                            child: const Text('Explore Courses'),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  );
+                }
                 
-                const SizedBox(height: 6),
-                
-                // Progress bar
-                LinearProgressIndicator(
-                  value: course.totalLessons > 0 
-                      ? course.completedLessons / course.totalLessons 
-                      : 0,
-                  backgroundColor: Colors.grey.shade200,
-                  valueColor: AlwaysStoppedAnimation<Color>(kDefaultColor),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                
-                const SizedBox(height: 8),
-                
-                // Continue button
-                if (!course.isCompleted)
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // Navigate to course details
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kDefaultColor,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                      ),
-                      child: const Text('Continue'),
-                    ),
-                  ),
-                  
-                if (course.isCompleted)
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Completed',
-                        style: TextStyle(
-                          color: Colors.green.shade700,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
+                return AlignedGridView.count(
+                  shrinkWrap: true,
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 15,
+                  crossAxisSpacing: 15,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: myCourseData.items.length,
+                  itemBuilder: (ctx, index) {
+                    return MyCourseGrid(
+                      myCourse: myCourseData.items[index],
+                    );
+                  },
+                );
+              },
+            );
+          }
+        }
+      },
     );
   }
 }
