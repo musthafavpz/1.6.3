@@ -22,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   var topCourses = [];
   var bundles = [];
   dynamic bundleStatus;
+  final searchController = TextEditingController();
   
   // Sample data for trending instructors - replace with actual data from your API
   final List<Map<String, dynamic>> trendingInstructors = [
@@ -61,6 +62,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   void didChangeDependencies() {
     if (_isInit) {
       setState(() {});
@@ -92,20 +99,95 @@ class _HomeScreenState extends State<HomeScreen> {
     return;
   }
 
+  Widget _buildSearchBar() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: searchController,
+        decoration: InputDecoration(
+          hintText: 'Search for courses...',
+          hintStyle: TextStyle(
+            color: Colors.grey[400],
+            fontSize: 14,
+          ),
+          prefixIcon: const Icon(Icons.search, color: kDefaultColor),
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.tune, color: kDefaultColor),
+            onPressed: () {
+              // Show filter options
+            },
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          border: InputBorder.none,
+        ),
+        onSubmitted: (value) {
+          if (value.isNotEmpty) {
+            Navigator.of(context).pushNamed(
+              CoursesScreen.routeName,
+              arguments: {
+                'category_id': null,
+                'seacrh_query': value,
+                'type': CoursesPageData.search,
+              },
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildWelcomeSection() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Welcome back!',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF333333),
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            'What would you like to learn today?',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAnnouncementBanner() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF4A00E0), Color(0xFF8E2DE2)],
+          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: const Color(0xFF6366F1).withOpacity(0.2),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -120,8 +202,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   'Special Offer!',
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
                 ),
@@ -129,8 +211,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   'Get 50% off on all premium courses. Limited time offer!',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     color: Colors.white,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ],
@@ -146,8 +229,8 @@ class _HomeScreenState extends State<HomeScreen> {
               'CLAIM NOW',
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF4A00E0),
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF6366F1),
               ),
             ),
           ),
@@ -159,41 +242,42 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSectionTitle(String title, VoidCallback onPressed) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             title,
             style: const TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.w600,
+              color: Color(0xFF333333),
             ),
           ),
           InkWell(
             onTap: onPressed,
             borderRadius: BorderRadius.circular(30),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: kSignUpTextColor.withOpacity(0.1),
+                color: const Color(0xFF6366F1).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(30),
               ),
-              child: Row(
-                children: const [
+              child: const Row(
+                children: [
                   Text(
                     'View all',
                     style: TextStyle(
-                      color: kSignUpTextColor,
-                      fontSize: 14,
+                      color: Color(0xFF6366F1),
+                      fontSize: 13,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  SizedBox(width: 5),
+                  SizedBox(width: 4),
                   Icon(
                     Icons.arrow_forward_rounded,
-                    color: kSignUpTextColor,
-                    size: 16,
+                    color: Color(0xFF6366F1),
+                    size: 14,
                   ),
                 ],
               ),
@@ -241,7 +325,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: FadeInImage.assetNetwork(
                       placeholder: 'assets/images/loading_animated.gif',
                       image: course.thumbnail.toString(),
-                      height: 130,
+                      height: 120,
                       width: double.infinity,
                       fit: BoxFit.cover,
                     ),
@@ -252,7 +336,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: kDefaultColor,
+                        color: const Color(0xFF6366F1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -260,15 +344,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Icon(
                             Icons.star,
                             color: Colors.white,
-                            size: 14,
+                            size: 12,
                           ),
                           const SizedBox(width: 3),
                           Text(
                             course.average_rating.toString(),
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -283,14 +367,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
-                      height: 45,
+                      height: 40,
                       child: Text(
                         course.title.toString(),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF333333),
                         ),
                       ),
                     ),
@@ -300,13 +385,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         const Icon(
                           Icons.people_alt_outlined,
                           color: kGreyLightColor,
-                          size: 14,
+                          size: 12,
                         ),
-                        const SizedBox(width: 5),
+                        const SizedBox(width: 4),
                         Text(
                           '${course.total_reviews} Enrolled',
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: FontWeight.w400,
                             color: kGreyLightColor,
                           ),
@@ -360,7 +445,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: FadeInImage.assetNetwork(
                       placeholder: 'assets/images/loading_animated.gif',
                       image: course.thumbnail.toString(),
-                      height: 150,
+                      height: 140,
                       width: double.infinity,
                       fit: BoxFit.cover,
                     ),
@@ -371,7 +456,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        color: Colors.orange,
+                        color: const Color(0xFFFF9800),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Row(
@@ -379,15 +464,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           Icon(
                             Icons.trending_up,
                             color: Colors.white,
-                            size: 14,
+                            size: 12,
                           ),
                           SizedBox(width: 3),
                           Text(
                             'TRENDING',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -400,7 +485,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: kDefaultColor,
+                        color: const Color(0xFF6366F1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -408,15 +493,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Icon(
                             Icons.star,
                             color: Colors.white,
-                            size: 14,
+                            size: 12,
                           ),
                           const SizedBox(width: 3),
                           Text(
                             course.average_rating.toString(),
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -431,14 +516,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
-                      height: 45,
+                      height: 40,
                       child: Text(
                         course.title.toString(),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF333333),
                         ),
                       ),
                     ),
@@ -451,13 +537,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             const Icon(
                               Icons.people_alt_outlined,
                               color: kGreyLightColor,
-                              size: 14,
+                              size: 12,
                             ),
-                            const SizedBox(width: 5),
+                            const SizedBox(width: 4),
                             Text(
                               '${course.total_reviews} Enrolled',
                               style: const TextStyle(
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w400,
                                 color: kGreyLightColor,
                               ),
@@ -468,16 +554,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             const Icon(
                               Icons.play_circle_outline,
-                              color: kDefaultColor,
-                              size: 14,
+                              color: Color(0xFF6366F1),
+                              size: 12,
                             ),
-                            const SizedBox(width: 5),
+                            const SizedBox(width: 4),
                             const Text(
                               'Start Learning',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w500,
-                                color: kDefaultColor,
+                                color: Color(0xFF6366F1),
                               ),
                             ),
                           ],
@@ -527,8 +613,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: FadeInImage.assetNetwork(
                         placeholder: 'assets/images/loading_animated.gif',
                         image: instructor['image'],
-                        width: 70,
-                        height: 70,
+                        width: 60,
+                        height: 60,
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -540,45 +626,46 @@ class _HomeScreenState extends State<HomeScreen> {
                           Text(
                             instructor['name'],
                             style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF333333),
                             ),
                           ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 4),
                           Text(
                             instructor['expertise'],
                             style: const TextStyle(
-                              fontSize: 14,
+                              fontSize: 12,
                               color: kGreyLightColor,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
                           Row(
                             children: [
                               const Icon(
                                 Icons.star,
-                                color: kStarColor,
-                                size: 16,
+                                color: Color(0xFFFFAB00),
+                                size: 14,
                               ),
-                              const SizedBox(width: 5),
+                              const SizedBox(width: 4),
                               Text(
                                 instructor['rating'].toString(),
                                 style: const TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              const SizedBox(width: 15),
+                              const SizedBox(width: 12),
                               const Icon(
                                 Icons.book,
                                 color: kGreyLightColor,
-                                size: 16,
+                                size: 14,
                               ),
-                              const SizedBox(width: 5),
+                              const SizedBox(width: 4),
                               Text(
                                 '${instructor['courses']} Courses',
                                 style: const TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 12,
                                   color: kGreyLightColor,
                                 ),
                               ),
@@ -592,9 +679,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: const BoxDecoration(
-                  color: kDefaultColor,
+                  color: Color(0xFF6366F1),
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(15),
                     bottomRight: Radius.circular(15),
@@ -606,6 +693,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
+                    fontSize: 13,
                   ),
                 ),
               ),
@@ -628,7 +716,7 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 15),
+        margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: kWhiteColor,
           borderRadius: BorderRadius.circular(15),
@@ -643,11 +731,11 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Row(
           children: <Widget>[
             Container(
-              height: 80,
-              width: 80,
-              margin: const EdgeInsets.all(12),
+              height: 70,
+              width: 70,
+              margin: const EdgeInsets.all(10),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
                 child: FadeInImage.assetNetwork(
                   placeholder: 'assets/images/loading_animated.gif',
                   image: category.thumbnail.toString(),
@@ -657,7 +745,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
@@ -666,16 +754,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF333333),
                       ),
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 4),
                     Text(
                       '${category.numberOfSubCategories} sub-categories',
                       style: const TextStyle(
                         color: kGreyLightColor,
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -684,20 +773,20 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             Container(
-              margin: const EdgeInsets.all(12),
-              padding: const EdgeInsets.all(8),
+              margin: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFEC6800), Color(0xFFD35400)],
+                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
                 Icons.arrow_forward_rounded,
                 color: kWhiteColor,
-                size: 18,
+                size: 16,
               ),
             ),
           ],
@@ -714,8 +803,9 @@ class _HomeScreenState extends State<HomeScreen> {
         50;
     return Container(
       height: MediaQuery.of(context).size.height,
-      color: kBackGroundColor,
+      color: const Color(0xFFF8F9FA), // Lighter background color
       child: RefreshIndicator(
+        color: const Color(0xFF6366F1),
         onRefresh: refreshList,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -727,7 +817,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: height,
                   child: const Center(
                     child: CupertinoActivityIndicator(
-                      color: kDefaultColor,
+                      color: Color(0xFF6366F1),
                     ),
                   ),
                 );
@@ -738,7 +828,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 } else {
                   return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const SizedBox(height: 10),
+                      // Welcome Message
+                      _buildWelcomeSection(),
+                      
+                      // Search Bar
+                      _buildSearchBar(),
+                      
                       // Announcement Banner
                       _buildAnnouncementBanner(),
                       
@@ -755,8 +853,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       }),
                       
                       Container(
-                        height: 260,
-                        margin: const EdgeInsets.only(bottom: 20),
+                        height: 235,
+                        margin: const EdgeInsets.only(bottom: 15),
                         child: topCourses.isEmpty
                             ? const Center(child: Text('No courses available'))
                             : ListView.builder(
@@ -782,8 +880,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       }),
                       
                       Container(
-                        height: 280,
-                        margin: const EdgeInsets.only(bottom: 20),
+                        height: 255,
+                        margin: const EdgeInsets.only(bottom: 15),
                         child: topCourses.isEmpty
                             ? const Center(child: Text('No trending courses available'))
                             : ListView.builder(
@@ -805,8 +903,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       }),
                       
                       Container(
-                        height: 180,
-                        margin: const EdgeInsets.only(bottom: 20),
+                        height: 165,
+                        margin: const EdgeInsets.only(bottom: 15),
                         child: ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           scrollDirection: Axis.horizontal,
