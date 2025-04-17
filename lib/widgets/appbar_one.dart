@@ -8,52 +8,139 @@ class AppBarOne extends StatefulWidget implements PreferredSizeWidget {
   final Size preferredSize;
   final dynamic title;
   final dynamic logo;
-  const AppBarOne({super.key, this.title, this.logo})
-      : preferredSize = const Size.fromHeight(70.0);
+  final bool showBackButton;
+  
+  const AppBarOne({
+    super.key, 
+    this.title, 
+    this.logo,
+    this.showBackButton = false,
+  }) : preferredSize = const Size.fromHeight(70.0);
+  
   @override
   State<AppBarOne> createState() => _AppBarOneState();
 }
 
 class _AppBarOneState extends State<AppBarOne> {
+  final GlobalKey _notificationIconKey = GlobalKey();
+  OverlayEntry? _overlayEntry;
+  bool _isNotificationVisible = false;
+  bool _hasNotification = true;
+
   @override
   void initState() {
     super.initState();
   }
 
-  void _showNotificationPopup() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Notifications'),
-          content: Container(
-            width: double.maxFinite,
-            child: const Column(
+  @override
+  void dispose() {
+    _removeOverlay();
+    super.dispose();
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+    _isNotificationVisible = false;
+  }
+
+  void _toggleNotificationOverlay() {
+    if (_isNotificationVisible) {
+      _removeOverlay();
+    } else {
+      _showNotificationOverlay();
+    }
+  }
+
+  void _showNotificationOverlay() {
+    final RenderBox renderBox = _notificationIconKey.currentContext!.findRenderObject() as RenderBox;
+    final position = renderBox.localToGlobal(Offset.zero);
+    final size = renderBox.size;
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: position.dy + size.height + 8,
+        left: position.dx - 200 + size.width / 2,
+        child: Material(
+          elevation: 8,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            width: 250,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ListTile(
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  decoration: const BoxDecoration(
+                    color: kPrimaryColor,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Notifications',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const ListTile(
                   leading: Icon(Icons.celebration, color: kPrimaryColor),
                   title: Text('Welcome to Elegance'),
                   subtitle: Text('We are glad to have you here. Explore our courses and start learning today.'),
                 ),
-                Divider(),
-                SizedBox(height: 8),
-                Text('No more notifications', style: TextStyle(color: Colors.grey)),
+                const Divider(height: 1),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: const Text(
+                    'No more notifications',
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                ),
+                InkWell(
+                  onTap: _removeOverlay,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                      border: Border(
+                        top: BorderSide(color: Colors.grey, width: 0.5),
+                      ),
+                    ),
+                    child: const Text(
+                      'Close',
+                      style: TextStyle(
+                        color: kPrimaryColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
+        ),
+      ),
     );
+
+    Overlay.of(context).insert(_overlayEntry!);
+    _isNotificationVisible = true;
   }
 
   @override
@@ -63,16 +150,53 @@ class _AppBarOneState extends State<AppBarOne> {
       toolbarHeight: 70,
       leadingWidth: 80,
       centerTitle: true,
-      // Add notification icon on the left
-      leading: GestureDetector(
-        onTap: _showNotificationPopup,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 20.0, top: 18, bottom: 18),
-          child: SvgPicture.asset(
-            'assets/icons/notification.svg',
-          ),
-        ),
-      ),
+      // Show back button if required, otherwise show notification icon
+      leading: widget.showBackButton 
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => Navigator.of(context).pop(),
+            )
+          : GestureDetector(
+              onTap: _toggleNotificationOverlay,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 20.0, top: 18, bottom: 18),
+                child: Stack(
+                  key: _notificationIconKey,
+                  clipBehavior: Clip.none,
+                  children: [
+                    SvgPicture.asset(
+                      'assets/icons/notification.svg',
+                    ),
+                    if (_hasNotification)
+                      Positioned(
+                        top: -5,
+                        right: -5,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
+                          child: const Center(
+                            child: Text(
+                              '1',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
       title: widget.title != null
           ? Text(
               widget.title,
