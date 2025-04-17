@@ -103,21 +103,13 @@ class _CartScreenState extends State<CartScreen> {
     String authToken = 'Basic ${base64Encode(utf8.encode('$email:$password:$currentTimestamp'))}';
     final url = '$baseUrl/payment/web_redirect_to_pay_fee?auth=$authToken&unique_id=academylaravelbycreativeitem';
     
-    // Navigate to WebView instead of launching external browser
-    final result = await Navigator.of(context).push(
+    // Navigate to WebView without waiting for a result
+    Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => PaymentWebView(url: url),
       ),
     );
-    
-    // Handle the payment result if needed
-    if (result == true) {
-      // Payment was successful
-      fetchCartTools(); // Refresh cart after successful payment
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Payment successful!')),
-      );
-    }
+    // No result handling code - user will simply return to this screen when they close the payment page
   }
 
   @override
