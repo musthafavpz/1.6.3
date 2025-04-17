@@ -1,17 +1,15 @@
-// ignore_for_file: avoid_print
-
 import 'dart:async';
 import 'dart:convert';
 
 import 'package:academy_lms_app/models/cart_tools_model.dart';
 import 'package:academy_lms_app/models/course.dart';
 import 'package:academy_lms_app/providers/courses.dart';
+import 'package:academy_lms_app/screens/payment_webview.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../constants.dart';
 import '../widgets/common_functions.dart';
@@ -54,56 +52,11 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
-  Future<void> fetchUrl() async {
-    final prefs = await SharedPreferences.getInstance();
-    final authToken = prefs.getString('access_token') ?? '';
-
-    var url = '$baseUrl/api/payment';
-    try {
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $authToken',
-        },
-      );
-
-      print('Response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        if (await canLaunchUrl(Uri.parse(url))) {
-          await launchUrl(
-            Uri.parse(url),
-            mode: LaunchMode.externalApplication,
-          );
-        } else {
-          throw 'Could not launch $url';
-        }
-      } else {
-        print('Error: ${response.statusCode}');
-      }
-    } catch (e) {
-      print(e.toString());
-    }
-  }
-
-  //  Timer? _timer;
-
   @override
   void initState() {
     super.initState();
     fetchCartTools();
-    // _timer = Timer.periodic(Duration(milliseconds: 5), (timer) {
-    //   fetchCartTools();
-    // });
   }
-
-  // @override
-  // void dispose() {
-  //   _timer?.cancel();
-  //   super.dispose();
-  // }
 
   Future<void> fetchCartTools() async {
     setState(() {
@@ -135,6 +88,36 @@ class _CartScreenState extends State<CartScreen> {
     setState(() {
       isLoading = false;
     });
+  }
+
+  Future<void> handleCheckout() async {
+    final prefs = await SharedPreferences.getInstance();
+    final emailPre = prefs.getString('email');
+    final passwordPre = prefs.getString('password');
+    var email = emailPre;
+    var password = passwordPre;
+    
+    DateTime currentDateTime = DateTime.now();
+    int currentTimestamp = (currentDateTime.millisecondsSinceEpoch / 1000).floor();
+    
+    String authToken = 'Basic ${base64Encode(utf8.encode('$email:$password:$currentTimestamp'))}';
+    final url = '$baseUrl/payment/web_redirect_to_pay_fee?auth=$authToken&unique_id=academylaravelbycreativeitem';
+    
+    // Navigate to WebView instead of launching external browser
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => PaymentWebView(url: url),
+      ),
+    );
+    
+    // Handle the payment result if needed
+    if (result == true) {
+      // Payment was successful
+      fetchCartTools(); // Refresh cart after successful payment
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Payment successful!')),
+      );
+    }
   }
 
   @override
@@ -175,8 +158,10 @@ class _CartScreenState extends State<CartScreen> {
                         return Consumer<Courses>(
                             builder: (context, cartData, child) {
                           double subtotal = calculateSubtotal(cartData.items);
-                          double tax = calculateTax(
-                              subtotal, _cartTools!.courseSellingTax);
+                          double tax = _cartTools != null
+                              ? calculateTax(
+                                  subtotal, _cartTools!.courseSellingTax)
+                              : 0.0;
                           double total = subtotal + tax;
                           return Column(
                             children: [
@@ -240,7 +225,6 @@ class _CartScreenState extends State<CartScreen> {
                                                         CrossAxisAlignment
                                                             .start,
                                                     children: [
-                                                      // Text(cartData.items[index].price_cart.toString()),
                                                       Padding(
                                                         padding:
                                                             const EdgeInsets
@@ -426,7 +410,7 @@ class _CartScreenState extends State<CartScreen> {
                               ),
                               cartData.items.isEmpty
                                   ? Text("No Cart item is added now")
-                                  : isLoading
+                                  : isLoading || _cartTools == null
                                       ? CircularProgressIndicator()
                                       : SizedBox(
                                           child: Padding(
@@ -570,49 +554,7 @@ class _CartScreenState extends State<CartScreen> {
                                                     padding: const EdgeInsets
                                                         .symmetric(
                                                         horizontal: 10),
-                                                    onPressed: () async {
-                                                      final prefs =
-                                                          await SharedPreferences
-                                                              .getInstance();
-                                                      final emailPre = prefs
-                                                          .getString('email');
-                                                      final passwordPre =
-                                                          prefs.getString(
-                                                              'password');
-                                                      var email = emailPre;
-                                                      var password =
-                                                          passwordPre;
-                                                      print(email);
-                                                      print(password);
-                                                      // var email = "student@example.com";
-                                                      // var password = "12345678";
-                                                      DateTime currentDateTime =
-                                                          DateTime.now();
-                                                      int currentTimestamp =
-                                                          (currentDateTime
-                                                                      .millisecondsSinceEpoch /
-                                                                  1000)
-                                                              .floor();
-
-                                                      String authToken =
-                                                          'Basic ${base64Encode(utf8.encode('$email:$password:$currentTimestamp'))}';
-                                                      print(authToken);
-                                                      final url =
-                                                          '$baseUrl/payment/web_redirect_to_pay_fee?auth=$authToken&unique_id=academylaravelbycreativeitem';
-                                                      print(url);
-                                                      // _launchURL(url);
-
-                                                      if (await canLaunchUrl(
-                                                          Uri.parse(url))) {
-                                                        await launchUrl(
-                                                          Uri.parse(url),
-                                                          mode: LaunchMode
-                                                              .externalApplication,
-                                                        );
-                                                      } else {
-                                                        throw 'Could not launch $url';
-                                                      }
-                                                    },
+                                                    onPressed: handleCheckout,
                                                     color: kDefaultColor,
                                                     height: 45,
                                                     minWidth: 111,
