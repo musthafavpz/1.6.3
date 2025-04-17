@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-const baseUrl = 'https://occassiohub.com'; // Example: const BASE_URL = 'http://creativeitem.com/academy';
+const baseUrl = 'https://app.eleganceprep.com'; // Example: const BASE_URL = 'http://creativeitem.com/academy';
 
 // list of colors that we use in our app
 const kWhiteColor = Colors.white;
