@@ -5,9 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// Import all carousel_slider components with an alias to prevent conflicts
-import 'package:carousel_slider/carousel_slider.dart' as carousel_slider;
-import 'package:carousel_slider/carousel_controller.dart' as carousel_controller;
 
 import '../constants.dart';
 import '../providers/categories.dart';
@@ -66,27 +63,13 @@ class _HomeScreenState extends State<HomeScreen> {
     },
   ];
   
-  // Banner data
-  final List<Map<String, dynamic>> bannerItems = [
-    {
-      'title': 'Special Offer!',
-      'description': 'Get 50% off on all premium courses. Limited time offer!',
-      'buttonText': 'CLAIM NOW',
-      'gradientColors': [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-    },
-    {
-      'title': 'New: Python Masterclass',
-      'description': 'Learn Python from scratch to advanced concepts',
-      'buttonText': 'ENROLL NOW',
-      'gradientColors': [Color(0xFF4CAF50), Color(0xFF2E7D32)],
-    },
-    {
-      'title': 'Free Workshop',
-      'description': 'Join our free AI workshop this weekend',
-      'buttonText': 'REGISTER',
-      'gradientColors': [Color(0xFFFF9800), Color(0xFFE65100)],
-    },
-  ];
+  // Single banner data
+  final Map<String, dynamic> bannerData = {
+    'title': 'Special Offer!',
+    'description': 'Get 50% off on all premium courses. Limited time offer!',
+    'buttonText': 'CLAIM NOW',
+    'gradientColors': [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+  };
 
   @override
   void initState() {
@@ -236,89 +219,69 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSlidingBanners() {
-    // Using the carousel_slider with the alias to avoid conflict
-    return carousel_slider.CarouselSlider.builder(
-      itemCount: bannerItems.length,
-      options: carousel_slider.CarouselOptions(
-        height: 100,
-        aspectRatio: 16/5,
-        viewportFraction: 0.9,
-        initialPage: 0,
-        enableInfiniteScroll: true,
-        reverse: false,
-        autoPlay: true,
-        autoPlayInterval: const Duration(seconds: 5),
-        autoPlayAnimationDuration: const Duration(milliseconds: 800),
-        autoPlayCurve: Curves.fastOutSlowIn,
-        enlargeCenterPage: true,
-        scrollDirection: Axis.horizontal,
-      ),
-      itemBuilder: (context, index, realIndex) {
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 5),
-          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: bannerItems[index]['gradientColors'],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: bannerItems[index]['gradientColors'][0].withOpacity(0.2),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
+  Widget _buildSingleBanner() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: bannerData['gradientColors'],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: bannerData['gradientColors'][0].withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      bannerItems[index]['title'],
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      bannerItems[index]['description'],
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  bannerItems[index]['buttonText'],
-                  style: TextStyle(
-                    fontSize: 12,
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  bannerData['title'],
+                  style: const TextStyle(
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: bannerItems[index]['gradientColors'][0],
+                    color: Colors.white,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 5),
+                Text(
+                  bannerData['description'],
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
           ),
-        );
-      },
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              bannerData['buttonText'],
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: bannerData['gradientColors'][0],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -828,8 +791,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Search Bar
                       _buildSearchBar(),
                       
-                      // Sliding Announcement Banners
-                      _buildSlidingBanners(),
+                      // Single Banner instead of slider
+                      _buildSingleBanner(),
                       const SizedBox(height: 10),
                       
                       // Trending Courses Section (First as requested)
