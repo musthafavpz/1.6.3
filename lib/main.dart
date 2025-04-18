@@ -1,12 +1,13 @@
 import 'package:academy_lms_app/constants.dart';
 import 'package:academy_lms_app/screens/course_details.dart';
 import 'package:academy_lms_app/screens/login.dart';
+import 'package:academy_lms_app/screens/onboarding_screen.dart';
 import 'package:academy_lms_app/screens/splash.dart';
 import 'package:academy_lms_app/screens/tab_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/auth.dart';
 import 'providers/categories.dart';
 import 'providers/courses.dart';
@@ -18,16 +19,25 @@ import 'screens/course_detail.dart';
 import 'screens/courses_screen.dart';
 import 'screens/sub_category.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
   Logger.root.onRecord.listen((LogRecord rec) {
     debugPrint(
         '${rec.loggerName}>${rec.level.name}: ${rec.time}: ${rec.message}');
   });
-  runApp(const MyApp());
+  
+  // Check if onboarding has been completed
+  final prefs = await SharedPreferences.getInstance();
+  final showOnboarding = prefs.getBool('onboarding_completed') != true;
+  
+  runApp(MyApp(showOnboarding: showOnboarding));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool showOnboarding;
+  
+  const MyApp({super.key, this.showOnboarding = true});
 
   // This widget is the root of your application.
   @override
@@ -67,12 +77,13 @@ class MyApp extends StatelessWidget {
             useMaterial3: true,
           ),
           debugShowCheckedModeBanner: false,
-          home: const SplashScreen(),
+          home: showOnboarding ? const OnboardingScreen() : const SplashScreen(),
           routes: {
             '/home': (ctx) => const TabsScreen(
                   pageIndex: 0,
                 ),
             '/login': (ctx) => const LoginScreen(),
+            OnboardingScreen.routeName: (ctx) => const OnboardingScreen(),
             CoursesScreen.routeName: (ctx) => const CoursesScreen(),
             CategoryDetailsScreen.routeName: (ctx) =>
                 const CategoryDetailsScreen(),
