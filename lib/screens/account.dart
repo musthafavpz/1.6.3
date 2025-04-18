@@ -80,8 +80,9 @@ class _AccountScreenState extends State<AccountScreen> {
                       // Profile header with gradient background
                       Container(
                         width: double.infinity,
+                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
+                          gradient: const LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
@@ -89,8 +90,16 @@ class _AccountScreenState extends State<AccountScreen> {
                               Colors.blue,
                             ],
                           ),
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.purple.withOpacity(0.2),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                         child: SafeArea(
                           child: Row(
                             children: [
@@ -100,6 +109,13 @@ class _AccountScreenState extends State<AccountScreen> {
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(color: Colors.white, width: 2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
                                 child: CircleAvatar(
                                   radius: 35,
@@ -120,7 +136,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                       : null,
                                 ),
                               ),
-                              const SizedBox(width: 15),
+                              const SizedBox(width: 20),
                               // User Info
                               Expanded(
                                 child: Column(
@@ -133,16 +149,16 @@ class _AccountScreenState extends State<AccountScreen> {
                                         color: Colors.white70,
                                       ),
                                     ),
-                                    const SizedBox(height: 5),
+                                    const SizedBox(height: 6),
                                     Text(
                                       user?['name'] ?? 'No Name',
                                       style: const TextStyle(
-                                        fontSize: 24,
+                                        fontSize: 26,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
                                       ),
                                     ),
-                                    const SizedBox(height: 5),
+                                    const SizedBox(height: 6),
                                     Text(
                                       user?['phone'] ?? "No Phone number",
                                       style: const TextStyle(
@@ -158,11 +174,19 @@ class _AccountScreenState extends State<AccountScreen> {
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: Colors.white.withOpacity(0.2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
                                 child: IconButton(
                                   icon: const Icon(
                                     Icons.edit,
                                     color: Colors.white,
+                                    size: 24,
                                   ),
                                   onPressed: () async {
                                     final result = await Navigator.push(
@@ -228,11 +252,11 @@ class _AccountScreenState extends State<AccountScreen> {
                       
                       // Profile Settings Section
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         child: Card(
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: Column(
                             children: [
@@ -289,11 +313,11 @@ class _AccountScreenState extends State<AccountScreen> {
 
                       // Support & Account Management
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         child: Card(
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: Column(
                             children: [
@@ -352,12 +376,19 @@ class _AccountScreenState extends State<AccountScreen> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
+        padding: const EdgeInsets.symmetric(vertical: 24),
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.5),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Stack(
           alignment: Alignment.center,
@@ -366,15 +397,15 @@ class _AccountScreenState extends State<AccountScreen> {
               children: [
                 Icon(
                   icon,
-                  size: 32,
+                  size: 36,
                   color: iconColor,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Text(
                   title,
                   style: TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                     color: Colors.black87,
                   ),
                 ),
@@ -385,10 +416,17 @@ class _AccountScreenState extends State<AccountScreen> {
                 top: 0,
                 right: 30,
                 child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: const BoxDecoration(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
                     color: Colors.red,
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.red.withOpacity(0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Text(
                     '$notificationCount',
@@ -417,15 +455,16 @@ class _AccountScreenState extends State<AccountScreen> {
   }) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: iconColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
                 icon,
@@ -433,7 +472,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 color: iconColor,
               ),
             ),
-            const SizedBox(width: 15),
+            const SizedBox(width: 20),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -442,13 +481,13 @@ class _AccountScreenState extends State<AccountScreen> {
                     title,
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                       color: textColor,
                     ),
                   ),
                   if (showSubtitle)
                     Padding(
-                      padding: const EdgeInsets.only(top: 4),
+                      padding: const EdgeInsets.only(top: 6),
                       child: Text(
                         subtitle,
                         style: const TextStyle(
@@ -472,11 +511,12 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _divider() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Divider(
         thickness: 1,
         height: 1,
+        color: Colors.grey.withOpacity(0.2),
       ),
     );
   }
@@ -484,18 +524,18 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget _buildLogoutDialog(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(24.0),
       ),
       elevation: 0,
       backgroundColor: Colors.transparent,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
+              blurRadius: 12,
               offset: const Offset(0, 5),
             ),
           ],
@@ -504,7 +544,7 @@ class _AccountScreenState extends State<AccountScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -515,8 +555,8 @@ class _AccountScreenState extends State<AccountScreen> {
                   ],
                 ),
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
                 ),
               ),
               width: double.infinity,
@@ -525,13 +565,13 @@ class _AccountScreenState extends State<AccountScreen> {
                   Icon(
                     Icons.logout_rounded,
                     color: Colors.white,
-                    size: 50,
+                    size: 60,
                   ),
-                  SizedBox(height: 10),
+                  SizedBox(height: 16),
                   Text(
                     "Log Out?",
                     style: TextStyle(
-                      fontSize: 22,
+                      fontSize: 24,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
@@ -540,19 +580,19 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
               child: Text(
                 "Are you sure you want to logout?",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
                   color: Colors.black87,
                   fontWeight: FontWeight.w400,
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -562,10 +602,10 @@ class _AccountScreenState extends State<AccountScreen> {
                         Navigator.pop(context);
                       },
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side: BorderSide(color: kPrimaryColor),
+                          borderRadius: BorderRadius.circular(14),
+                          side: BorderSide(color: kPrimaryColor, width: 1.5),
                         ),
                       ),
                       child: const Text(
@@ -573,12 +613,12 @@ class _AccountScreenState extends State<AccountScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           color: kPrimaryColor,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 15),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
@@ -588,9 +628,9 @@ class _AccountScreenState extends State<AccountScreen> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: kPrimaryColor,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                         elevation: 0,
                       ),
@@ -599,7 +639,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.white,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
