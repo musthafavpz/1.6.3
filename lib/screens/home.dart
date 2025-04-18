@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:academy_lms_app/screens/course_detail.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 import '../constants.dart';
 import '../providers/categories.dart';
@@ -20,11 +24,15 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   var _isInit = true;
   var topCourses = [];
+  var recentCourses = [];
   var bundles = [];
   dynamic bundleStatus;
   final searchController = TextEditingController();
+  String? userName;
+  Map<String, dynamic>? user;
+  bool _isLoading = false;
   
-  // Sample data for trending instructors - replace with actual data from your API
+  // Sample data for trending instructors
   final List<Map<String, dynamic>> trendingInstructors = [
     {
       'name': 'Dr. Sarah Johnson',
@@ -55,16 +63,63 @@ class _HomeScreenState extends State<HomeScreen> {
       'courses': 10
     },
   ];
+  
+  // Banner data
+  final List<Map<String, dynamic>> bannerItems = [
+    {
+      'title': 'Special Offer!',
+      'description': 'Get 50% off on all premium courses. Limited time offer!',
+      'buttonText': 'CLAIM NOW',
+      'gradientColors': [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+    },
+    {
+      'title': 'New: Python Masterclass',
+      'description': 'Learn Python from scratch to advanced concepts',
+      'buttonText': 'ENROLL NOW',
+      'gradientColors': [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+    },
+    {
+      'title': 'Free Workshop',
+      'description': 'Join our free AI workshop this weekend',
+      'buttonText': 'REGISTER',
+      'gradientColors': [Color(0xFFFF9800), Color(0xFFE65100)],
+    },
+  ];
 
   @override
   void initState() {
     super.initState();
+    getUserData();
   }
 
   @override
   void dispose() {
     searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> getUserData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    var userDetails = sharedPreferences.getString("user");
+
+    if (userDetails != null) {
+      try {
+        setState(() {
+          user = jsonDecode(userDetails);
+          userName = user?['name'];
+        });
+      } catch (e) {
+        print('Error decoding user details: $e');
+      }
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   @override
@@ -75,6 +130,9 @@ class _HomeScreenState extends State<HomeScreen> {
       Provider.of<Courses>(context).fetchTopCourses().then((_) {
         setState(() {
           topCourses = Provider.of<Courses>(context, listen: false).topItems;
+          // For demo purposes, use same data but filter differently
+          // In production, fetch a different list
+          recentCourses = List.from(topCourses.reversed);
         });
       });
     }
@@ -85,10 +143,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> refreshList() async {
     try {
       setState(() {});
+      await getUserData();
       await Provider.of<Courses>(context, listen: false).fetchTopCourses();
 
       setState(() {
         topCourses = Provider.of<Courses>(context, listen: false).topItems;
+        recentCourses = List.from(topCourses.reversed);
       });
     } catch (error) {
       const errorMsg = 'Could not refresh!';
@@ -153,9 +213,9 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Welcome back!',
-            style: TextStyle(
+          Text(
+            userName != null ? 'Welcome back, ${userName?.split(' ')[0]}!' : 'Welcome back!',
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w600,
               color: Color(0xFF333333),
@@ -174,68 +234,88 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildAnnouncementBanner() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF6366F1).withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
+  Widget _buildSlidingBanners() {
+    return CarouselSlider.builder(
+      itemCount: bannerItems.length,
+      options: CarouselOptions(
+        height: 100,
+        aspectRatio: 16/5,
+        viewportFraction: 0.9,
+        initialPage: 0,
+        enableInfiniteScroll: true,
+        reverse: false,
+        autoPlay: true,
+        autoPlayInterval: const Duration(seconds: 5),
+        autoPlayAnimationDuration: const Duration(milliseconds: 800),
+        autoPlayCurve: Curves.fastOutSlowIn,
+        enlargeCenterPage: true,
+        scrollDirection: Axis.horizontal,
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  'Special Offer!',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: 5),
-                Text(
-                  'Get 50% off on all premium courses. Limited time offer!',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
+      itemBuilder: (context, index, realIndex) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 5),
+          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: bannerItems[index]['gradientColors'],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Text(
-              'CLAIM NOW',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF6366F1),
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: bannerItems[index]['gradientColors'][0].withOpacity(0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      bannerItems[index]['title'],
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      bannerItems[index]['description'],
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  bannerItems[index]['buttonText'],
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: bannerItems[index]['gradientColors'][0],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -420,7 +500,7 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         borderRadius: BorderRadius.circular(15),
         child: Container(
-          width: MediaQuery.of(context).size.width * .6,
+          width: MediaQuery.of(context).size.width * .65,
           decoration: BoxDecoration(
             color: kWhiteColor,
             borderRadius: BorderRadius.circular(15),
@@ -586,7 +666,6 @@ class _HomeScreenState extends State<HomeScreen> {
       child: InkWell(
         onTap: () {
           // Navigate to instructor profile
-          // You'll need to implement this screen
         },
         borderRadius: BorderRadius.circular(15),
         child: Container(
@@ -704,97 +783,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCategoryItem(dynamic category) {
-    return InkWell(
-      onTap: () {
-        Navigator.of(context).pushNamed(
-          CategoryDetailsScreen.routeName,
-          arguments: {
-            'category_id': category.id,
-            'title': category.title,
-          },
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: kWhiteColor,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Row(
-          children: <Widget>[
-            Container(
-              height: 70,
-              width: 70,
-              margin: const EdgeInsets.all(10),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: FadeInImage.assetNetwork(
-                  placeholder: 'assets/images/loading_animated.gif',
-                  image: category.thumbnail.toString(),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      category.title.toString(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF333333),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${category.numberOfSubCategories} sub-categories',
-                      style: const TextStyle(
-                        color: kGreyLightColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.all(10),
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.arrow_forward_rounded,
-                color: kWhiteColor,
-                size: 16,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height -
@@ -812,7 +800,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: FutureBuilder(
             future: Provider.of<Categories>(context, listen: false).fetchCategories(),
             builder: (ctx, dataSnapshot) {
-              if (dataSnapshot.connectionState == ConnectionState.waiting) {
+              if (dataSnapshot.connectionState == ConnectionState.waiting || _isLoading) {
                 return SizedBox(
                   height: height,
                   child: const Center(
@@ -831,17 +819,63 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 10),
-                      // Welcome Message
+                      // Welcome Message with User Name
                       _buildWelcomeSection(),
                       
                       // Search Bar
                       _buildSearchBar(),
                       
-                      // Announcement Banner
-                      _buildAnnouncementBanner(),
+                      // Sliding Announcement Banners
+                      _buildSlidingBanners(),
+                      const SizedBox(height: 10),
                       
-                      // Top Courses Section
-                      _buildSectionTitle('Top Courses', () {
+                      // Trending Courses Section (First as requested)
+                      _buildSectionTitle('Trending Courses', () {
+                        Navigator.of(context).pushNamed(
+                          CoursesScreen.routeName,
+                          arguments: {
+                            'category_id': null,
+                            'seacrh_query': null,
+                            'type': CoursesPageData.all,
+                          },
+                        );
+                      }),
+                      
+                      Container(
+                        height: 255,
+                        margin: const EdgeInsets.only(bottom: 15),
+                        child: topCourses.isEmpty
+                            ? const Center(child: Text('No trending courses available'))
+                            : ListView.builder(
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                scrollDirection: Axis.horizontal,
+                                itemCount: topCourses.length,
+                                itemBuilder: (ctx, index) {
+                                  return _buildTrendingCourseCard(topCourses[index]);
+                                },
+                              ),
+                      ),
+                      
+                      // Trending Instructors Section (Second as requested)
+                      _buildSectionTitle('Trending Instructors', () {
+                        // Navigate to all instructors page
+                      }),
+                      
+                      Container(
+                        height: 165,
+                        margin: const EdgeInsets.only(bottom: 15),
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          scrollDirection: Axis.horizontal,
+                          itemCount: trendingInstructors.length,
+                          itemBuilder: (ctx, index) {
+                            return _buildInstructorCard(trendingInstructors[index]);
+                          },
+                        ),
+                      ),
+                      
+                      // Featured Courses Section
+                      _buildSectionTitle('Featured Courses', () {
                         Navigator.of(context).pushNamed(
                           CoursesScreen.routeName,
                           arguments: {
@@ -867,8 +901,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                       ),
                       
-                      // Trending Courses Section
-                      _buildSectionTitle('Trending Courses', () {
+                      // Recently Added Courses Section
+                      _buildSectionTitle('Recently Added', () {
                         Navigator.of(context).pushNamed(
                           CoursesScreen.routeName,
                           arguments: {
@@ -880,72 +914,22 @@ class _HomeScreenState extends State<HomeScreen> {
                       }),
                       
                       Container(
-                        height: 255,
+                        height: 235,
                         margin: const EdgeInsets.only(bottom: 15),
-                        child: topCourses.isEmpty
-                            ? const Center(child: Text('No trending courses available'))
+                        child: recentCourses.isEmpty
+                            ? const Center(child: Text('No recent courses available'))
                             : ListView.builder(
                                 padding: const EdgeInsets.symmetric(horizontal: 20),
                                 scrollDirection: Axis.horizontal,
-                                // Using the same data source for demo purposes
-                                // In production, you'd want a separate API call for trending courses
-                                itemCount: topCourses.length,
+                                itemCount: recentCourses.length,
                                 itemBuilder: (ctx, index) {
-                                  return _buildTrendingCourseCard(topCourses[index]);
+                                  return _buildCourseCard(recentCourses[index]);
                                 },
                               ),
                       ),
                       
-                      // Trending Instructors Section
-                      _buildSectionTitle('Trending Instructors', () {
-                        // Navigate to all instructors page
-                        // You'll need to implement this screen
-                      }),
-                      
-                      Container(
-                        height: 165,
-                        margin: const EdgeInsets.only(bottom: 15),
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          scrollDirection: Axis.horizontal,
-                          itemCount: trendingInstructors.length,
-                          itemBuilder: (ctx, index) {
-                            return _buildInstructorCard(trendingInstructors[index]);
-                          },
-                        ),
-                      ),
-                      
-                      // Course Categories Section
-                      _buildSectionTitle('Course Categories', () {
-                        Navigator.of(context).pushNamed(
-                          CoursesScreen.routeName,
-                          arguments: {
-                            'category_id': null,
-                            'seacrh_query': null,
-                            'type': CoursesPageData.all,
-                          },
-                        );
-                      }),
-                      
-                      Consumer<Categories>(
-                        builder: (context, categoriesData, child) => Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: categoriesData.items.isEmpty
-                              ? const Center(child: Text('No categories available'))
-                              : ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: categoriesData.items.length,
-                                  padding: EdgeInsets.zero,
-                                  itemBuilder: (ctx, index) {
-                                    return _buildCategoryItem(categoriesData.items[index]);
-                                  },
-                                ),
-                        ),
-                      ),
-                      
-                      // Add some bottom padding
-                      const SizedBox(height: 20),
+                      // Add proper bottom padding for menu tabs
+                      const SizedBox(height: 80),
                     ],
                   );
                 }
