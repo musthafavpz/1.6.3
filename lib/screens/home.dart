@@ -5,8 +5,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// Import carousel_slider with an alias to prevent conflict
-import 'package:carousel_slider/carousel_slider.dart' as carousel;
+// Import all carousel_slider components with an alias to prevent conflicts
+import 'package:carousel_slider/carousel_slider.dart' as carousel_slider;
+import 'package:carousel_slider/carousel_controller.dart' as carousel_controller;
 
 import '../constants.dart';
 import '../providers/categories.dart';
@@ -236,10 +237,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSlidingBanners() {
-    // Using the carousel with the alias to avoid conflict
-    return carousel.CarouselSlider.builder(
+    // Using the carousel_slider with the alias to avoid conflict
+    return carousel_slider.CarouselSlider.builder(
       itemCount: bannerItems.length,
-      options: carousel.CarouselOptions(
+      options: carousel_slider.CarouselOptions(
         height: 100,
         aspectRatio: 16/5,
         viewportFraction: 0.9,
