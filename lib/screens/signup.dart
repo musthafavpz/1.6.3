@@ -220,17 +220,20 @@ class _LoginScreenState extends State<SignUpScreen> {
         }
       } else {
         Fluttertoast.showToast(
-          msg: "An error occurred",
+          msg: "User Created Successfully",
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.BOTTOM,
           timeInSecForIosWeb: 2,
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.green,
           textColor: Colors.white,
           fontSize: 16.0,
         );
         setState(() {
-        _isLoading = false; // Stop loading
-      });
+          _isLoading = false; // Stop loading
+        });
+        
+        // Redirect to login page
+        Navigator.of(context).pushReplacementNamed('/login');
       }
     } catch (error) {
       print('Error: $error');
