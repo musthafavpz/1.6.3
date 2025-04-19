@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:math' show pi;  // Add this import for pi constant
 import 'package:confetti/confetti.dart';
 import '../constants.dart';
 import 'my_courses.dart';
