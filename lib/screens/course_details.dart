@@ -1,4 +1,4 @@
-/ ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously
 import 'dart:convert';
 
 import 'package:academy_lms_app/models/course_detail.dart';
