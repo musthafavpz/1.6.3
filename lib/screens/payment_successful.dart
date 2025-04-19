@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'dart:math' show pi;  // Add this import for pi constant
+import 'dart:math' show pi;
 import 'package:confetti/confetti.dart';
 import '../constants.dart';
 import 'my_courses.dart';
@@ -21,8 +21,8 @@ class _PaymentSuccessfulScreenState extends State<PaymentSuccessfulScreen> {
   void initState() {
     super.initState();
     
-    // Initialize confetti controller
-    _confettiController = ConfettiController(duration: const Duration(seconds: 5));
+    // Initialize confetti controller with shorter duration
+    _confettiController = ConfettiController(duration: const Duration(seconds: 2));
     _confettiController.play();
     
     // Set up timer for auto-redirect
@@ -37,7 +37,7 @@ class _PaymentSuccessfulScreenState extends State<PaymentSuccessfulScreen> {
       });
     });
     
-    // Ensure we navigate after 6 seconds even if timer fails
+    // Ensure we navigate after 6 seconds
     Future.delayed(const Duration(seconds: 6), _navigateToMyCourses);
   }
 
@@ -68,52 +68,33 @@ class _PaymentSuccessfulScreenState extends State<PaymentSuccessfulScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Success icon with animation
-                TweenAnimationBuilder<double>(
-                  tween: Tween<double>(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 800),
-                  builder: (context, value, child) {
-                    return Transform.scale(
-                      scale: value,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade50,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.check_circle,
-                          color: Colors.green,
-                          size: 80,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 40),
-                
-                // Success message
-                TweenAnimationBuilder<double>(
-                  tween: Tween<double>(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 800),
-                  curve: Curves.easeOut,
-                  builder: (context, value, child) {
-                    return Opacity(
-                      opacity: value,
-                      child: child,
-                    );
-                  },
-                  child: const Text(
-                    'Payment Successful!',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                    ),
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 80,
                   ),
                 ),
                 
-                const SizedBox(height: 20),
+                const SizedBox(height: 30),
+                
+                // Success message
+                const Text(
+                  'Payment Successful!',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+                
+                const SizedBox(height: 15),
                 
                 // Thank you message
                 Text(
@@ -124,7 +105,7 @@ class _PaymentSuccessfulScreenState extends State<PaymentSuccessfulScreen> {
                   ),
                 ),
                 
-                const SizedBox(height: 40),
+                const SizedBox(height: 30),
                 
                 // Redirect message
                 Text(
@@ -135,7 +116,7 @@ class _PaymentSuccessfulScreenState extends State<PaymentSuccessfulScreen> {
                   ),
                 ),
                 
-                const SizedBox(height: 30),
+                const SizedBox(height: 25),
                 
                 // Manual redirect button
                 ElevatedButton(
@@ -159,63 +140,20 @@ class _PaymentSuccessfulScreenState extends State<PaymentSuccessfulScreen> {
             ),
           ),
           
-          // Top confetti
+          // Single confetti source from top
           Align(
             alignment: Alignment.topCenter,
             child: ConfettiWidget(
               confettiController: _confettiController,
               blastDirection: pi / 2,
-              maxBlastForce: 5,
-              minBlastForce: 2,
-              emissionFrequency: 0.05,
-              numberOfParticles: 20,
-              gravity: 0.1,
-              colors: const [
-                Colors.green,
-                Colors.blue,
-                Colors.pink,
-                Colors.orange,
-                Colors.purple,
-              ],
-            ),
-          ),
-          
-          // Left side confetti
-          Align(
-            alignment: Alignment.centerLeft,
-            child: ConfettiWidget(
-              confettiController: _confettiController,
-              blastDirection: 0,
-              emissionFrequency: 0.05,
-              numberOfParticles: 10,
               maxBlastForce: 4,
               minBlastForce: 2,
-              gravity: 0.1,
-              colors: const [
-                Colors.green,
-                Colors.blue,
-                Colors.pink,
-                Colors.orange,
-                Colors.purple,
-              ],
-            ),
-          ),
-          
-          // Right side confetti
-          Align(
-            alignment: Alignment.centerRight,
-            child: ConfettiWidget(
-              confettiController: _confettiController,
-              blastDirection: pi,
               emissionFrequency: 0.05,
-              numberOfParticles: 10,
-              maxBlastForce: 4,
-              minBlastForce: 2,
-              gravity: 0.1,
+              numberOfParticles: 15,
+              gravity: 0.2,
               colors: const [
                 Colors.green,
                 Colors.blue,
-                Colors.pink,
                 Colors.orange,
                 Colors.purple,
               ],
