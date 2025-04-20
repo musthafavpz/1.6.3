@@ -9,12 +9,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants.dart';
 import '../providers/categories.dart';
 import '../providers/courses.dart';
-import '../providers/my_courses.dart';
 import '../widgets/common_functions.dart';
-import '../widgets/my_course_grid.dart';
 import 'category_details.dart';
 import 'courses_screen.dart';
-import 'my_courses.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,7 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
   var topCourses = [];
   var recentCourses = [];
   var bundles = [];
-  var myCourses = [];
   dynamic bundleStatus;
   final searchController = TextEditingController();
   String? userName;
@@ -124,13 +120,6 @@ class _HomeScreenState extends State<HomeScreen> {
           recentCourses = List.from(topCourses.reversed);
         });
       });
-
-      // Fetch my courses for Continue Learning section
-      Provider.of<MyCourses>(context, listen: false).fetchMyCourses().then((_) {
-        setState(() {
-          myCourses = Provider.of<MyCourses>(context, listen: false).items;
-        });
-      });
     }
     _isInit = false;
     super.didChangeDependencies();
@@ -141,12 +130,10 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {});
       await getUserData();
       await Provider.of<Courses>(context, listen: false).fetchTopCourses();
-      await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
 
       setState(() {
         topCourses = Provider.of<Courses>(context, listen: false).topItems;
         recentCourses = List.from(topCourses.reversed);
-        myCourses = Provider.of<MyCourses>(context, listen: false).items;
       });
     } catch (error) {
       const errorMsg = 'Could not refresh!';
@@ -467,134 +454,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildContinueLearningCard(dynamic myCourse) {
-    // Calculate progress percentage (assuming myCourse has properties like totalLessons and completedLessons)
-    double progressPercentage = 0.0;
-    try {
-      if (myCourse.total_number_of_lessons > 0) {
-        progressPercentage = myCourse.total_number_of_completed_lessons / myCourse.total_number_of_lessons;
-      }
-    } catch (e) {
-      // Use a default value if properties are missing
-      progressPercentage = 0.3; // 30% progress as default
-    }
-    
-    // Ensure progress is between 0 and 1
-    progressPercentage = progressPercentage.clamp(0.0, 1.0);
-
-    return Padding(
-      padding: const EdgeInsets.only(right: 15.0),
-      child: InkWell(
-        onTap: () {
-          Navigator.of(context).pushNamed(
-            CourseDetailScreen.routeName,
-            arguments: myCourse.id,
-          );
-        },
-        borderRadius: BorderRadius.circular(15),
-        child: Container(
-          width: MediaQuery.of(context).size.width * .7,
-          decoration: BoxDecoration(
-            color: kWhiteColor,
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(15),
-                      topRight: Radius.circular(15),
-                    ),
-                    child: FadeInImage.assetNetwork(
-                      placeholder: 'assets/images/loading_animated.gif',
-                      image: myCourse.thumbnail.toString(),
-                      height: 120,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: LinearProgressIndicator(
-                      value: progressPercentage,
-                      backgroundColor: Colors.grey.withOpacity(0.3),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
-                      minHeight: 5,
-                    ),
-                  ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      height: 40,
-                      child: Text(
-                        myCourse.title.toString(),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF333333),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '${(progressPercentage * 100).toInt()}% Completed',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: kGreyLightColor,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.play_circle_fill,
-                              color: Color(0xFF6366F1),
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            const Text(
-                              'Continue',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF6366F1),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildTrendingCourseCard(dynamic course) {
     return Padding(
       padding: const EdgeInsets.only(right: 15.0),
@@ -890,101 +749,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildContinueLearningSection() {
-    return Consumer<MyCourses>(
-      builder: (context, myCourseData, _) {
-        if (myCourseData.items.isEmpty) {
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withOpacity(0.05),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.school_outlined,
-                  size: 40,
-                  color: const Color(0xFF6366F1).withOpacity(0.7),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'No enrolled courses yet',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                const Text(
-                  'Explore and enroll in courses to start learning',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: kGreyLightColor,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6366F1),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).pushNamed(
-                      CoursesScreen.routeName,
-                      arguments: {
-                        'category_id': null,
-                        'seacrh_query': null,
-                        'type': CoursesPageData.all,
-                      },
-                    );
-                  },
-                  child: const Text(
-                    'Browse Courses',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return Column(
-          children: [
-            _buildSectionTitle('Continue Learning', () {
-              Navigator.of(context).pushNamed(
-                MyCoursesScreen.routeName,
-              );
-            }),
-            Container(
-              height: 210,
-              margin: const EdgeInsets.only(bottom: 15),
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                scrollDirection: Axis.horizontal,
-                itemCount: myCourseData.items.length,
-                itemBuilder: (ctx, index) {
-                  return _buildContinueLearningCard(myCourseData.items[index]);
-                },
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
- @override
+  @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height -
         MediaQuery.of(context).padding.top -
