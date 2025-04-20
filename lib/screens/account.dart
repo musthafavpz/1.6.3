@@ -64,20 +64,18 @@ class _AccountScreenState extends State<AccountScreen> {
       _dataUpdated = false;
     }
 
-   return Scaffold(
-  backgroundColor: Colors.grey[50],
-  body: _isLoading
-      ? const Center(
-          child: CircularProgressIndicator(color: kDefaultColor),
-        )
-      : user == null
-          ? const Center(child: Text('No user data available'))
-          : SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: EdgeInsets.only(bottom: 72), // Add bottom padding for tab bar
-                child: Column(
-                  children: [
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: kDefaultColor),
+            )
+          : user == null
+              ? const Center(child: Text('No user data available'))
+              : SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    children: [
                       // Profile header with gradient background
                       Container(
                         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -535,7 +533,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
