@@ -14,7 +14,7 @@ import '../widgets/common_functions.dart';
 import '../widgets/my_course_grid.dart';
 import 'category_details.dart';
 import 'courses_screen.dart';
-import 'my_courses_screen.dart';
+import 'my_courses.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
