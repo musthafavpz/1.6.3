@@ -340,8 +340,8 @@ class _CartScreenState extends State<CartScreen> {
               ),
             ),
             onPressed: () {
-              // Navigate to courses page
-              Navigator.of(context).pop();
+    // Navigate to home screen
+             Navigator.of(context).pushReplacementNamed('/home');
             },
             child: const Text(
               'Browse Courses',
