@@ -470,7 +470,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildContinueLearningSection() {
-    // Don't show section if user is not logged in
+    // If user is not logged in, don't show this section
     if (user == null) {
       return const SizedBox.shrink();
     }
@@ -502,7 +502,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 } else {
                   return Consumer<MyCourses>(
                     builder: (ctx, myCourseData, _) {
-                      // Don't show section if no courses
+                      // If no courses, don't show this section
                       if (myCourseData.items.isEmpty) {
                         return const SizedBox.shrink();
                       }
@@ -513,14 +513,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         itemCount: myCourseData.items.length,
                         itemBuilder: (ctx, index) {
                           final course = myCourseData.items[index];
-                          // Calculate total lessons and current lesson dynamically
-                          final totalLessons = course.total_lessons ?? 12;  // Default to 12 if not available
-                          final completedLessons = course.completed_lessons ?? 3;  // Default to 3 if not available
-                          // Calculate progress percentage
-                          final progressPercentage = totalLessons > 0 
-                              ? (completedLessons / totalLessons) 
-                              : 0.0;
-                              
                           return Padding(
                             padding: const EdgeInsets.only(right: 15),
                             child: InkWell(
@@ -545,7 +537,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ],
                                 ),
                                 child: Padding(
-                                  padding: const EdgeInsets.all(12),
+                                  padding: const EdgeInsets.all(16),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -555,30 +547,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
-                                          fontSize: 14,
+                                          fontSize: 16,
                                           fontWeight: FontWeight.w500,
                                           color: Color(0xFF333333),
                                         ),
                                       ),
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.play_lesson,
-                                            color: kGreyLightColor,
-                                            size: 12,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'Lesson $completedLessons/$totalLessons',
-                                            style: const TextStyle(
-                                              fontSize: 11,
-                                              color: kGreyLightColor,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 12),
+                                      const SizedBox(height: 16),
                                       Container(
                                         height: 6,
                                         decoration: BoxDecoration(
@@ -588,7 +562,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         child: Row(
                                           children: [
                                             Container(
-                                              width: MediaQuery.of(context).size.width * 0.7 * progressPercentage * 0.9, // account for padding
+                                              width: 100,
                                               decoration: BoxDecoration(
                                                 color: kDefaultColor,
                                                 borderRadius: BorderRadius.circular(10),
@@ -597,7 +571,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ],
                                         ),
                                       ),
-                                      const SizedBox(height: 12),
+                                      const SizedBox(height: 16),
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                         decoration: BoxDecoration(
@@ -689,10 +663,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       _buildSingleBanner(),
                       const SizedBox(height: 10),
                       
-                      // Continue Learning Section (only if user is logged in)
-                      if (user != null) _buildContinueLearningSection(),
+                      // Continue Learning Section - Only show if user is logged in and has courses
+                      _buildContinueLearningSection(),
                       
-                      // Popular Courses Section (Renamed from Trending Courses)
+                      // Popular Courses Section
                       _buildSectionTitle('Popular Courses', () {
                         Navigator.of(context).pushNamed(
                           CoursesScreen.routeName,
