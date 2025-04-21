@@ -77,13 +77,13 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  width: 150,
-                  height: 22,
+                  width: 130,
+                  height: 18,
                   color: Colors.white,
                 ),
                 Container(
-                  width: 80,
-                  height: 22,
+                  width: 70,
+                  height: 18,
                   color: Colors.white,
                 ),
               ],
@@ -100,7 +100,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
                     width: MediaQuery.of(context).size.width * 0.4,
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
@@ -111,13 +111,13 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  width: 120,
-                  height: 22,
+                  width: 100,
+                  height: 18,
                   color: Colors.white,
                 ),
                 Container(
-                  width: 100,
-                  height: 22,
+                  width: 80,
+                  height: 18,
                   color: Colors.white,
                 ),
               ],
@@ -136,7 +136,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
               itemBuilder: (_, __) => Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
@@ -151,12 +151,12 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 60, color: Colors.red[300]),
+          Icon(Icons.error_outline, size: 50, color: Colors.red[300]),
           const SizedBox(height: 16),
           const Text(
             'Oops! Something went wrong',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -165,8 +165,8 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
             onPressed: () {
               setState(() {});
             },
-            icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            icon: const Icon(Icons.refresh, size: 14),
+            label: const Text('Retry', style: TextStyle(fontSize: 14)),
             style: TextButton.styleFrom(
               foregroundColor: kDefaultColor,
             ),
@@ -235,29 +235,29 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
         Text(
           title,
           style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
+            fontSize: 16,  // Reduced from 20
+            fontWeight: FontWeight.w500,  // Reduced from 600
           ),
         ),
         TextButton(
           onPressed: onAction,
           style: TextButton.styleFrom(
             foregroundColor: kSignUpTextColor,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
           ),
           child: Row(
             children: [
               Text(
                 actionText,
                 style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 13,  // Reduced from 16
+                  fontWeight: FontWeight.w400,  // Reduced from 500
                 ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 2),
               const Icon(
                 Icons.arrow_forward_ios_rounded,
-                size: 14,
+                size: 12,  // Reduced from 14
               ),
             ],
           ),
@@ -268,7 +268,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
   
   Widget _buildSubCategoriesList(dynamic loadedCategoryDetail) {
     return SizedBox(
-      height: 110,
+      height: 100,  // Reduced from 110
       child: ListView.builder(
         physics: const BouncingScrollPhysics(),
         scrollDirection: Axis.horizontal,
@@ -316,31 +316,31 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
         width: MediaQuery.of(context).size.width * 0.45,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),  // Reduced from 16
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
+              color: Colors.black.withOpacity(0.04),  // Reduced opacity
+              blurRadius: 10,  // Reduced from 15
+              offset: const Offset(0, 4),  // Reduced from 5
             ),
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),  // Reduced from 12
           child: Row(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),  // Reduced from 12
                 child: CachedNetworkImage(
                   imageUrl: loadedCategoryDetail.mSubCategory![index].thumbnail.toString(),
                   placeholder: (context, url) => Container(
-                    height: 70,
-                    width: 70,
+                    height: 60,  // Reduced from 70
+                    width: 60,   // Reduced from 70
                     color: Colors.grey[200],
                     child: const Center(
                       child: SizedBox(
-                        width: 20,
-                        height: 20,
+                        width: 16,  // Reduced from 20
+                        height: 16,  // Reduced from 20
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: kDefaultColor,
@@ -349,17 +349,17 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
                     ),
                   ),
                   errorWidget: (context, url, error) => Container(
-                    height: 70,
-                    width: 70,
+                    height: 60,  // Reduced from 70
+                    width: 60,   // Reduced from 70
                     color: Colors.grey[200],
-                    child: const Icon(Icons.error, color: Colors.grey),
+                    child: const Icon(Icons.error, color: Colors.grey, size: 18),  // Reduced from default
                   ),
-                  height: 70,
-                  width: 70,
+                  height: 60,  // Reduced from 70
+                  width: 60,   // Reduced from 70
                   fit: BoxFit.cover,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),  // Reduced from 12
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,23 +370,24 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 12,  // Reduced from 14
+                        fontWeight: FontWeight.w500,  // Reduced from 600
+                        height: 1.2,  // Added for better line spacing
                       ),
                     ),
                     const SizedBox(height: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),  // Reduced from 8,4
                       decoration: BoxDecoration(
-                        color: kDefaultColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        color: kDefaultColor.withOpacity(0.08),  // Reduced opacity
+                        borderRadius: BorderRadius.circular(8),  // Reduced from 12
                       ),
                       child: Text(
                         "${loadedCategoryDetail.mSubCategory![index].numberOfCourses.toString()} Courses",
                         style: TextStyle(
                           color: kDefaultColor,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 9,  // Reduced from 10
+                          fontWeight: FontWeight.w500,  // Reduced from 600
                         ),
                       ),
                     ),
@@ -406,8 +407,8 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
       itemCount: loadedCategoryDetail.mCourse!.length,
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
+      mainAxisSpacing: 14,  // Reduced from 16
+      crossAxisSpacing: 14,  // Reduced from 16
       itemBuilder: (ctx, index) {
         return FadeTransition(
           opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -444,12 +445,12 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),  // Reduced from 16
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
+              color: Colors.black.withOpacity(0.04),  // Reduced opacity
+              blurRadius: 10,  // Reduced from 15
+              offset: const Offset(0, 4),  // Reduced from 5
             ),
           ],
         ),
@@ -458,8 +459,8 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
           children: [
             ClipRRect(
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
+                topLeft: Radius.circular(12),  // Reduced from 16
+                topRight: Radius.circular(12),  // Reduced from 16
               ),
               child: CachedNetworkImage(
                 imageUrl: loadedCategoryDetail.mCourse![index].thumbnail.toString(),
@@ -469,8 +470,8 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
                     color: Colors.grey[200],
                     child: const Center(
                       child: SizedBox(
-                        width: 24,
-                        height: 24,
+                        width: 20,  // Reduced from 24
+                        height: 20,  // Reduced from 24
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: kDefaultColor,
@@ -483,53 +484,53 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
                   aspectRatio: 16/9,
                   child: Container(
                     color: Colors.grey[200],
-                    child: const Icon(Icons.error, color: Colors.grey),
+                    child: const Icon(Icons.error, color: Colors.grey, size: 18),  // Reduced from default
                   ),
                 ),
-                height: 120,
+                height: 100,  // Reduced from 120
                 width: double.infinity,
                 fit: BoxFit.cover,
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),  // Reduced from 12
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    height: 42,
+                    height: 36,  // Reduced from 42
                     child: Text(
                       loadedCategoryDetail.mCourse![index].title.toString(),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        height: 1.3,
+                        fontSize: 13,  // Reduced from 15
+                        fontWeight: FontWeight.w500,  // Reduced from 600
+                        height: 1.2,  // Adjusted from 1.3
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),  // Reduced from 10
                   Row(
                     children: [
                       const Icon(
                         Icons.star,
                         color: kStarColor,
-                        size: 16,
+                        size: 14,  // Reduced from 16
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 3),  // Reduced from 4
                       Text(
                         loadedCategoryDetail.mCourse![index].average_rating.toString(),
                         style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 12,  // Reduced from 14
+                          fontWeight: FontWeight.w500,  // Reduced from 600
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),  // Reduced from 6
                       Text(
                         '(${loadedCategoryDetail.mCourse![index].total_reviews})',
                         style: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,  // Reduced from 12
                           fontWeight: FontWeight.w400,
                           color: kGreyLightColor,
                         ),
