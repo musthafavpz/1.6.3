@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:academy_lms_app/screens/course_detail.dart';
+import 'package:academy_lms_app/screens/my_course_detail.dart'; // Add this import
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -417,10 +418,16 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.only(right: 15.0),
       child: InkWell(
         onTap: () {
-          // Navigate to course detail page
-          Navigator.of(context).pushNamed(
-            CourseDetailScreen.routeName,
-            arguments: myCourse.id,
+          // Updated navigation to use MyCourseDetailScreen instead of CourseDetailScreen
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) {
+                return MyCourseDetailScreen(
+                  courseId: myCourse.id,
+                  enableDripContent: myCourse.enableDripContent.toString(),
+                );
+              },
+            ),
           );
         },
         borderRadius: BorderRadius.circular(15),
