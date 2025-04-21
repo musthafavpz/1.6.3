@@ -33,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   
   // Single banner data
   final Map<String, dynamic> bannerData = {
-    'title': 'Launching Offer!',
+    'title': 'Special Offer!',
     'description': 'Get 50% off on all premium courses. Limited time offer!',
     'buttonText': 'CLAIM NOW',
     'gradientColors': [Color(0xFF6366F1), Color(0xFF8B5CF6)],
@@ -50,23 +50,30 @@ class _HomeScreenState extends State<HomeScreen> {
       _isLoading = true;
     });
 
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    var userDetails = sharedPreferences.getString("user");
+    try {
+      SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+      var userDetails = sharedPreferences.getString("user");
 
-    if (userDetails != null) {
-      try {
-        setState(() {
-          user = jsonDecode(userDetails);
-          userName = user?['name'];
-        });
-      } catch (e) {
-        print('Error decoding user details: $e');
+      if (userDetails != null && userDetails.isNotEmpty) {
+        try {
+          final decoded = jsonDecode(userDetails);
+          if (decoded != null && decoded is Map<String, dynamic>) {
+            setState(() {
+              user = decoded;
+              userName = user?['name'];
+            });
+          }
+        } catch (e) {
+          print('Error decoding user details: $e');
+        }
       }
+    } catch (e) {
+      print('Error getting user data: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
-
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   @override
@@ -79,6 +86,8 @@ class _HomeScreenState extends State<HomeScreen> {
           topCourses = Provider.of<Courses>(context, listen: false).topItems;
           recentCourses = List.from(topCourses.reversed);
         });
+      }).catchError((error) {
+        print('Error fetching top courses: $error');
       });
     }
     _isInit = false;
@@ -87,21 +96,35 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> refreshList() async {
     try {
-      setState(() {});
-      await getUserData();
-      await Provider.of<Courses>(context, listen: false).fetchTopCourses();
-      await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
-
       setState(() {
-        topCourses = Provider.of<Courses>(context, listen: false).topItems;
-        recentCourses = List.from(topCourses.reversed);
+        _isLoading = true;
       });
+      
+      await getUserData();
+      
+      try {
+        await Provider.of<Courses>(context, listen: false).fetchTopCourses();
+        setState(() {
+          topCourses = Provider.of<Courses>(context, listen: false).topItems;
+          recentCourses = List.from(topCourses.reversed);
+        });
+      } catch (e) {
+        print('Error refreshing courses: $e');
+      }
+      
+      try {
+        await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
+      } catch (e) {
+        print('Error refreshing my courses: $e');
+      }
     } catch (error) {
       const errorMsg = 'Could not refresh!';
       CommonFunctions.showErrorDialog(errorMsg, context);
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
-
-    return;
   }
 
   Widget _buildWelcomeSection() {
@@ -282,10 +305,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: FadeInImage.assetNetwork(
                       placeholder: 'assets/images/loading_animated.gif',
-                      image: course.thumbnail.toString(),
+                      image: course.thumbnail?.toString() ?? '',
                       height: 120,
                       width: double.infinity,
                       fit: BoxFit.cover,
+                      imageErrorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 120,
+                          width: double.infinity,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                        );
+                      },
                     ),
                   ),
                   Positioned(
@@ -306,7 +337,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(width: 3),
                           Text(
-                            course.average_rating.toString(),
+                            course.average_rating?.toString() ?? '0.0',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 11,
@@ -327,7 +358,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     SizedBox(
                       height: 40,
                       child: Text(
-                        course.title.toString(),
+                        course.title?.toString() ?? 'Untitled Course',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -347,7 +378,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${course.total_reviews} Enrolled',
+                          '${course.total_reviews ?? 0} Enrolled',
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
@@ -367,6 +398,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildContinueLearningCard(dynamic course) {
+    final double progressValue = course.progress is double ? course.progress : 0.0;
+    
     return Padding(
       padding: const EdgeInsets.only(right: 15.0),
       child: InkWell(
@@ -399,10 +432,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: FadeInImage.assetNetwork(
                   placeholder: 'assets/images/loading_animated.gif',
-                  image: course.thumbnail.toString(),
+                  image: course.thumbnail?.toString() ?? '',
                   width: 100,
                   height: 100,
                   fit: BoxFit.cover,
+                  imageErrorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 100,
+                      height: 100,
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                    );
+                  },
                 ),
               ),
               Expanded(
@@ -412,7 +453,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        course.title.toString(),
+                        course.title?.toString() ?? 'Untitled Course',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -431,7 +472,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${course.total_reviews} Enrolled',
+                            '${course.total_reviews ?? 0} Enrolled',
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w400,
@@ -442,7 +483,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 10),
                       LinearProgressIndicator(
-                        value: course.progress ?? 0.3, // Default to 30% if progress not available
+                        value: progressValue,
                         backgroundColor: kGreyLightColor.withOpacity(0.2),
                         color: kDefaultColor,
                         minHeight: 6,
@@ -452,7 +493,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            '${((course.progress ?? 0.3) * 100).toInt()}% Completed',
+                            '${(progressValue * 100).toInt()}% Completed',
                             style: const TextStyle(
                               fontSize: 11,
                               color: kGreyLightColor,
@@ -495,7 +536,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildContinueLearningSection() {
     return Consumer<MyCourses>(
       builder: (context, myCourses, child) {
-        if (myCourses.items.isEmpty) {
+        // Add safe check for myCourses.items
+        final courseItems = myCourses.items ?? [];
+        
+        if (courseItems.isEmpty) {
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             padding: const EdgeInsets.all(15),
@@ -547,13 +591,13 @@ class _HomeScreenState extends State<HomeScreen> {
               // Navigate to my courses
             }),
             SizedBox(
-              height: myCourses.items.isEmpty ? 0 : 120,
+              height: courseItems.isEmpty ? 0 : 120,
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 scrollDirection: Axis.horizontal,
-                itemCount: myCourses.items.length,
+                itemCount: courseItems.length,
                 itemBuilder: (ctx, index) {
-                  return _buildContinueLearningCard(myCourses.items[index]);
+                  return _buildContinueLearningCard(courseItems[index]);
                 },
               ),
             ),
@@ -580,8 +624,14 @@ class _HomeScreenState extends State<HomeScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           child: FutureBuilder(
             future: Future.wait([
-              Provider.of<Categories>(context, listen: false).fetchCategories(),
-              Provider.of<MyCourses>(context, listen: false).fetchMyCourses(),
+              Provider.of<Categories>(context, listen: false).fetchCategories().catchError((e) {
+                print('Error fetching categories: $e');
+                return null;
+              }),
+              Provider.of<MyCourses>(context, listen: false).fetchMyCourses().catchError((e) {
+                print('Error fetching my courses: $e');
+                return null;
+              }),
             ]),
             builder: (ctx, dataSnapshot) {
               if (dataSnapshot.connectionState == ConnectionState.waiting || _isLoading) {
@@ -594,9 +644,37 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               } else {
-                if (dataSnapshot.error != null) {
-                  return Center(
-                    child: Text(dataSnapshot.error.toString()),
+                // Show specific error message if there's an error
+                if (dataSnapshot.hasError) {
+                  return SizedBox(
+                    height: height,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 60,
+                          ),
+                          const SizedBox(height: 15),
+                          Text(
+                            'Error: ${dataSnapshot.error}',
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _isInit = true;
+                                didChangeDependencies();
+                              });
+                            },
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 } else {
                   return Column(
@@ -625,19 +703,24 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                       }),
                       
-                      Container(
-                        height: 235,
-                        margin: const EdgeInsets.only(bottom: 15),
-                        child: topCourses.isEmpty
-                            ? const Center(child: Text('No popular courses available'))
-                            : ListView.builder(
-                                padding: const EdgeInsets.symmetric(horizontal: 20),
-                                scrollDirection: Axis.horizontal,
-                                itemCount: topCourses.length,
-                                itemBuilder: (ctx, index) {
-                                  return _buildCourseCard(topCourses[index]);
-                                },
-                              ),
+                      Consumer<Courses>(
+                        builder: (ctx, coursesData, _) {
+                          final courses = coursesData.topItems;
+                          return Container(
+                            height: 235,
+                            margin: const EdgeInsets.only(bottom: 15),
+                            child: courses.isEmpty
+                                ? const Center(child: Text('No popular courses available'))
+                                : ListView.builder(
+                                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: courses.length,
+                                    itemBuilder: (ctx, index) {
+                                      return _buildCourseCard(courses[index]);
+                                    },
+                                  ),
+                          );
+                        },
                       ),
                       
                       // Add proper bottom padding for menu tabs
