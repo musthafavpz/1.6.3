@@ -1,7 +1,7 @@
 import 'package:academy_lms_app/screens/tab_screen.dart';
+import 'package:academy_lms_app/screens/cart.dart'; // Add this import
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
 import '../constants.dart';
 
 class AppBarOne extends StatefulWidget implements PreferredSizeWidget {
@@ -9,10 +9,8 @@ class AppBarOne extends StatefulWidget implements PreferredSizeWidget {
   final Size preferredSize;
   final dynamic title;
   final dynamic logo;
-
   const AppBarOne({super.key, this.title, this.logo})
       : preferredSize = const Size.fromHeight(70.0);
-
   @override
   State<AppBarOne> createState() => _AppBarOneState();
 }
@@ -48,12 +46,11 @@ class _AppBarOneState extends State<AppBarOne> {
       actions: [
         GestureDetector(
           onTap: () {
+            // Navigate to Cart screen instead of TabsScreen
             Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const TabsScreen(
-                    pageIndex: 2,
-                  ),
+                  builder: (context) => const CartScreen(), // Change this line
                 ));
           },
           child: Padding(
@@ -66,18 +63,7 @@ class _AppBarOneState extends State<AppBarOne> {
                 SvgPicture.asset(
                   'assets/icons/shopping-cart 1.svg',
                 ),
-                // const Center(
-                //   child: Padding(
-                //     padding: EdgeInsets.only(left: 14.0, bottom: 12),
-                //     child: Text(
-                //       '0',
-                //       style: TextStyle(
-                //         color: kWhiteColor,
-                //         fontSize: 12,
-                //       ),
-                //     ),
-                //   ),
-                // ),
+                // Cart badge code commented out
               ],
             ),
           ),
