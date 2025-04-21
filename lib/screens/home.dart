@@ -1,17 +1,15 @@
 import 'dart:convert';
-
-import 'package:academy_lms_app/screens/course_detail.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../constants.dart';
 import '../providers/categories.dart';
 import '../providers/courses.dart';
+import '../providers/my_courses.dart';
+import '../screens/course_detail.dart';
+import '../screens/my_courses.dart';
 import '../widgets/common_functions.dart';
-import 'category_details.dart';
-import 'courses_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,14 +22,11 @@ class _HomeScreenState extends State<HomeScreen> {
   var _isInit = true;
   var topCourses = [];
   var recentCourses = [];
-  var bundles = [];
-  dynamic bundleStatus;
   final searchController = TextEditingController();
   String? userName;
   Map<String, dynamic>? user;
   bool _isLoading = false;
-  
-  // Sample data for trending instructors
+
   final List<Map<String, dynamic>> trendingInstructors = [
     {
       'name': 'Dr. Sarah Johnson',
@@ -62,8 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'courses': 10
     },
   ];
-  
-  // Single banner data
+
   final Map<String, dynamic> bannerData = {
     'title': 'Special Offer!',
     'description': 'Get 50% off on all premium courses. Limited time offer!',
@@ -115,11 +109,10 @@ class _HomeScreenState extends State<HomeScreen> {
       Provider.of<Courses>(context).fetchTopCourses().then((_) {
         setState(() {
           topCourses = Provider.of<Courses>(context, listen: false).topItems;
-          // For demo purposes, use same data but filter differently
-          // In production, fetch a different list
           recentCourses = List.from(topCourses.reversed);
         });
       });
+      Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
     }
     _isInit = false;
     super.didChangeDependencies();
@@ -130,6 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {});
       await getUserData();
       await Provider.of<Courses>(context, listen: false).fetchTopCourses();
+      await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
 
       setState(() {
         topCourses = Provider.of<Courses>(context, listen: false).topItems;
@@ -137,11 +131,8 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     } catch (error) {
       const errorMsg = 'Could not refresh!';
-      // ignore: use_build_context_synchronously
       CommonFunctions.showErrorDialog(errorMsg, context);
     }
-
-    return;
   }
 
   Widget _buildSearchBar() {
@@ -169,9 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
           prefixIcon: const Icon(Icons.search, color: kDefaultColor),
           suffixIcon: IconButton(
             icon: const Icon(Icons.tune, color: kDefaultColor),
-            onPressed: () {
-              // Show filter options
-            },
+            onPressed: () {},
           ),
           contentPadding: const EdgeInsets.symmetric(vertical: 14),
           border: InputBorder.none,
@@ -204,7 +193,6 @@ class _HomeScreenState extends State<HomeScreen> {
               fontSize: 24,
               fontWeight: FontWeight.w600,
               color: Color(0xFF333333),
-            ),
           ),
           const SizedBox(height: 5),
           Text(
@@ -250,8 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+                    color: Colors.white),
                 ),
                 const SizedBox(height: 5),
                 Text(
@@ -259,8 +246,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: const TextStyle(
                     fontSize: 13,
                     color: Colors.white,
-                    fontWeight: FontWeight.w400,
-                  ),
+                    fontWeight: FontWeight.w400),
                 ),
               ],
             ),
@@ -276,8 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: bannerData['gradientColors'][0],
-              ),
+                color: bannerData['gradientColors'][0]),
             ),
           ),
         ],
@@ -297,8 +282,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF333333),
-            ),
+              color: Color(0xFF333333)),
           ),
           InkWell(
             onTap: onPressed,
@@ -316,15 +300,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(
                       color: Color(0xFF6366F1),
                       fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
+                      fontWeight: FontWeight.w500),
                   ),
                   SizedBox(width: 4),
                   Icon(
                     Icons.arrow_forward_rounded,
                     color: Color(0xFF6366F1),
-                    size: 14,
-                  ),
+                    size: 14),
                 ],
               ),
             ),
@@ -348,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Container(
           width: MediaQuery.of(context).size.width * .45,
           decoration: BoxDecoration(
-            color: kWhiteColor,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
               BoxShadow(
@@ -390,16 +372,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Icon(
                             Icons.star,
                             color: Colors.white,
-                            size: 12,
-                          ),
+                            size: 12),
                           const SizedBox(width: 3),
                           Text(
                             course.average_rating.toString(),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
+                              fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -421,8 +401,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: Color(0xFF333333),
-                        ),
+                          color: Color(0xFF333333)),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -431,16 +410,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         const Icon(
                           Icons.people_alt_outlined,
                           color: kGreyLightColor,
-                          size: 12,
-                        ),
+                          size: 12),
                         const SizedBox(width: 4),
                         Text(
                           '${course.total_reviews} Enrolled',
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
-                            color: kGreyLightColor,
-                          ),
+                            color: kGreyLightColor),
                         ),
                       ],
                     ),
@@ -468,7 +445,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Container(
           width: MediaQuery.of(context).size.width * .65,
           decoration: BoxDecoration(
-            color: kWhiteColor,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
               BoxShadow(
@@ -510,16 +487,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           Icon(
                             Icons.trending_up,
                             color: Colors.white,
-                            size: 12,
-                          ),
+                            size: 12),
                           SizedBox(width: 3),
                           Text(
                             'TRENDING',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 9,
-                              fontWeight: FontWeight.w600,
-                            ),
+                              fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -539,16 +514,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Icon(
                             Icons.star,
                             color: Colors.white,
-                            size: 12,
-                          ),
+                            size: 12),
                           const SizedBox(width: 3),
                           Text(
                             course.average_rating.toString(),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
+                              fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -570,8 +543,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: Color(0xFF333333),
-                        ),
+                          color: Color(0xFF333333)),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -583,16 +555,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             const Icon(
                               Icons.people_alt_outlined,
                               color: kGreyLightColor,
-                              size: 12,
-                            ),
+                              size: 12),
                             const SizedBox(width: 4),
                             Text(
                               '${course.total_reviews} Enrolled',
                               style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w400,
-                                color: kGreyLightColor,
-                              ),
+                                color: kGreyLightColor),
                             ),
                           ],
                         ),
@@ -601,16 +571,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             const Icon(
                               Icons.play_circle_outline,
                               color: Color(0xFF6366F1),
-                              size: 12,
-                            ),
+                              size: 12),
                             const SizedBox(width: 4),
                             const Text(
                               'Start Learning',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
-                                color: Color(0xFF6366F1),
-                              ),
+                                color: Color(0xFF6366F1)),
                             ),
                           ],
                         ),
@@ -630,14 +598,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return Padding(
       padding: const EdgeInsets.only(right: 15.0),
       child: InkWell(
-        onTap: () {
-          // Navigate to instructor profile
-        },
+        onTap: () {},
         borderRadius: BorderRadius.circular(15),
         child: Container(
           width: MediaQuery.of(context).size.width * .65,
           decoration: BoxDecoration(
-            color: kWhiteColor,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
               BoxShadow(
@@ -673,16 +639,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: Color(0xFF333333),
-                            ),
+                              color: Color(0xFF333333)),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             instructor['expertise'],
                             style: const TextStyle(
                               fontSize: 12,
-                              color: kGreyLightColor,
-                            ),
+                              color: kGreyLightColor),
                           ),
                           const SizedBox(height: 6),
                           Row(
@@ -690,29 +654,25 @@ class _HomeScreenState extends State<HomeScreen> {
                               const Icon(
                                 Icons.star,
                                 color: Color(0xFFFFAB00),
-                                size: 14,
-                              ),
+                                size: 14),
                               const SizedBox(width: 4),
                               Text(
                                 instructor['rating'].toString(),
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                  fontWeight: FontWeight.w500),
                               ),
                               const SizedBox(width: 12),
                               const Icon(
                                 Icons.book,
                                 color: kGreyLightColor,
-                                size: 14,
-                              ),
+                                size: 14),
                               const SizedBox(width: 4),
                               Text(
                                 '${instructor['courses']} Courses',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: kGreyLightColor,
-                                ),
+                                  color: kGreyLightColor),
                               ),
                             ],
                           ),
@@ -738,8 +698,107 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w500,
-                    fontSize: 13,
-                  ),
+                    fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContinueLearningCard(dynamic course) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).pushNamed(
+            CourseDetailScreen.routeName,
+            arguments: course.id,
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: FadeInImage.assetNetwork(
+                  placeholder: 'assets/images/loading_animated.gif',
+                  image: course.thumbnail,
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      course.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333)),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    LinearProgressIndicator(
+                      value: course.progress / 100,
+                      backgroundColor: Colors.grey[200],
+                      valueColor: AlwaysStoppedAnimation<Color>(kDefaultColor),
+                      minHeight: 6,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${course.progress}% Complete',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: kGreyLightColor),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kDefaultColor,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 15, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20)),
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pushNamed(
+                              CourseDetailScreen.routeName,
+                              arguments: course.id,
+                            );
+                          },
+                          child: const Text(
+                            'Continue',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -751,27 +810,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final height = MediaQuery.of(context).size.height -
-        MediaQuery.of(context).padding.top -
-        kToolbarHeight -
-        50;
     return Container(
       height: MediaQuery.of(context).size.height,
-      color: const Color(0xFFF8F9FA), // Lighter background color
+      color: const Color(0xFFF8F9FA),
       child: RefreshIndicator(
-        color: const Color(0xFF6366F1),
+        color: kDefaultColor,
         onRefresh: refreshList,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: FutureBuilder(
-            future: Provider.of<Categories>(context, listen: false).fetchCategories(),
+            future: Provider.of<Categories>(context).fetchCategories(),
             builder: (ctx, dataSnapshot) {
               if (dataSnapshot.connectionState == ConnectionState.waiting || _isLoading) {
                 return SizedBox(
-                  height: height,
+                  height: MediaQuery.of(context).size.height,
                   child: const Center(
                     child: CupertinoActivityIndicator(
-                      color: Color(0xFF6366F1),
+                      color: kDefaultColor,
                     ),
                   ),
                 );
@@ -785,17 +840,34 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 10),
-                      // Welcome Message with User Name
                       _buildWelcomeSection(),
-                      
-                      // Search Bar
                       _buildSearchBar(),
-                      
-                      // Single Banner instead of slider
                       _buildSingleBanner(),
                       const SizedBox(height: 10),
-                      
-                      // Trending Courses Section (First as requested)
+
+                      // Continue Learning Section
+                      Consumer<MyCourses>(
+                        builder: (context, myCourses, child) {
+                          if (myCourses.items.isNotEmpty) {
+                            return Column(
+                              children: [
+                                _buildSectionTitle('Continue Learning', () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const MyCoursesScreen(),
+                                    ),
+                                  );
+                                }),
+                                _buildContinueLearningCard(myCourses.items.first),
+                              ],
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+
+                      // Trending Courses Section
                       _buildSectionTitle('Trending Courses', () {
                         Navigator.of(context).pushNamed(
                           CoursesScreen.routeName,
@@ -821,11 +893,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 },
                               ),
                       ),
-                      
-                      // Trending Instructors Section (Second as requested)
-                      _buildSectionTitle('Trending Instructors', () {
-                        // Navigate to all instructors page
-                      }),
+
+                      // Trending Instructors Section
+                      _buildSectionTitle('Trending Instructors', () {}),
                       
                       Container(
                         height: 165,
@@ -839,7 +909,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         ),
                       ),
-                      
+
                       // Featured Courses Section
                       _buildSectionTitle('Featured Courses', () {
                         Navigator.of(context).pushNamed(
@@ -866,7 +936,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 },
                               ),
                       ),
-                      
+
                       // Recently Added Courses Section
                       _buildSectionTitle('Recently Added', () {
                         Navigator.of(context).pushNamed(
@@ -893,8 +963,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 },
                               ),
                       ),
-                      
-                      // Add proper bottom padding for menu tabs
+
                       const SizedBox(height: 80),
                     ],
                   );
