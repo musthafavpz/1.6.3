@@ -27,7 +27,6 @@ class _HomeScreenState extends State<HomeScreen> {
   var recentCourses = [];
   var bundles = [];
   dynamic bundleStatus;
-  final searchController = TextEditingController();
   String? userName;
   Map<String, dynamic>? user;
   bool _isLoading = false;
@@ -44,12 +43,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     getUserData();
-  }
-
-  @override
-  void dispose() {
-    searchController.dispose();
-    super.dispose();
   }
 
   Future<void> getUserData() async {
@@ -97,6 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {});
       await getUserData();
       await Provider.of<Courses>(context, listen: false).fetchTopCourses();
+      await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
 
       setState(() {
         topCourses = Provider.of<Courses>(context, listen: false).topItems;
@@ -110,73 +104,25 @@ class _HomeScreenState extends State<HomeScreen> {
     return;
   }
 
-  Widget _buildSearchBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: searchController,
-        decoration: InputDecoration(
-          hintText: 'Search for courses...',
-          hintStyle: TextStyle(
-            color: Colors.grey[400],
-            fontSize: 14,
-          ),
-          prefixIcon: const Icon(Icons.search, color: kDefaultColor),
-          suffixIcon: IconButton(
-            icon: const Icon(Icons.tune, color: kDefaultColor),
-            onPressed: () {
-              // Show filter options
-            },
-          ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 14),
-          border: InputBorder.none,
-        ),
-        onSubmitted: (value) {
-          if (value.isNotEmpty) {
-            Navigator.of(context).pushNamed(
-              CoursesScreen.routeName,
-              arguments: {
-                'category_id': null,
-                'seacrh_query': value,
-                'type': CoursesPageData.search,
-              },
-            );
-          }
-        },
-      ),
-    );
-  }
-
   Widget _buildWelcomeSection() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            userName != null ? 'Welcome back, ${userName?.split(' ')[0]}!' : 'Welcome back!',
+            userName != null ? 'Welcome, ${userName?.split(' ')[0]}' : 'Welcome',
             style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
+              fontSize: 20,
+              fontWeight: FontWeight.w500,
               color: Color(0xFF333333),
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 4),
           Text(
             'What would you like to learn today?',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               color: Colors.grey[600],
             ),
           ),
@@ -261,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             title,
             style: const TextStyle(
-              fontSize: 18,
+              fontSize: 17,
               fontWeight: FontWeight.w600,
               color: Color(0xFF333333),
             ),
@@ -506,7 +452,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            '${(course.progress ?? 0.3) * 100}% Completed',
+                            '${((course.progress ?? 0.3) * 100).toInt()}% Completed',
                             style: const TextStyle(
                               fontSize: 11,
                               color: kGreyLightColor,
@@ -514,7 +460,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           TextButton(
                             onPressed: () {
-                              // Continue course
+                              Navigator.of(context).pushNamed(
+                                CourseDetailScreen.routeName,
+                                arguments: course.id,
+                              );
                             },
                             style: TextButton.styleFrom(
                               padding: EdgeInsets.zero,
@@ -563,7 +512,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const Text(
                       '0 Courses',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -571,7 +520,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const Text(
                       'Continue your learning journey',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         color: Colors.grey,
                       ),
                     ),
@@ -579,11 +528,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 CircleAvatar(
                   backgroundColor: kDefaultColor,
-                  radius: 24,
-                  child: Icon(
+                  radius: 20,
+                  child: const Icon(
                     Icons.play_arrow,
                     color: Colors.white,
-                    size: 28,
+                    size: 24,
                   ),
                 ),
               ],
@@ -597,9 +546,8 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildSectionTitle('Continue Learning', () {
               // Navigate to my courses
             }),
-            Container(
-              height: 120,
-              margin: const EdgeInsets.only(bottom: 15),
+            SizedBox(
+              height: myCourses.items.isEmpty ? 0 : 120,
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 scrollDirection: Axis.horizontal,
@@ -609,6 +557,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
+            const SizedBox(height: 15),
           ],
         );
       },
@@ -630,7 +579,10 @@ class _HomeScreenState extends State<HomeScreen> {
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: FutureBuilder(
-            future: Provider.of<Categories>(context, listen: false).fetchCategories(),
+            future: Future.wait([
+              Provider.of<Categories>(context, listen: false).fetchCategories(),
+              Provider.of<MyCourses>(context, listen: false).fetchMyCourses(),
+            ]),
             builder: (ctx, dataSnapshot) {
               if (dataSnapshot.connectionState == ConnectionState.waiting || _isLoading) {
                 return SizedBox(
@@ -651,17 +603,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 10),
-                      // Welcome Message with User Name
+                      // Welcome Message with User Name - Updated font size and text
                       _buildWelcomeSection(),
-                      
-                      // Search Bar
-                      _buildSearchBar(),
                       
                       // Single Banner
                       _buildSingleBanner(),
                       const SizedBox(height: 10),
                       
-                      // Continue Learning Section
+                      // Continue Learning Section - Fixed to properly show enrolled courses
                       _buildContinueLearningSection(),
                       
                       // Popular Courses Section
