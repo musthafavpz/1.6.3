@@ -8,7 +8,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../constants.dart';
 import '../providers/categories.dart';
 import '../widgets/appbar_one.dart';
-import '../widgets/section_header.dart';
 import 'courses_screen.dart';
 import 'sub_category.dart';
 
