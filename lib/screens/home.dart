@@ -9,7 +9,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants.dart';
 import '../providers/categories.dart';
 import '../providers/courses.dart';
-import '../providers/my_courses.dart';
 import '../widgets/common_functions.dart';
 import 'category_details.dart';
 import 'courses_screen.dart';
@@ -121,9 +120,6 @@ class _HomeScreenState extends State<HomeScreen> {
           recentCourses = List.from(topCourses.reversed);
         });
       });
-      
-      // Fetch enrolled courses
-      Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
     }
     _isInit = false;
     super.didChangeDependencies();
@@ -134,7 +130,6 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {});
       await getUserData();
       await Provider.of<Courses>(context, listen: false).fetchTopCourses();
-      await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
 
       setState(() {
         topCourses = Provider.of<Courses>(context, listen: false).topItems;
@@ -754,173 +749,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // New widget for Continue Learning section
-  Widget _buildContinueLearningSection() {
-    return Consumer<MyCourses>(
-      builder: (ctx, myCourseData, child) {
-        // Check if user has any enrolled courses
-        if (myCourseData.items.isEmpty) {
-          return Container(); // Return empty container if no enrolled courses
-        }
-        
-        // Get the first enrolled course
-        final firstEnrolledCourse = myCourseData.items[0];
-        
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionTitle('Continue Learning', () {
-                // Navigate to My Courses screen
-              }),
-              InkWell(
-                onTap: () {
-                  Navigator.of(context).pushNamed(
-                    CourseDetailScreen.routeName,
-                    arguments: firstEnrolledCourse.id,
-                  );
-                },
-                borderRadius: BorderRadius.circular(15),
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: kWhiteColor,
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(15),
-                              topRight: Radius.circular(15),
-                            ),
-                            child: FadeInImage.assetNetwork(
-                              placeholder: 'assets/images/loading_animated.gif',
-                              image: firstEnrolledCourse.thumbnail.toString(),
-                              height: 160,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          Positioned(
-                            top: 10,
-                            left: 10,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF4CAF50),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Row(
-                                children: [
-                                  Icon(
-                                    Icons.play_circle_fill,
-                                    color: Colors.white,
-                                    size: 12,
-                                  ),
-                                  SizedBox(width: 5),
-                                  Text(
-                                    'CONTINUE',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(15.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              firstEnrolledCourse.title.toString(),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF333333),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            // Progress bar
-                            LinearProgressIndicator(
-                              value: firstEnrolledCourse.progress != null ? 
-                                firstEnrolledCourse.progress / 100 : 0.1,
-                              backgroundColor: Colors.grey[200],
-                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  '${firstEnrolledCourse.progress != null ? 
-                                    firstEnrolledCourse.progress : 0}% Complete',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF4CAF50),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF6366F1),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: const Row(
-                                    children: [
-                                      Icon(
-                                        Icons.play_arrow,
-                                        color: Colors.white,
-                                        size: 14,
-                                      ),
-                                      SizedBox(width: 5),
-                                      Text(
-                                        'Resume',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height -
@@ -963,14 +791,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Search Bar
                       _buildSearchBar(),
                       
-                      // Single Banner
+                      // Single Banner instead of slider
                       _buildSingleBanner(),
                       const SizedBox(height: 10),
                       
-                      // Continue Learning Section (New)
-                      _buildContinueLearningSection(),
-                      
-                      // Trending Courses Section
+                      // Trending Courses Section (First as requested)
                       _buildSectionTitle('Trending Courses', () {
                         Navigator.of(context).pushNamed(
                           CoursesScreen.routeName,
@@ -981,7 +806,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         );
                       }),
-                                        Container(
+                      
+                      Container(
                         height: 255,
                         margin: const EdgeInsets.only(bottom: 15),
                         child: topCourses.isEmpty
