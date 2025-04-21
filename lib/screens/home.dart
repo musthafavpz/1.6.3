@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants.dart';
 import '../providers/categories.dart';
 import '../providers/courses.dart';
+import '../providers/my_courses.dart';
 import '../widgets/common_functions.dart';
 import 'category_details.dart';
 import 'courses_screen.dart';
@@ -30,38 +31,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String? userName;
   Map<String, dynamic>? user;
   bool _isLoading = false;
-  
-  // Sample data for trending instructors
-  final List<Map<String, dynamic>> trendingInstructors = [
-    {
-      'name': 'Dr. Sarah Johnson',
-      'expertise': 'Data Science',
-      'image': 'https://randomuser.me/api/portraits/women/44.jpg',
-      'rating': 4.9,
-      'courses': 12
-    },
-    {
-      'name': 'Prof. Michael Chen',
-      'expertise': 'Web Development',
-      'image': 'https://randomuser.me/api/portraits/men/32.jpg',
-      'rating': 4.8,
-      'courses': 8
-    },
-    {
-      'name': 'Dr. Emily Williams',
-      'expertise': 'UX Design',
-      'image': 'https://randomuser.me/api/portraits/women/33.jpg',
-      'rating': 4.7,
-      'courses': 5
-    },
-    {
-      'name': 'John Doe',
-      'expertise': 'Mobile Development',
-      'image': 'https://randomuser.me/api/portraits/men/44.jpg',
-      'rating': 4.6,
-      'courses': 10
-    },
-  ];
   
   // Single banner data
   final Map<String, dynamic> bannerData = {
@@ -115,8 +84,6 @@ class _HomeScreenState extends State<HomeScreen> {
       Provider.of<Courses>(context).fetchTopCourses().then((_) {
         setState(() {
           topCourses = Provider.of<Courses>(context, listen: false).topItems;
-          // For demo purposes, use same data but filter differently
-          // In production, fetch a different list
           recentCourses = List.from(topCourses.reversed);
         });
       });
@@ -137,7 +104,6 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     } catch (error) {
       const errorMsg = 'Could not refresh!';
-      // ignore: use_build_context_synchronously
       CommonFunctions.showErrorDialog(errorMsg, context);
     }
 
@@ -454,7 +420,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildTrendingCourseCard(dynamic course) {
+  Widget _buildContinueLearningCard(dynamic course) {
     return Padding(
       padding: const EdgeInsets.only(right: 15.0),
       child: InkWell(
@@ -466,7 +432,7 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         borderRadius: BorderRadius.circular(15),
         child: Container(
-          width: MediaQuery.of(context).size.width * .65,
+          width: MediaQuery.of(context).size.width * .85,
           decoration: BoxDecoration(
             color: kWhiteColor,
             borderRadius: BorderRadius.circular(15),
@@ -478,92 +444,28 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(15),
-                      topRight: Radius.circular(15),
-                    ),
-                    child: FadeInImage.assetNetwork(
-                      placeholder: 'assets/images/loading_animated.gif',
-                      image: course.thumbnail.toString(),
-                      height: 140,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  Positioned(
-                    top: 10,
-                    left: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFF9800),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(
-                            Icons.trending_up,
-                            color: Colors.white,
-                            size: 12,
-                          ),
-                          SizedBox(width: 3),
-                          Text(
-                            'TRENDING',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6366F1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.star,
-                            color: Colors.white,
-                            size: 12,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            course.average_rating.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(15),
+                  bottomLeft: Radius.circular(15),
+                ),
+                child: FadeInImage.assetNetwork(
+                  placeholder: 'assets/images/loading_animated.gif',
+                  image: course.thumbnail.toString(),
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      height: 40,
-                      child: Text(
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
                         course.title.toString(),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -573,50 +475,65 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Color(0xFF333333),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.people_alt_outlined,
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.people_alt_outlined,
+                            color: kGreyLightColor,
+                            size: 12,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${course.total_reviews} Enrolled',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w400,
                               color: kGreyLightColor,
-                              size: 12,
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${course.total_reviews} Enrolled',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w400,
-                                color: kGreyLightColor,
-                              ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      LinearProgressIndicator(
+                        value: course.progress ?? 0.3, // Default to 30% if progress not available
+                        backgroundColor: kGreyLightColor.withOpacity(0.2),
+                        color: kDefaultColor,
+                        minHeight: 6,
+                      ),
+                      const SizedBox(height: 5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${(course.progress ?? 0.3) * 100}% Completed',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: kGreyLightColor,
                             ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.play_circle_outline,
-                              color: Color(0xFF6366F1),
-                              size: 12,
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              // Continue course
+                            },
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            const SizedBox(width: 4),
-                            const Text(
-                              'Start Learning',
+                            child: const Text(
+                              'Continue',
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w500,
-                                color: Color(0xFF6366F1),
+                                color: kDefaultColor,
                               ),
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -626,126 +543,75 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildInstructorCard(Map<String, dynamic> instructor) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 15.0),
-      child: InkWell(
-        onTap: () {
-          // Navigate to instructor profile
-        },
-        borderRadius: BorderRadius.circular(15),
-        child: Container(
-          width: MediaQuery.of(context).size.width * .65,
-          decoration: BoxDecoration(
-            color: kWhiteColor,
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(15.0),
-                child: Row(
+  Widget _buildContinueLearningSection() {
+    return Consumer<MyCourses>(
+      builder: (context, myCourses, child) {
+        if (myCourses.items.isEmpty) {
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              color: kDefaultColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(40),
-                      child: FadeInImage.assetNetwork(
-                        placeholder: 'assets/images/loading_animated.gif',
-                        image: instructor['image'],
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.cover,
+                    const Text(
+                      '0 Courses',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            instructor['name'],
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF333333),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            instructor['expertise'],
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: kGreyLightColor,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.star,
-                                color: Color(0xFFFFAB00),
-                                size: 14,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                instructor['rating'].toString(),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              const Icon(
-                                Icons.book,
-                                color: kGreyLightColor,
-                                size: 14,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${instructor['courses']} Courses',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: kGreyLightColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                    const SizedBox(height: 5),
+                    const Text(
+                      'Continue your learning journey',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
                       ),
                     ),
                   ],
                 ),
-              ),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF6366F1),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(15),
-                    bottomRight: Radius.circular(15),
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: const Text(
-                  'View Profile',
-                  style: TextStyle(
+                CircleAvatar(
+                  backgroundColor: kDefaultColor,
+                  radius: 24,
+                  child: Icon(
+                    Icons.play_arrow,
                     color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 13,
+                    size: 28,
                   ),
                 ),
+              ],
+            ),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Continue Learning', () {
+              // Navigate to my courses
+            }),
+            Container(
+              height: 120,
+              margin: const EdgeInsets.only(bottom: 15),
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                scrollDirection: Axis.horizontal,
+                itemCount: myCourses.items.length,
+                itemBuilder: (ctx, index) {
+                  return _buildContinueLearningCard(myCourses.items[index]);
+                },
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -791,57 +657,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Search Bar
                       _buildSearchBar(),
                       
-                      // Single Banner instead of slider
+                      // Single Banner
                       _buildSingleBanner(),
                       const SizedBox(height: 10),
                       
-                      // Trending Courses Section (First as requested)
-                      _buildSectionTitle('Trending Courses', () {
-                        Navigator.of(context).pushNamed(
-                          CoursesScreen.routeName,
-                          arguments: {
-                            'category_id': null,
-                            'seacrh_query': null,
-                            'type': CoursesPageData.all,
-                          },
-                        );
-                      }),
+                      // Continue Learning Section
+                      _buildContinueLearningSection(),
                       
-                      Container(
-                        height: 255,
-                        margin: const EdgeInsets.only(bottom: 15),
-                        child: topCourses.isEmpty
-                            ? const Center(child: Text('No trending courses available'))
-                            : ListView.builder(
-                                padding: const EdgeInsets.symmetric(horizontal: 20),
-                                scrollDirection: Axis.horizontal,
-                                itemCount: topCourses.length,
-                                itemBuilder: (ctx, index) {
-                                  return _buildTrendingCourseCard(topCourses[index]);
-                                },
-                              ),
-                      ),
-                      
-                      // Trending Instructors Section (Second as requested)
-                      _buildSectionTitle('Trending Instructors', () {
-                        // Navigate to all instructors page
-                      }),
-                      
-                      Container(
-                        height: 165,
-                        margin: const EdgeInsets.only(bottom: 15),
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          scrollDirection: Axis.horizontal,
-                          itemCount: trendingInstructors.length,
-                          itemBuilder: (ctx, index) {
-                            return _buildInstructorCard(trendingInstructors[index]);
-                          },
-                        ),
-                      ),
-                      
-                      // Featured Courses Section
-                      _buildSectionTitle('Featured Courses', () {
+                      // Popular Courses Section
+                      _buildSectionTitle('Popular Courses', () {
                         Navigator.of(context).pushNamed(
                           CoursesScreen.routeName,
                           arguments: {
@@ -856,40 +680,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: 235,
                         margin: const EdgeInsets.only(bottom: 15),
                         child: topCourses.isEmpty
-                            ? const Center(child: Text('No courses available'))
+                            ? const Center(child: Text('No popular courses available'))
                             : ListView.builder(
                                 padding: const EdgeInsets.symmetric(horizontal: 20),
                                 scrollDirection: Axis.horizontal,
                                 itemCount: topCourses.length,
                                 itemBuilder: (ctx, index) {
                                   return _buildCourseCard(topCourses[index]);
-                                },
-                              ),
-                      ),
-                      
-                      // Recently Added Courses Section
-                      _buildSectionTitle('Recently Added', () {
-                        Navigator.of(context).pushNamed(
-                          CoursesScreen.routeName,
-                          arguments: {
-                            'category_id': null,
-                            'seacrh_query': null,
-                            'type': CoursesPageData.all,
-                          },
-                        );
-                      }),
-                      
-                      Container(
-                        height: 235,
-                        margin: const EdgeInsets.only(bottom: 15),
-                        child: recentCourses.isEmpty
-                            ? const Center(child: Text('No recent courses available'))
-                            : ListView.builder(
-                                padding: const EdgeInsets.symmetric(horizontal: 20),
-                                scrollDirection: Axis.horizontal,
-                                itemCount: recentCourses.length,
-                                itemBuilder: (ctx, index) {
-                                  return _buildCourseCard(recentCourses[index]);
                                 },
                               ),
                       ),
