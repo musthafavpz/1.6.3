@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants.dart';
 import '../providers/categories.dart';
 import '../providers/courses.dart';
+import '../providers/my_courses.dart';
 import '../widgets/common_functions.dart';
 import 'category_details.dart';
 import 'courses_screen.dart';
@@ -23,45 +24,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   var _isInit = true;
   var topCourses = [];
-  var recentCourses = [];
-  var bundles = [];
-  dynamic bundleStatus;
-  final searchController = TextEditingController();
   String? userName;
   Map<String, dynamic>? user;
   bool _isLoading = false;
-  
-  // Sample data for trending instructors
-  final List<Map<String, dynamic>> trendingInstructors = [
-    {
-      'name': 'Dr. Sarah Johnson',
-      'expertise': 'Data Science',
-      'image': 'https://randomuser.me/api/portraits/women/44.jpg',
-      'rating': 4.9,
-      'courses': 12
-    },
-    {
-      'name': 'Prof. Michael Chen',
-      'expertise': 'Web Development',
-      'image': 'https://randomuser.me/api/portraits/men/32.jpg',
-      'rating': 4.8,
-      'courses': 8
-    },
-    {
-      'name': 'Dr. Emily Williams',
-      'expertise': 'UX Design',
-      'image': 'https://randomuser.me/api/portraits/women/33.jpg',
-      'rating': 4.7,
-      'courses': 5
-    },
-    {
-      'name': 'John Doe',
-      'expertise': 'Mobile Development',
-      'image': 'https://randomuser.me/api/portraits/men/44.jpg',
-      'rating': 4.6,
-      'courses': 10
-    },
-  ];
   
   // Single banner data
   final Map<String, dynamic> bannerData = {
@@ -75,12 +40,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     getUserData();
-  }
-
-  @override
-  void dispose() {
-    searchController.dispose();
-    super.dispose();
   }
 
   Future<void> getUserData() async {
@@ -115,11 +74,11 @@ class _HomeScreenState extends State<HomeScreen> {
       Provider.of<Courses>(context).fetchTopCourses().then((_) {
         setState(() {
           topCourses = Provider.of<Courses>(context, listen: false).topItems;
-          // For demo purposes, use same data but filter differently
-          // In production, fetch a different list
-          recentCourses = List.from(topCourses.reversed);
         });
       });
+      
+      // Fetch user's enrolled courses
+      Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
     }
     _isInit = false;
     super.didChangeDependencies();
@@ -130,10 +89,10 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {});
       await getUserData();
       await Provider.of<Courses>(context, listen: false).fetchTopCourses();
+      await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
 
       setState(() {
         topCourses = Provider.of<Courses>(context, listen: false).topItems;
-        recentCourses = List.from(topCourses.reversed);
       });
     } catch (error) {
       const errorMsg = 'Could not refresh!';
@@ -144,54 +103,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return;
   }
 
-  Widget _buildSearchBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: searchController,
-        decoration: InputDecoration(
-          hintText: 'Search for courses...',
-          hintStyle: TextStyle(
-            color: Colors.grey[400],
-            fontSize: 14,
-          ),
-          prefixIcon: const Icon(Icons.search, color: kDefaultColor),
-          suffixIcon: IconButton(
-            icon: const Icon(Icons.tune, color: kDefaultColor),
-            onPressed: () {
-              // Show filter options
-            },
-          ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 14),
-          border: InputBorder.none,
-        ),
-        onSubmitted: (value) {
-          if (value.isNotEmpty) {
-            Navigator.of(context).pushNamed(
-              CoursesScreen.routeName,
-              arguments: {
-                'category_id': null,
-                'seacrh_query': value,
-                'type': CoursesPageData.search,
-              },
-            );
-          }
-        },
-      ),
-    );
-  }
-
   Widget _buildWelcomeSection() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
@@ -199,19 +110,11 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            userName != null ? 'Welcome back, ${userName?.split(' ')[0]}!' : 'Welcome back!',
+            userName != null ? 'Welcome, $userName' : 'Welcome',
             style: const TextStyle(
-              fontSize: 24,
+              fontSize: 20,  // Reduced font size
               fontWeight: FontWeight.w600,
               color: Color(0xFF333333),
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            'What would you like to learn today?',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
             ),
           ),
         ],
@@ -330,126 +233,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildCourseCard(dynamic course) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 15.0),
-      child: InkWell(
-        onTap: () {
-          Navigator.of(context).pushNamed(
-            CourseDetailScreen.routeName,
-            arguments: course.id,
-          );
-        },
-        borderRadius: BorderRadius.circular(15),
-        child: Container(
-          width: MediaQuery.of(context).size.width * .45,
-          decoration: BoxDecoration(
-            color: kWhiteColor,
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(15),
-                      topRight: Radius.circular(15),
-                    ),
-                    child: FadeInImage.assetNetwork(
-                      placeholder: 'assets/images/loading_animated.gif',
-                      image: course.thumbnail.toString(),
-                      height: 120,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6366F1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.star,
-                            color: Colors.white,
-                            size: 12,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            course.average_rating.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      height: 40,
-                      child: Text(
-                        course.title.toString(),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF333333),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.people_alt_outlined,
-                          color: kGreyLightColor,
-                          size: 12,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${course.total_reviews} Enrolled',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w400,
-                            color: kGreyLightColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -626,16 +409,23 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildInstructorCard(Map<String, dynamic> instructor) {
+  Widget _buildContinueLearningCard(dynamic myCourse) {
+    // Calculate progress percentage
+    double progress = myCourse.courseCompletion.toDouble();
+    
     return Padding(
       padding: const EdgeInsets.only(right: 15.0),
       child: InkWell(
         onTap: () {
-          // Navigate to instructor profile
+          // Navigate to course detail page
+          Navigator.of(context).pushNamed(
+            CourseDetailScreen.routeName,
+            arguments: myCourse.id,
+          );
         },
         borderRadius: BorderRadius.circular(15),
         child: Container(
-          width: MediaQuery.of(context).size.width * .65,
+          width: MediaQuery.of(context).size.width * .75,
           decoration: BoxDecoration(
             color: kWhiteColor,
             borderRadius: BorderRadius.circular(15),
@@ -648,98 +438,133 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.all(15.0),
-                child: Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(40),
-                      child: FadeInImage.assetNetwork(
-                        placeholder: 'assets/images/loading_animated.gif',
-                        image: instructor['image'],
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.cover,
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(15),
+                      topRight: Radius.circular(15),
+                    ),
+                    child: FadeInImage.assetNetwork(
+                      placeholder: 'assets/images/loading_animated.gif',
+                      image: myCourse.thumbnail.toString(),
+                      height: 120,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 4,
+                      child: LinearProgressIndicator(
+                        value: progress / 100,
+                        backgroundColor: Colors.grey[300],
+                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
                       ),
                     ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            instructor['name'],
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF333333),
-                            ),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 36,
+                      child: Text(
+                        myCourse.title.toString(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF333333),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${progress.toInt()}% Complete',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF6366F1),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            instructor['expertise'],
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: kGreyLightColor,
-                            ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF6366F1),
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                          const SizedBox(height: 6),
-                          Row(
+                          child: const Row(
                             children: [
-                              const Icon(
-                                Icons.star,
-                                color: Color(0xFFFFAB00),
-                                size: 14,
+                              Icon(
+                                Icons.play_circle_filled,
+                                color: Colors.white,
+                                size: 12,
                               ),
-                              const SizedBox(width: 4),
+                              SizedBox(width: 4),
                               Text(
-                                instructor['rating'].toString(),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              const Icon(
-                                Icons.book,
-                                color: kGreyLightColor,
-                                size: 14,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${instructor['courses']} Courses',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: kGreyLightColor,
+                                'CONTINUE',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.book,
+                          color: kGreyLightColor,
+                          size: 12,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${myCourse.totalNumberOfCompletedLessons}/${myCourse.totalNumberOfLessons} Lessons',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: kGreyLightColor,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Icon(
+                          Icons.person,
+                          color: kGreyLightColor,
+                          size: 12,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            myCourse.instructor,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w400,
+                              color: kGreyLightColor,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
-              ),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF6366F1),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(15),
-                    bottomRight: Radius.circular(15),
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: const Text(
-                  'View Profile',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 13,
-                  ),
                 ),
               ),
             ],
@@ -788,14 +613,36 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Welcome Message with User Name
                       _buildWelcomeSection(),
                       
-                      // Search Bar
-                      _buildSearchBar(),
-                      
-                      // Single Banner instead of slider
+                      // Single Banner
                       _buildSingleBanner(),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 15),
                       
-                      // Trending Courses Section (First as requested)
+                      // Continue Learning Section
+                      Consumer<MyCourses>(
+                        builder: (ctx, myCourses, _) => myCourses.items.isNotEmpty
+                          ? Column(
+                              children: [
+                                _buildSectionTitle('Continue Learning', () {
+                                  // Navigate to all enrolled courses
+                                }),
+                                Container(
+                                  height: 200,
+                                  margin: const EdgeInsets.only(bottom: 20),
+                                  child: ListView.builder(
+                                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: myCourses.items.length,
+                                    itemBuilder: (ctx, index) {
+                                      return _buildContinueLearningCard(myCourses.items[index]);
+                                    },
+                                  ),
+                                ),
+                              ],
+                            )
+                          : const SizedBox.shrink(),
+                      ),
+                      
+                      // Trending Courses Section
                       _buildSectionTitle('Trending Courses', () {
                         Navigator.of(context).pushNamed(
                           CoursesScreen.routeName,
@@ -818,78 +665,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 itemCount: topCourses.length,
                                 itemBuilder: (ctx, index) {
                                   return _buildTrendingCourseCard(topCourses[index]);
-                                },
-                              ),
-                      ),
-                      
-                      // Trending Instructors Section (Second as requested)
-                      _buildSectionTitle('Trending Instructors', () {
-                        // Navigate to all instructors page
-                      }),
-                      
-                      Container(
-                        height: 165,
-                        margin: const EdgeInsets.only(bottom: 15),
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          scrollDirection: Axis.horizontal,
-                          itemCount: trendingInstructors.length,
-                          itemBuilder: (ctx, index) {
-                            return _buildInstructorCard(trendingInstructors[index]);
-                          },
-                        ),
-                      ),
-                      
-                      // Featured Courses Section
-                      _buildSectionTitle('Featured Courses', () {
-                        Navigator.of(context).pushNamed(
-                          CoursesScreen.routeName,
-                          arguments: {
-                            'category_id': null,
-                            'seacrh_query': null,
-                            'type': CoursesPageData.all,
-                          },
-                        );
-                      }),
-                      
-                      Container(
-                        height: 235,
-                        margin: const EdgeInsets.only(bottom: 15),
-                        child: topCourses.isEmpty
-                            ? const Center(child: Text('No courses available'))
-                            : ListView.builder(
-                                padding: const EdgeInsets.symmetric(horizontal: 20),
-                                scrollDirection: Axis.horizontal,
-                                itemCount: topCourses.length,
-                                itemBuilder: (ctx, index) {
-                                  return _buildCourseCard(topCourses[index]);
-                                },
-                              ),
-                      ),
-                      
-                      // Recently Added Courses Section
-                      _buildSectionTitle('Recently Added', () {
-                        Navigator.of(context).pushNamed(
-                          CoursesScreen.routeName,
-                          arguments: {
-                            'category_id': null,
-                            'seacrh_query': null,
-                            'type': CoursesPageData.all,
-                          },
-                        );
-                      }),
-                      
-                      Container(
-                        height: 235,
-                        margin: const EdgeInsets.only(bottom: 15),
-                        child: recentCourses.isEmpty
-                            ? const Center(child: Text('No recent courses available'))
-                            : ListView.builder(
-                                padding: const EdgeInsets.symmetric(horizontal: 20),
-                                scrollDirection: Axis.horizontal,
-                                itemCount: recentCourses.length,
-                                itemBuilder: (ctx, index) {
-                                  return _buildCourseCard(recentCourses[index]);
                                 },
                               ),
                       ),
