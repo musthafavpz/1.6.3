@@ -470,6 +470,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildContinueLearningSection() {
+    // Don't show section if user is not logged in
+    if (user == null) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -497,47 +502,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 } else {
                   return Consumer<MyCourses>(
                     builder: (ctx, myCourseData, _) {
+                      // Don't show section if no courses
                       if (myCourseData.items.isEmpty) {
-                        return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 20),
-                          decoration: BoxDecoration(
-                            color: kWhiteColor,
-                            borderRadius: BorderRadius.circular(15),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 15,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.school_outlined,
-                                size: 40,
-                                color: kDefaultColor.withOpacity(0.7),
-                              ),
-                              const SizedBox(height: 10),
-                              const Text(
-                                'No courses in progress',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 5),
-                              const Text(
-                                'Enroll in courses to get started',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: kGreyLightColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
+                        return const SizedBox.shrink();
                       }
                       
                       return ListView.builder(
@@ -546,6 +513,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         itemCount: myCourseData.items.length,
                         itemBuilder: (ctx, index) {
                           final course = myCourseData.items[index];
+                          // Calculate total lessons and current lesson dynamically
+                          final totalLessons = course.total_lessons ?? 12;  // Default to 12 if not available
+                          final completedLessons = course.completed_lessons ?? 3;  // Default to 3 if not available
+                          // Calculate progress percentage
+                          final progressPercentage = totalLessons > 0 
+                              ? (completedLessons / totalLessons) 
+                              : 0.0;
+                              
                           return Padding(
                             padding: const EdgeInsets.only(right: 15),
                             child: InkWell(
@@ -569,107 +544,88 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ],
                                 ),
-                                child: Row(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(15),
-                                        bottomLeft: Radius.circular(15),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        course.title.toString(),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF333333),
+                                        ),
                                       ),
-                                      child: FadeInImage.assetNetwork(
-                                        placeholder: 'assets/images/loading_animated.gif',
-                                        image: course.thumbnail.toString(),
-                                        width: 100,
-                                        height: 150,
-                                        fit: BoxFit.cover,
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.play_lesson,
+                                            color: kGreyLightColor,
+                                            size: 12,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Lesson $completedLessons/$totalLessons',
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              color: kGreyLightColor,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                    Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(12),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                      const SizedBox(height: 12),
+                                      Container(
+                                        height: 6,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[200],
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Row(
                                           children: [
-                                            Text(
-                                              course.title.toString(),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w500,
-                                                color: Color(0xFF333333),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Row(
-                                              children: [
-                                                const Icon(
-                                                  Icons.play_lesson,
-                                                  color: kGreyLightColor,
-                                                  size: 12,
-                                                ),
-                                                const SizedBox(width: 4),
-                                                const Text(
-                                                  'Lesson 3/12',
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    color: kGreyLightColor,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 12),
                                             Container(
-                                              height: 6,
-                                              decoration: BoxDecoration(
-                                                color: Colors.grey[200],
-                                                borderRadius: BorderRadius.circular(10),
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  Container(
-                                                    width: 100,
-                                                    decoration: BoxDecoration(
-                                                      color: kDefaultColor,
-                                                      borderRadius: BorderRadius.circular(10),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            const SizedBox(height: 12),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                              width: MediaQuery.of(context).size.width * 0.7 * progressPercentage * 0.9, // account for padding
                                               decoration: BoxDecoration(
                                                 color: kDefaultColor,
-                                                borderRadius: BorderRadius.circular(20),
-                                              ),
-                                              child: const Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    Icons.play_arrow,
-                                                    color: Colors.white,
-                                                    size: 12,
-                                                  ),
-                                                  SizedBox(width: 4),
-                                                  Text(
-                                                    'Continue',
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 11,
-                                                      fontWeight: FontWeight.w500,
-                                                    ),
-                                                  ),
-                                                ],
+                                                borderRadius: BorderRadius.circular(10),
                                               ),
                                             ),
                                           ],
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 12),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                        decoration: BoxDecoration(
+                                          color: kDefaultColor,
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.play_arrow,
+                                              color: Colors.white,
+                                              size: 12,
+                                            ),
+                                            SizedBox(width: 4),
+                                            Text(
+                                              'Continue',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -733,8 +689,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       _buildSingleBanner(),
                       const SizedBox(height: 10),
                       
-                      // Continue Learning Section (New)
-                      _buildContinueLearningSection(),
+                      // Continue Learning Section (only if user is logged in)
+                      if (user != null) _buildContinueLearningSection(),
                       
                       // Popular Courses Section (Renamed from Trending Courses)
                       _buildSectionTitle('Popular Courses', () {
