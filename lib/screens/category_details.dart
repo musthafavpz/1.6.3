@@ -2,10 +2,13 @@ import 'package:academy_lms_app/screens/course_detail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../constants.dart';
 import '../providers/categories.dart';
 import '../widgets/appbar_one.dart';
+import '../widgets/section_header.dart';
 import 'courses_screen.dart';
 import 'sub_category.dart';
 
@@ -17,422 +20,528 @@ class CategoryDetailsScreen extends StatefulWidget {
   State<CategoryDetailsScreen> createState() => _CategoryDetailsScreenState();
 }
 
-class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
+class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      vsync: this, 
+      duration: const Duration(milliseconds: 800),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final routeArgs =
-        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-
+    final routeArgs = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final categoryId = routeArgs['category_id'] as int;
     final title = routeArgs['title'];
+    
     return Scaffold(
+      backgroundColor: kBackGroundColor,
       appBar: AppBarOne(title: title),
-      body: Container(
-        height: MediaQuery.of(context).size.height * 1,
-        color: kBackGroundColor,
+      body: SafeArea(
         child: FutureBuilder(
-            future: Provider.of<Categories>(context, listen: false)
-                .fetchCategoryDetails(categoryId),
-            builder: (ctx, dataSnapshot) {
-              if (dataSnapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(color: kDefaultColor),
-                );
-              } else {
-                if (dataSnapshot.error != null) {
-                  //error
-                  return const Center(
-                    child: Text('Error Occured'),
-                  );
-                } else {
-                  return SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                      child: Consumer<Categories>(
-                          builder: (context, categoryDetails, child) {
-                        final loadedCategoryDetail =
-                            categoryDetails.getCategoryDetail;
-                        return Column(
-                          children: [
-                            SizedBox(
-                              width: double.infinity,
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text(
-                                    'Sub Categories',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  MaterialButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pushNamed(
-                                        SubCategoryScreen.routeName,
-                                        arguments: {
-                                          'category_id': categoryId,
-                                          'title': title,
-                                        },
-                                      );
-                                    },
-                                    padding: const EdgeInsets.all(0),
-                                    child: const Row(
-                                      children: [
-                                        Text(
-                                          'Show all',
-                                          style: TextStyle(
-                                            color: kSignUpTextColor,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        Icon(
-                                          Icons.arrow_forward_ios_rounded,
-                                          color: kSignUpTextColor,
-                                          size: 18,
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
-                            Container(
-                              height: MediaQuery.of(context).size.height * .13,
-                              decoration: BoxDecoration(
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: kBackButtonBorderColor
-                                        .withOpacity(0.023),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 0),
-                                  ),
-                                ],
-                              ),
-                              child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount:
-                                      loadedCategoryDetail.mSubCategory!.length,
-                                  itemBuilder: (ctx, index) {
-                                    return InkWell(
-                                      onTap: () {
-                                        Navigator.of(context).pushNamed(
-                                          CoursesScreen.routeName,
-                                          arguments: {
-                                            'category_id': loadedCategoryDetail
-                                                .mSubCategory![index].id,
-                                            'search_query': null,
-                                            'type': CoursesPageData.category,
-                                          },
-                                        );
-                                      },
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 2.0, vertical: 10),
-                                        child: SizedBox(
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              .435,
-                                          child: Card(
-                                            elevation: 0,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                            ),
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 8.0),
-                                              child: Row(
-                                                children: [
-                                                  Expanded(
-                                                    flex: 3,
-                                                    child: ClipRRect(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              8),
-                                                      child: FadeInImage
-                                                          .assetNetwork(
-                                                        placeholder:
-                                                            'assets/images/loading_animated.gif',
-                                                        image:
-                                                            loadedCategoryDetail
-                                                                .mSubCategory![
-                                                                    index]
-                                                                .thumbnail
-                                                                .toString(),
-                                                        height: 60,
-                                                        width: double.infinity,
-                                                        fit: BoxFit.cover,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    flex: 4,
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              left: 10.0,
-                                                              right: 5.0),
-                                                      child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .center,
-                                                        children: [
-                                                          Text(
-                                                            "${loadedCategoryDetail.mSubCategory![index].numberOfCourses.toString()} Courses",
-                                                            style: const TextStyle(
-                                                                color:
-                                                                    kGreyLightColor,
-                                                                fontSize: 10,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w500),
-                                                            textAlign:
-                                                                TextAlign.left,
-                                                          ),
-                                                          Text(
-                                                            loadedCategoryDetail
-                                                                .mSubCategory![
-                                                                    index]
-                                                                .title
-                                                                .toString(),
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            style:
-                                                                const TextStyle(
-                                                              fontSize: 14,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }),
-                            ),
-                            SizedBox(
-                              width: double.infinity,
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text(
-                                    'Courses',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  MaterialButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pushNamed(
-                                        CoursesScreen.routeName,
-                                        arguments: {
-                                          'category_id': null,
-                                          'seacrh_query': null,
-                                          'type': CoursesPageData.all,
-                                        },
-                                      );
-                                    },
-                                    padding: const EdgeInsets.all(0),
-                                    child: const Row(
-                                      children: [
-                                        Text(
-                                          'All courses',
-                                          style: TextStyle(
-                                            color: kSignUpTextColor,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        Icon(
-                                          Icons.arrow_forward_ios_rounded,
-                                          color: kSignUpTextColor,
-                                          size: 18,
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
-                            SizedBox(
-                              height: MediaQuery.of(context).size.height * .7,
-                              child: AlignedGridView.count(
-                                  shrinkWrap: true,
-                                  crossAxisCount: 2,
-                                  itemCount:
-                                      loadedCategoryDetail.mCourse!.length,
-                                  mainAxisSpacing: 5,
-                                  crossAxisSpacing: 5,
-                                  itemBuilder: (ctx, index) {
-                                    return InkWell(
-                                      onTap: () {
-                                            Navigator.of(context).pushNamed(
-                                          CourseDetailScreen.routeName,
-                                          arguments: loadedCategoryDetail.mCourse![index].id,
-                                        );
-
-                                        // Navigator.of(context).push(
-                                        //     MaterialPageRoute(
-                                        //         builder: (context) =>
-                                        //             CourseDetailScreen1(
-                                        //               courseId:
-                                        //                   loadedCategoryDetail
-                                        //                       .mCourse![index]
-                                        //                       .id
-                                        //                       .toString(),
-                                        //             )));
-                                      },
-                                      child: SizedBox(
-                                        width: double.infinity,
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: kBackButtonBorderColor
-                                                    .withOpacity(0.07),
-                                                blurRadius: 10,
-                                                offset: const Offset(0, 5),
-                                              ),
-                                            ],
-                                          ),
-                                          child: Card(
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
-                                            ),
-                                            elevation: 0,
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(8.0),
-                                                  child: ClipRRect(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            8),
-                                                    child: FadeInImage
-                                                        .assetNetwork(
-                                                      placeholder:
-                                                          'assets/images/loading_animated.gif',
-                                                      image:
-                                                          loadedCategoryDetail
-                                                              .mCourse![index]
-                                                              .thumbnail
-                                                              .toString(),
-                                                      height: 120,
-                                                      width: double.infinity,
-                                                      fit: BoxFit.cover,
-                                                    ),
-                                                  ),
-                                                ),
-                                                Padding(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 8.0,
-                                                      vertical: 5.0),
-                                                  child: SizedBox(
-                                                    height: 50,
-                                                    child: Text(
-                                                      loadedCategoryDetail
-                                                          .mCourse![index].title
-                                                          .toString(),
-                                                      style: const TextStyle(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                Padding(
-                                                  padding: EdgeInsets.symmetric(
-                                                      horizontal: 8.0),
-                                                  child: Row(
-                                                    children: [
-                                                      Expanded(
-                                                        flex: 1,
-                                                        child: Icon(
-                                                          Icons.star,
-                                                          color: kStarColor,
-                                                          size: 18,
-                                                        ),
-                                                      ),
-                                                      Expanded(
-                                                        flex: 1,
-                                                        child: Text(
-                                                          loadedCategoryDetail
-                                                              .mCourse![index]
-                                                              .average_rating
-                                                              .toString(),
-                                                          style: TextStyle(
-                                                            fontSize: 12,
-                                                            fontWeight:
-                                                                FontWeight.w400,
-                                                            color:
-                                                                kGreyLightColor,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Expanded(
-                                                        flex: 5,
-                                                        child: Text(
-                                                          '(${loadedCategoryDetail.mCourse![index].total_reviews} Reviews)',
-                                                          style: TextStyle(
-                                                            fontSize: 12,
-                                                            fontWeight:
-                                                                FontWeight.w400,
-                                                            color:
-                                                                kGreyLightColor,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 10),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }),
-                            ),
-                          ],
-                        );
-                      }),
+          future: Provider.of<Categories>(context, listen: false).fetchCategoryDetails(categoryId),
+          builder: (ctx, dataSnapshot) {
+            if (dataSnapshot.connectionState == ConnectionState.waiting) {
+              return _buildLoadingShimmer();
+            } else if (dataSnapshot.error != null) {
+              return _buildErrorView();
+            } else {
+              return _buildContent(categoryId, title);
+            }
+          },
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildLoadingShimmer() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 150,
+                  height: 22,
+                  color: Colors.white,
+                ),
+                Container(
+                  width: 80,
+                  height: 22,
+                  color: Colors.white,
+                ),
+              ],
+            ),
+            const SizedBox(height: 15),
+            SizedBox(
+              height: 100,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: 4,
+                itemBuilder: (_, __) => Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 0.4,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
                     ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 25),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 120,
+                  height: 22,
+                  color: Colors.white,
+                ),
+                Container(
+                  width: 100,
+                  height: 22,
+                  color: Colors.white,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.7,
+                crossAxisSpacing: 15,
+                mainAxisSpacing: 15,
+              ),
+              itemCount: 4,
+              itemBuilder: (_, __) => Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildErrorView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 60, color: Colors.red[300]),
+          const SizedBox(height: 16),
+          const Text(
+            'Oops! Something went wrong',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextButton.icon(
+            onPressed: () {
+              setState(() {});
+            },
+            icon: const Icon(Icons.refresh),
+            label: const Text('Retry'),
+            style: TextButton.styleFrom(
+              foregroundColor: kDefaultColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildContent(int categoryId, String title) {
+    return Consumer<Categories>(
+      builder: (context, categoryDetails, child) {
+        final loadedCategoryDetail = categoryDetails.getCategoryDetail;
+        
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              _buildSectionHeader(
+                'Sub Categories',
+                'Show all',
+                () {
+                  Navigator.of(context).pushNamed(
+                    SubCategoryScreen.routeName,
+                    arguments: {
+                      'category_id': categoryId,
+                      'title': title,
+                    },
                   );
-                }
-              }
-            }),
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildSubCategoriesList(loadedCategoryDetail),
+              const SizedBox(height: 24),
+              _buildSectionHeader(
+                'Courses',
+                'All courses',
+                () {
+                  Navigator.of(context).pushNamed(
+                    CoursesScreen.routeName,
+                    arguments: {
+                      'category_id': null,
+                      'seacrh_query': null,
+                      'type': CoursesPageData.all,
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildCoursesGrid(loadedCategoryDetail),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+  
+  Widget _buildSectionHeader(String title, String actionText, VoidCallback onAction) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        TextButton(
+          onPressed: onAction,
+          style: TextButton.styleFrom(
+            foregroundColor: kSignUpTextColor,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+          ),
+          child: Row(
+            children: [
+              Text(
+                actionText,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildSubCategoriesList(dynamic loadedCategoryDetail) {
+    return SizedBox(
+      height: 110,
+      child: ListView.builder(
+        physics: const BouncingScrollPhysics(),
+        scrollDirection: Axis.horizontal,
+        itemCount: loadedCategoryDetail.mSubCategory!.length,
+        itemBuilder: (ctx, index) {
+          return FadeTransition(
+            opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
+              CurvedAnimation(
+                parent: _animationController,
+                curve: Interval(0.1 * index, 0.1 * index + 0.5, curve: Curves.easeOut),
+              ),
+            ),
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.2, 0),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(
+                  parent: _animationController,
+                  curve: Interval(0.1 * index, 0.1 * index + 0.5, curve: Curves.easeOut),
+                ),
+              ),
+              child: _buildSubCategoryCard(loadedCategoryDetail, index),
+            ),
+          );
+        },
+      ),
+    );
+  }
+  
+  Widget _buildSubCategoryCard(dynamic loadedCategoryDetail, int index) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).pushNamed(
+          CoursesScreen.routeName,
+          arguments: {
+            'category_id': loadedCategoryDetail.mSubCategory![index].id,
+            'search_query': null,
+            'type': CoursesPageData.category,
+          },
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(right: 12),
+        width: MediaQuery.of(context).size.width * 0.45,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: CachedNetworkImage(
+                  imageUrl: loadedCategoryDetail.mSubCategory![index].thumbnail.toString(),
+                  placeholder: (context, url) => Container(
+                    height: 70,
+                    width: 70,
+                    color: Colors.grey[200],
+                    child: const Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: kDefaultColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    height: 70,
+                    width: 70,
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.error, color: Colors.grey),
+                  ),
+                  height: 70,
+                  width: 70,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      loadedCategoryDetail.mSubCategory![index].title.toString(),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: kDefaultColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        "${loadedCategoryDetail.mSubCategory![index].numberOfCourses.toString()} Courses",
+                        style: TextStyle(
+                          color: kDefaultColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildCoursesGrid(dynamic loadedCategoryDetail) {
+    return AlignedGridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      itemCount: loadedCategoryDetail.mCourse!.length,
+      mainAxisSpacing: 16,
+      crossAxisSpacing: 16,
+      itemBuilder: (ctx, index) {
+        return FadeTransition(
+          opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
+            CurvedAnimation(
+              parent: _animationController,
+              curve: Interval(0.05 * index, 0.05 * index + 0.5, curve: Curves.easeOut),
+            ),
+          ),
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.2),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(
+                parent: _animationController,
+                curve: Interval(0.05 * index, 0.05 * index + 0.5, curve: Curves.easeOut),
+              ),
+            ),
+            child: _buildCourseCard(loadedCategoryDetail, index),
+          ),
+        );
+      },
+    );
+  }
+  
+  Widget _buildCourseCard(dynamic loadedCategoryDetail, int index) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).pushNamed(
+          CourseDetailScreen.routeName,
+          arguments: loadedCategoryDetail.mCourse![index].id,
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+              child: CachedNetworkImage(
+                imageUrl: loadedCategoryDetail.mCourse![index].thumbnail.toString(),
+                placeholder: (context, url) => AspectRatio(
+                  aspectRatio: 16/9,
+                  child: Container(
+                    color: Colors.grey[200],
+                    child: const Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: kDefaultColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                errorWidget: (context, url, error) => AspectRatio(
+                  aspectRatio: 16/9,
+                  child: Container(
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.error, color: Colors.grey),
+                  ),
+                ),
+                height: 120,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 42,
+                    child: Text(
+                      loadedCategoryDetail.mCourse![index].title.toString(),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.star,
+                        color: kStarColor,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        loadedCategoryDetail.mCourse![index].average_rating.toString(),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '(${loadedCategoryDetail.mCourse![index].total_reviews})',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: kGreyLightColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
