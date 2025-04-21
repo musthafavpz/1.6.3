@@ -33,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   
   // Single banner data
   final Map<String, dynamic> bannerData = {
-    'title': 'Special Offer!',
+    'title': 'Launching Offer!',
     'description': 'Get 50% off on all premium courses. Limited time offer!',
     'buttonText': 'CLAIM NOW',
     'gradientColors': [Color(0xFF6366F1), Color(0xFF8B5CF6)],
