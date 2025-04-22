@@ -47,23 +47,29 @@ class _HomeScreenState extends State<HomeScreen> {
       _isLoading = true;
     });
 
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    var userDetails = sharedPreferences.getString("user");
+    try {
+      SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+      var userDetails = sharedPreferences.getString("user");
 
-    if (userDetails != null) {
-      try {
+      if (userDetails != null) {
+        try {
+          setState(() {
+            user = jsonDecode(userDetails);
+            userName = user?['name'];
+          });
+        } catch (e) {
+          print('Error decoding user details: $e');
+        }
+      }
+    } catch (e) {
+      print('Error getting user data: $e');
+    } finally {
+      if (mounted) {
         setState(() {
-          user = jsonDecode(userDetails);
-          userName = user?['name'];
+          _isLoading = false;
         });
-      } catch (e) {
-        print('Error decoding user details: $e');
       }
     }
-
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   @override
@@ -71,14 +77,20 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_isInit) {
       setState(() {});
 
-      Provider.of<Courses>(context).fetchTopCourses().then((_) {
-        setState(() {
-          topCourses = Provider.of<Courses>(context, listen: false).topItems;
+      try {
+        Provider.of<Courses>(context, listen: false).fetchTopCourses().then((_) {
+          if (mounted) {
+            setState(() {
+              topCourses = Provider.of<Courses>(context, listen: false).topItems;
+            });
+          }
         });
-      });
-      
-      // Fetch user's enrolled courses
-      Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
+        
+        // Fetch user's enrolled courses
+        Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
+      } catch (e) {
+        print('Error in didChangeDependencies: $e');
+      }
     }
     _isInit = false;
     super.didChangeDependencies();
@@ -86,18 +98,32 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> refreshList() async {
     try {
-      setState(() {});
+      if (!mounted) return;
+      
+      setState(() {
+        _isLoading = true;
+      });
+      
       await getUserData();
+      
       await Provider.of<Courses>(context, listen: false).fetchTopCourses();
       await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
 
-      setState(() {
-        topCourses = Provider.of<Courses>(context, listen: false).topItems;
-      });
+      if (mounted) {
+        setState(() {
+          topCourses = Provider.of<Courses>(context, listen: false).topItems;
+          _isLoading = false;
+        });
+      }
     } catch (error) {
-      const errorMsg = 'Could not refresh!';
-      // ignore: use_build_context_synchronously
-      CommonFunctions.showErrorDialog(errorMsg, context);
+      print('Error refreshing data: $error');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        const errorMsg = 'Could not refresh!';
+        CommonFunctions.showErrorDialog(errorMsg, context);
+      }
     }
 
     return;
@@ -157,6 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: TextField(
         controller: _searchController,
+        enabled: false, // Make it non-interactive
         decoration: InputDecoration(
           hintText: 'Search for courses, instructors...',
           hintStyle: TextStyle(
@@ -168,47 +195,21 @@ class _HomeScreenState extends State<HomeScreen> {
             color: const Color(0xFF6366F1),
             size: 22,
           ),
-          suffixIcon: InkWell(
-            onTap: () {
-              if (_searchController.text.isNotEmpty) {
-                Navigator.of(context).pushNamed(
-                  CoursesScreen.routeName,
-                  arguments: {
-                    'category_id': null,
-                    'seacrh_query': _searchController.text,
-                    'type': CoursesPageData.search,
-                  },
-                );
-              }
-            },
-            child: Container(
-              margin: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF6366F1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                Icons.arrow_forward,
-                color: Colors.white,
-                size: 18,
-              ),
+          suffixIcon: Container(
+            margin: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6366F1).withOpacity(0.5), // Dimmed color to indicate non-functional
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.arrow_forward,
+              color: Colors.white,
+              size: 18,
             ),
           ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 15),
         ),
-        onSubmitted: (value) {
-          if (value.isNotEmpty) {
-            Navigator.of(context).pushNamed(
-              CoursesScreen.routeName,
-              arguments: {
-                'category_id': null,
-                'seacrh_query': value,
-                'type': CoursesPageData.search,
-              },
-            );
-          }
-        },
       ),
     );
   }
@@ -225,12 +226,12 @@ class _HomeScreenState extends State<HomeScreen> {
             Image.asset(
               'assets/images/code_the_ledger.png',
               width: double.infinity,
-              fit: BoxFit.fitWidth, // This makes the image fit the width while maintaining its aspect ratio
+              fit: BoxFit.fitWidth,
             ),
-            // Join Now Button (positioned bottom right - updated position)
+            // Join Now Button (positioned bottom right)
             Positioned(
               bottom: 15,
-              right: 15, // Changed from left: 15 to right: 15
+              right: 15,
               child: InkWell(
                 onTap: () {
                   // Add your join now action here
@@ -685,8 +686,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               } else {
                 if (dataSnapshot.error != null) {
-                  return Center(
-                    child: Text(dataSnapshot.error.toString()),
+                  return SizedBox(
+                    height: height,
+                    child: Center(
+                      child: Text('An error occurred: ${dataSnapshot.error}'),
+                    ),
                   );
                 } else {
                   return Column(
@@ -696,7 +700,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Welcome Message with User Name and Hand Wave
                       _buildWelcomeSection(),
                       
-                      // Search Bar - Added here
+                      // Search Bar - Now static
                       _buildSearchBar(),
                       
                       // Custom Banner with Join Now button
