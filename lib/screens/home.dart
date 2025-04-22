@@ -12,6 +12,7 @@ import '../providers/categories.dart';
 import '../providers/courses.dart';
 import '../providers/my_courses.dart';
 import '../widgets/common_functions.dart';
+import '../widgets/custom_text.dart';
 import 'category_details.dart';
 import 'courses_screen.dart';
 
@@ -28,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? userName;
   Map<String, dynamic>? user;
   bool _isLoading = false;
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -77,6 +79,12 @@ class _HomeScreenState extends State<HomeScreen> {
     super.didChangeDependencies();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> refreshList() async {
     try {
       setState(() {});
@@ -94,6 +102,61 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return;
+  }
+
+  void _handleSearchSubmitted(String value) {
+    final searchText = _searchController.text.trim();
+    if (searchText.isEmpty) {
+      CommonFunctions.showErrorDialog('Search query cannot be empty', context);
+      return;
+    }
+
+    Navigator.of(context).pushNamed(
+      CoursesScreen.routeName,
+      arguments: {
+        'category_id': null,
+        'search_query': searchText,
+        'type': CoursesPageData.search,
+      },
+    );
+    _searchController.clear();
+  }
+
+  InputDecoration getSearchInputDecoration(String hintext) {
+    return InputDecoration(
+      enabledBorder: OutlineInputBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
+        borderSide: BorderSide(color: kDefaultColor.withOpacity(0.1), width: 1),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
+        borderSide: BorderSide(color: kDefaultColor.withOpacity(0.1), width: 1),
+      ),
+      border: OutlineInputBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
+        borderSide: BorderSide(color: kDefaultColor.withOpacity(0.1), width: 1),
+      ),
+      focusedErrorBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(16.0)),
+        borderSide: BorderSide(color: Color(0xFFF65054)),
+      ),
+      errorBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(16.0)),
+        borderSide: BorderSide(color: Color(0xFFF65054)),
+      ),
+      filled: true,
+      hintStyle: const TextStyle(color: Colors.black54, fontSize: 14),
+      hintText: hintext,
+      fillColor: kInputBoxBackGroundColor,
+      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
+      suffixIcon: GestureDetector(
+        onTap: () {
+          _handleSearchSubmitted(_searchController.text);
+        },
+        child: const Icon(Icons.search_rounded),
+      ),
+      suffixIconColor: kDefaultColor.withOpacity(0.8),
+    );
   }
 
   Widget _buildWelcomeSection() {
@@ -134,57 +197,70 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-Widget _buildCustomBanner() {
-  return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-    width: double.infinity,
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(15),
-      child: Stack(
-        children: [
-          // Banner Image
-          Image.asset(
-            'assets/images/code_the_ledger.png',
-            width: double.infinity,
-            fit: BoxFit.fitWidth, // This makes the image fit the width while maintaining its aspect ratio
-          ),
-          // Join Now Button (positioned bottom left)
-          Positioned(
-            bottom: 15,
-            left: 15,
-            child: InkWell(
-              onTap: () {
-                // Add your join now action here
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 5,
-                      offset: const Offset(0, 2),
+  Widget _buildSearchSection() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+      child: TextFormField(
+        style: const TextStyle(fontSize: 14),
+        decoration: getSearchInputDecoration('Search for courses...'),
+        controller: _searchController,
+        keyboardType: TextInputType.text,
+        onFieldSubmitted: _handleSearchSubmitted,
+      ),
+    );
+  }
+
+  Widget _buildCustomBanner() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      width: double.infinity,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15),
+        child: Stack(
+          children: [
+            // Banner Image
+            Image.asset(
+              'assets/images/code_the_ledger.png',
+              width: double.infinity,
+              fit: BoxFit.fitWidth, // This makes the image fit the width while maintaining its aspect ratio
+            ),
+            // Join Now Button (positioned bottom left)
+            Positioned(
+              bottom: 15,
+              left: 15,
+              child: InkWell(
+                onTap: () {
+                  // Add your join now action here
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 5,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Text(
+                    'Join Now',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF6366F1),
                     ),
-                  ],
-                ),
-                child: const Text(
-                  'Join Now',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF6366F1),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildSectionTitle(String title, VoidCallback onPressed) {
     return Container(
@@ -614,10 +690,14 @@ Widget _buildCustomBanner() {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 10),
+                      
                       // Welcome Message with User Name and Hand Wave
                       _buildWelcomeSection(),
                       
-                      // Custom Banner with Join Now button
+                      // Search Bar
+                      _buildSearchSection(),
+                      
+                      // Custom Banner with Join Now button  
                       _buildCustomBanner(),
                       const SizedBox(height: 15),
                       
