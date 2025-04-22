@@ -12,7 +12,6 @@ import '../providers/categories.dart';
 import '../providers/courses.dart';
 import '../providers/my_courses.dart';
 import '../widgets/common_functions.dart';
-import '../widgets/custom_text.dart';
 import 'category_details.dart';
 import 'courses_screen.dart';
 
@@ -29,12 +28,18 @@ class _HomeScreenState extends State<HomeScreen> {
   String? userName;
   Map<String, dynamic>? user;
   bool _isLoading = false;
-  final _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     getUserData();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> getUserData() async {
@@ -79,12 +84,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.didChangeDependencies();
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
   Future<void> refreshList() async {
     try {
       setState(() {});
@@ -104,61 +103,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return;
   }
 
-  void _handleSearchSubmitted(String value) {
-    final searchText = _searchController.text.trim();
-    if (searchText.isEmpty) {
-      CommonFunctions.showErrorDialog('Search query cannot be empty', context);
-      return;
-    }
-
-    Navigator.of(context).pushNamed(
-      CoursesScreen.routeName,
-      arguments: {
-        'category_id': null,
-        'search_query': searchText,
-        'type': CoursesPageData.search,
-      },
-    );
-    _searchController.clear();
-  }
-
-  InputDecoration getSearchInputDecoration(String hintext) {
-    return InputDecoration(
-      enabledBorder: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: kDefaultColor.withOpacity(0.1), width: 1),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: kDefaultColor.withOpacity(0.1), width: 1),
-      ),
-      border: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: kDefaultColor.withOpacity(0.1), width: 1),
-      ),
-      focusedErrorBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: Color(0xFFF65054)),
-      ),
-      errorBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: Color(0xFFF65054)),
-      ),
-      filled: true,
-      hintStyle: const TextStyle(color: Colors.black54, fontSize: 14),
-      hintText: hintext,
-      fillColor: kInputBoxBackGroundColor,
-      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
-      suffixIcon: GestureDetector(
-        onTap: () {
-          _handleSearchSubmitted(_searchController.text);
-        },
-        child: const Icon(Icons.search_rounded),
-      ),
-      suffixIconColor: kDefaultColor.withOpacity(0.8),
-    );
-  }
-
   Widget _buildWelcomeSection() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
@@ -170,7 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Text(
                 userName != null ? 'Welcome, $userName ' : 'Welcome ',
                 style: const TextStyle(
-                  fontSize: 20,
+                  fontSize: 24,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF333333),
                 ),
@@ -178,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const Text(
                 '👋',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 24,
                 ),
               ),
             ],
@@ -187,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const Text(
             'Learn bigger, achieve anything',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w400,
               color: Color(0xFF666666),
             ),
@@ -197,15 +141,74 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSearchSection() {
+  Widget _buildSearchBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-      child: TextFormField(
-        style: const TextStyle(fontSize: 14),
-        decoration: getSearchInputDecoration('Search for courses...'),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: TextField(
         controller: _searchController,
-        keyboardType: TextInputType.text,
-        onFieldSubmitted: _handleSearchSubmitted,
+        decoration: InputDecoration(
+          hintText: 'Search for courses, instructors...',
+          hintStyle: TextStyle(
+            color: Colors.grey[400],
+            fontSize: 14,
+          ),
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            color: const Color(0xFF6366F1),
+            size: 22,
+          ),
+          suffixIcon: InkWell(
+            onTap: () {
+              if (_searchController.text.isNotEmpty) {
+                Navigator.of(context).pushNamed(
+                  CoursesScreen.routeName,
+                  arguments: {
+                    'category_id': null,
+                    'seacrh_query': _searchController.text,
+                    'type': CoursesPageData.search,
+                  },
+                );
+              }
+            },
+            child: Container(
+              margin: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6366F1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.arrow_forward,
+                color: Colors.white,
+                size: 18,
+              ),
+            ),
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 15),
+        ),
+        onSubmitted: (value) {
+          if (value.isNotEmpty) {
+            Navigator.of(context).pushNamed(
+              CoursesScreen.routeName,
+              arguments: {
+                'category_id': null,
+                'seacrh_query': value,
+                'type': CoursesPageData.search,
+              },
+            );
+          }
+        },
       ),
     );
   }
@@ -224,10 +227,10 @@ class _HomeScreenState extends State<HomeScreen> {
               width: double.infinity,
               fit: BoxFit.fitWidth, // This makes the image fit the width while maintaining its aspect ratio
             ),
-            // Join Now Button (positioned bottom left)
+            // Join Now Button (positioned bottom right - updated position)
             Positioned(
               bottom: 15,
-              left: 15,
+              right: 15, // Changed from left: 15 to right: 15
               child: InkWell(
                 onTap: () {
                   // Add your join now action here
@@ -690,14 +693,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 10),
-                      
                       // Welcome Message with User Name and Hand Wave
                       _buildWelcomeSection(),
                       
-                      // Search Bar
-                      _buildSearchSection(),
+                      // Search Bar - Added here
+                      _buildSearchBar(),
                       
-                      // Custom Banner with Join Now button  
+                      // Custom Banner with Join Now button
                       _buildCustomBanner(),
                       const SizedBox(height: 15),
                       
