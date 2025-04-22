@@ -135,26 +135,33 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCustomBanner() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: Stack(
-        children: [
-          // Banner Image with rounded corners
-          ClipRRect(
+  return Container(
+    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+    height: 180, // Explicitly setting height for the banner
+    width: double.infinity,
+    child: Stack(
+      children: [
+        // Banner Image with rounded corners
+        Positioned.fill(
+          child: ClipRRect(
             borderRadius: BorderRadius.circular(15),
             child: Image.asset(
               'assets/images/code_the_ledger.png',
+              fit: BoxFit.cover, // Ensures the image covers the entire space
               width: double.infinity,
-              height: 150,
-              fit: BoxFit.cover,
             ),
           ),
-          // Join Now Button (positioned bottom left)
-          Positioned(
-            bottom: 15,
-            left: 15,
+        ),
+        // Join Now Button (positioned bottom left)
+        Positioned(
+          bottom: 15,
+          left: 15,
+          child: InkWell(
+            onTap: () {
+              // Add your join now action here
+            },
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
@@ -176,10 +183,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildSectionTitle(String title, VoidCallback onPressed) {
     return Container(
