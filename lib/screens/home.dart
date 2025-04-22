@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:academy_lms_app/screens/course_detail.dart';
-import 'package:academy_lms_app/screens/my_course_detail.dart'; // Add this import
+import 'package:academy_lms_app/screens/my_course_detail.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -28,14 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String? userName;
   Map<String, dynamic>? user;
   bool _isLoading = false;
-  
-  // Single banner data
-  final Map<String, dynamic> bannerData = {
-    'title': 'Special Offer!',
-    'description': 'Get 50% off on all premium courses. Limited time offer!',
-    'buttonText': 'CLAIM NOW',
-    'gradientColors': [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-  };
 
   @override
   void initState() {
@@ -110,12 +102,31 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            userName != null ? 'Welcome, $userName' : 'Welcome',
-            style: const TextStyle(
-              fontSize: 20,  // Reduced font size
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF333333),
+          Row(
+            children: [
+              Text(
+                userName != null ? 'Welcome, $userName ' : 'Welcome ',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF333333),
+                ),
+              ),
+              const Text(
+                '👋',
+                style: TextStyle(
+                  fontSize: 20,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Learn bigger, achieve anything',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF666666),
             ),
           ),
         ],
@@ -123,64 +134,45 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSingleBanner() {
+  Widget _buildCustomBanner() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: bannerData['gradientColors'],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: bannerData['gradientColors'][0].withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
+      child: Stack(
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  bannerData['title'],
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  bannerData['description'],
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
+          // Banner Image with rounded corners
+          ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: Image.asset(
+              'assets/images/code_the_ledger.png',
+              width: double.infinity,
+              height: 150,
+              fit: BoxFit.cover,
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              bannerData['buttonText'],
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: bannerData['gradientColors'][0],
+          // Join Now Button (positioned bottom left)
+          Positioned(
+            bottom: 15,
+            left: 15,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 5,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Text(
+                'Join Now',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF6366F1),
+                ),
               ),
             ),
           ),
@@ -617,11 +609,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 10),
-                      // Welcome Message with User Name
+                      // Welcome Message with User Name and Hand Wave
                       _buildWelcomeSection(),
                       
-                      // Single Banner
-                      _buildSingleBanner(),
+                      // Custom Banner with Join Now button
+                      _buildCustomBanner(),
                       const SizedBox(height: 15),
                       
                       // Continue Learning Section
