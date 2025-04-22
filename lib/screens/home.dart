@@ -134,57 +134,54 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCustomBanner() {
+Widget _buildCustomBanner() {
   return Container(
     margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-    height: 180, // Explicitly setting height for the banner
     width: double.infinity,
-    child: Stack(
-      children: [
-        // Banner Image with rounded corners
-        Positioned.fill(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(15),
-            child: Image.asset(
-              'assets/images/code_the_ledger.png',
-              fit: BoxFit.cover, // Ensures the image covers the entire space
-              width: double.infinity,
-            ),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(15),
+      child: Stack(
+        children: [
+          // Banner Image
+          Image.asset(
+            'assets/images/code_the_ledger.png',
+            width: double.infinity,
+            fit: BoxFit.fitWidth, // This makes the image fit the width while maintaining its aspect ratio
           ),
-        ),
-        // Join Now Button (positioned bottom left)
-        Positioned(
-          bottom: 15,
-          left: 15,
-          child: InkWell(
-            onTap: () {
-              // Add your join now action here
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
+          // Join Now Button (positioned bottom left)
+          Positioned(
+            bottom: 15,
+            left: 15,
+            child: InkWell(
+              onTap: () {
+                // Add your join now action here
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 5,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Text(
+                  'Join Now',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF6366F1),
                   ),
-                ],
-              ),
-              child: const Text(
-                'Join Now',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF6366F1),
                 ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
   );
 }
