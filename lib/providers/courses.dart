@@ -29,6 +29,10 @@ class Courses with ChangeNotifier {
     return [..._items];
   }
 
+  List<Course> get cartItems {
+    return [..._items];
+  }
+
   List<Course> get topItems {
     return [..._topItems];
   }

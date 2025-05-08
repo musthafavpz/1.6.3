@@ -31,6 +31,8 @@ class CourseDetail {
   String? preview;
   String? description;
   List<Section>? mSection;
+  String? requirements;
+  String? outcomes;
 
   CourseDetail({
     @required this.courseId,
@@ -59,6 +61,8 @@ class CourseDetail {
     this.preview,
     this.description,
     @required this.mSection,
+    this.requirements,
+    this.outcomes,
   });
 }
 // To parse this JSON data, do

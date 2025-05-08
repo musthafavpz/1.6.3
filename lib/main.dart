@@ -1,5 +1,4 @@
 import 'package:academy_lms_app/constants.dart';
-import 'package:academy_lms_app/screens/course_details.dart';
 import 'package:academy_lms_app/screens/login.dart';
 import 'package:academy_lms_app/screens/onboarding_screen.dart';
 import 'package:academy_lms_app/screens/splash.dart';
@@ -88,7 +87,6 @@ class MyApp extends StatelessWidget {
             CategoryDetailsScreen.routeName: (ctx) =>
                 const CategoryDetailsScreen(),
             CourseDetailScreen.routeName: (ctx) => const CourseDetailScreen(),
-            CourseDetailScreen1.routeName: (ctx) => const CourseDetailScreen1(),
             SubCategoryScreen.routeName: (ctx) => const SubCategoryScreen(),
             AccountRemoveScreen.routeName: (ctx) => const AccountRemoveScreen(),
           },
