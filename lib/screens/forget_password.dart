@@ -7,329 +7,251 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-class ForgetPasswordScreen extends StatefulWidget {
-  const ForgetPasswordScreen({super.key});
+class ForgetPassword extends StatefulWidget {
+  const ForgetPassword({super.key});
 
   @override
-  State<ForgetPasswordScreen> createState() => _ForgetPasswordScreenState();
+  State<ForgetPassword> createState() => _ForgetPasswordState();
 }
 
-class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
-  GlobalKey<FormState> globalFormKey = GlobalKey<FormState>();
-  // final scaffoldKey = GlobalKey<ScaffoldState>();
-
+class _ForgetPasswordState extends State<ForgetPassword> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
   bool _isLoading = false;
-  final _emailController = TextEditingController();
-  SharedPreferences? sharedPreferences;
+  String _message = '';
+  bool _success = false;
 
-  // Future<void> sendemail(
-  //   String email,
-  // ) async {
-  //   sharedPreferences = await SharedPreferences.getInstance();
-  //   dynamic tokens = sharedPreferences!.getString("access_token");
+  Future<void> _resetPassword() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
-  //   var urls = "$baseUrl/api/forgot_password";
-  //   try {
-  //     final responses = await http.post(
-  //       Uri.parse(urls),
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         'Accept': 'application/json',
-  //         'Authorization': 'Bearer $tokens',
-  //       },
-  //       body: json.encode({
-  //         'email': email,
-  //       }),
-  //     );
-  //     print(responses.body);
-  //     if (responses.statusCode == 200) {
-  //       print(responses.body);
-  //       Fluttertoast.showToast(
-  //         msg: "Email sended, Please check your email",
-  //         toastLength: Toast.LENGTH_SHORT,
-  //         gravity: ToastGravity.BOTTOM,
-  //         timeInSecForIosWeb: 1,
-  //         backgroundColor: Colors.grey,
-  //         textColor: Colors.white,
-  //         fontSize: 16.0,
-  //       );
-  //     } else {
-  //       Fluttertoast.showToast(
-  //         msg: "Here is something error",
-  //         toastLength: Toast.LENGTH_SHORT,
-  //         gravity: ToastGravity.BOTTOM,
-  //         timeInSecForIosWeb: 1,
-  //         backgroundColor: Colors.grey,
-  //         textColor: Colors.white,
-  //         fontSize: 16.0,
-  //       );
-  //     }
-  //   } catch (error) {
-  //     // rethrow;
-  //     print('Error: $error');
-  //   }
-  // }
-
-  Future<void> sendemail(String email, context) async {
     setState(() {
       _isLoading = true;
+      _message = '';
     });
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    dynamic tokens = sharedPreferences.getString("access_token");
 
-    var urls = "$baseUrl/api/forgot_password";
     try {
-      final responses = await http.post(
-        Uri.parse(urls),
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/forgot_password'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': 'Bearer $tokens',
         },
-        body: json.encode({
-          'email': email,
+        body: jsonEncode({
+          'email': _emailController.text.trim(),
         }),
       );
 
-      if (responses.statusCode == 200) {
-        var responseData = jsonDecode(responses.body);
-        if (responseData['success'] == true) {
-          Fluttertoast.showToast(
-            msg: responseData['message'],
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            backgroundColor: Colors.greenAccent,
-            textColor: Colors.white,
-            fontSize: 16.0,
-          );
-          await Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(
-                  builder: (context) => FogotPasswordVerificationNotice()),
-              (route) => false);
+      final responseData = jsonDecode(response.body);
+
+      setState(() {
+        _isLoading = false;
+        if (response.statusCode == 200 && responseData['status'] == true) {
+          _success = true;
+          _message = responseData['message'] ?? 'Password reset email sent!';
         } else {
-          Fluttertoast.showToast(
-            msg: "Error: ${responseData['message']}",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            backgroundColor: Colors.red,
-            textColor: Colors.white,
-            fontSize: 16.0,
-          );
+          _success = false;
+          _message = responseData['message'] ?? 'Failed to reset password. Please try again.';
         }
-      } else {
-        Fluttertoast.showToast(
-          msg: "There is an error. Please try again.",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0,
-        );
-      }
+      });
     } catch (error) {
-      print('Error: $error');
+      setState(() {
+        _isLoading = false;
+        _success = false;
+        _message = 'Network error. Please check your connection and try again.';
+      });
     }
-    setState(() {
-      _isLoading = false;
-    });
   }
 
-  InputDecoration getInputDecoration(String hintext) {
-    return InputDecoration(
-      enabledBorder: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: kDefaultColor.withOpacity(0.1), width: 1),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: kDefaultColor.withOpacity(0.1), width: 1),
-      ),
-      border: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: kDefaultColor.withOpacity(0.1), width: 1),
-      ),
-      focusedErrorBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: Color(0xFFF65054)),
-      ),
-      errorBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: Color(0xFFF65054)),
-      ),
-      filled: true,
-      hintStyle: const TextStyle(color: Colors.black54, fontSize: 16),
-      hintText: hintext,
-      fillColor: kInputBoxBackGroundColor,
-      contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
-    );
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackGroundColor,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Form(
-            key: globalFormKey,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.white,
+              kBackGroundColor.withOpacity(0.8),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(
-                  height: 20,
-                ),
-                Row(
-                  children: [
-                    const SizedBox(
-                      width: 20,
-                    ),
-                    GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: Image.asset("assets/images/Back Button.png")),
-                  ],
-                ),
-                const SizedBox(
-                  height: 100,
-                ),
-                const Center(
-                  child: Text(
-                    'Foeget Password',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 40,
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Text(
-                    'Provide your email address to reset password ',
-                    style: TextStyle(
-                      color: kGreyLightColor,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20.0, vertical: 5.0),
-                  child: TextFormField(
-                    style: const TextStyle(fontSize: 14),
-                    decoration: getInputDecoration(
-                      'E-mail',
-                    ),
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (input) =>
-                        !RegExp(r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")
-                                .hasMatch(input!)
-                            ? "Email Id should be valid"
-                            : null,
-                    onSaved: (value) {
-                      _emailController.text = value as String;
-                    },
-                  ),
-                ),
-                SizedBox(
-                  width: MediaQuery.sizeOf(context).width,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 15.0),
-                      child: MaterialButton(
-                        minWidth: MediaQuery.sizeOf(context).width,
-                        elevation: 0,
-                        color: kDefaultColor,
-                        onPressed: () {
-                          if (globalFormKey.currentState!.validate()) {
-                            if (!_isLoading) {
-                              sendemail(_emailController.text, context);
-                            }
-                          }
-                        },
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadiusDirectional.circular(16),
+                IconButton(
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
-                        child: _isLoading
-                            ? const Center(
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white),
-                                ),
-                              )
-                            : const Text(
-                                'Reset Password',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
+                      ],
+                    ),
+                    child: const Icon(Icons.arrow_back, color: kDefaultColor),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 30),
+                          Image.asset(
+                            'assets/images/forgot_image.png',
+                            height: 180,
+                          ),
+                          const SizedBox(height: 40),
+                          const Text(
+                            'Forgot Password',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: kDefaultColor,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Enter your email address and we\'ll send you a link to reset your password.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 40),
+                          Form(
+                            key: _formKey,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Column(
+                                  children: [
+                                    TextFormField(
+                                      controller: _emailController,
+                                      keyboardType: TextInputType.emailAddress,
+                                      decoration: InputDecoration(
+                                        hintText: 'Email Address',
+                                        prefixIcon: const Icon(Icons.email, color: kDefaultColor),
+                                        filled: true,
+                                        fillColor: Colors.grey[100],
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: const BorderSide(color: kDefaultColor),
+                                        ),
+                                      ),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Please enter your email';
+                                        }
+                                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                                          return 'Please enter a valid email';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    const SizedBox(height: 30),
+                                    if (_message.isNotEmpty)
+                                      Container(
+                                        padding: const EdgeInsets.all(15),
+                                        decoration: BoxDecoration(
+                                          color: _success ? Colors.green[50] : Colors.red[50],
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              _success ? Icons.check_circle : Icons.error,
+                                              color: _success ? Colors.green : Colors.red,
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Expanded(
+                                              child: Text(
+                                                _message,
+                                                style: TextStyle(
+                                                  color: _success ? Colors.green[700] : Colors.red[700],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    if (_message.isNotEmpty) const SizedBox(height: 30),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: kDefaultColor,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(vertical: 15),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          elevation: 0,
+                                        ),
+                                        onPressed: _isLoading ? null : _resetPassword,
+                                        child: _isLoading
+                                            ? const SizedBox(
+                                                height: 20,
+                                                width: 20,
+                                                child: CircularProgressIndicator(
+                                                  color: Colors.white,
+                                                  strokeWidth: 2,
+                                                ),
+                                              )
+                                            : const Text(
+                                                'Reset Password',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-                // SizedBox(
-                //   width: MediaQuery.sizeOf(context).width,
-                //   child: Padding(
-                //     padding: const EdgeInsets.only(top: 10.0),
-                //     child: Padding(
-                //       padding: const EdgeInsets.symmetric(
-                //           horizontal: 20.0, vertical: 15.0),
-                //       child: MaterialButton(
-                //         minWidth: MediaQuery.sizeOf(context).width,
-                //         elevation: 0,
-                //         color: kDefaultColor,
-                //         onPressed: () {
-                //           if (globalFormKey.currentState!.validate()) {
-                //             // Navigator.of(context).pushAndRemoveUntil(
-                //             //     MaterialPageRoute(
-                //             //         builder: (context) =>
-                //             //             FogotPasswordVerificationNotice()),
-                //             //     (route) => false);
-
-                //             _isLoading
-                //                 ? const Center(
-                //                     child: CircularProgressIndicator())
-                //                 : sendemail(_emailController.text, context);
-                //           }
-                //         },
-                //         padding: const EdgeInsets.symmetric(
-                //             horizontal: 20, vertical: 16),
-                //         shape: RoundedRectangleBorder(
-                //           borderRadius: BorderRadiusDirectional.circular(16),
-                //           // side: const BorderSide(color: kRedColor),
-                //         ),
-                //         child: const Row(
-                //           mainAxisAlignment: MainAxisAlignment.center,
-                //           children: [
-                //             Text(
-                //               'Reset Password',
-                //               style: TextStyle(
-                //                 fontSize: 16,
-                //                 color: Colors.white,
-                //                 fontWeight: FontWeight.w500,
-                //               ),
-                //             ),
-                //           ],
-                //         ),
-                //       ),
-                //     ),
-                //   ),
-                // ),
               ],
             ),
           ),

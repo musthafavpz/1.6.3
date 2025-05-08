@@ -73,7 +73,7 @@ class _MyCourseGridState extends State<MyCourseGrid> {
                             fit: BoxFit.cover,
                             imageErrorBuilder: (context, error, stackTrace) => 
                                 Image.asset(
-                                  'assets/images/placeholder.png',
+                                  'assets/images/course_thumbnail.png',
                                   fit: BoxFit.cover,
                                 ),
                           ),

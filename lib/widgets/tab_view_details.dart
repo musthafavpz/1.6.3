@@ -1,19 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 import './custom_text.dart';
 import '../constants.dart';
 
 class TabViewDetails extends StatelessWidget {
   final String? titleText;
   final List<String>? listText;
+  final String? description;
 
   const TabViewDetails({
     super.key,
-    @required this.titleText,
-    @required this.listText,
+    this.titleText,
+    this.listText,
+    this.description,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (description != null) {
+      return SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Html(
+            data: description!,
+            style: {
+              "body": Style(
+                fontSize: FontSize(15.0),
+                color: kTextColor,
+              ),
+              "li": Style(
+                margin: const EdgeInsets.only(bottom: 8),
+              ),
+            },
+          ),
+        ),
+      );
+    }
+
     return Column(
       children: <Widget>[
         Row(
@@ -33,7 +56,7 @@ class TabViewDetails extends StatelessWidget {
           child: ListView.builder(
             shrinkWrap: true,
             physics: const ClampingScrollPhysics(),
-            itemCount: listText!.length,
+            itemCount: listText?.length ?? 0,
             itemBuilder: (ctx, index) {
               return Padding(
                 padding:

@@ -2,13 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../constants.dart';
 import '../models/lesson.dart';
+import '../models/section.dart';
 
 class LessonListItem extends StatefulWidget {
   final Lesson? lesson;
   final int courseId;
 
-  const LessonListItem(
-      {super.key, @required this.lesson, required this.courseId});
+  const LessonListItem({
+    super.key, 
+    @required this.lesson, 
+    this.courseId = 0,
+  });
+
+  // Constructor that takes a Section and extracts the first lesson
+  factory LessonListItem.fromSection(Section section) {
+    return LessonListItem(
+      lesson: section.mLesson.isNotEmpty ? section.mLesson.first : null,
+      courseId: 0,
+    );
+  }
 
   @override
   State<LessonListItem> createState() => _LessonListItemState();

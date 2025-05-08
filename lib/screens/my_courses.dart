@@ -537,7 +537,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                         child: SlideAnimation(
                           verticalOffset: 50.0,
                           child: FadeInAnimation(
-                            child: ChangeNotifierProvider.value(
+                            child: Provider.value(
                               value: myCourseData.items[index],
                               child: const MyCourseGrid(),
                             ),

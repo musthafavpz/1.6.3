@@ -677,22 +677,16 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  TextButton.icon(
-                    onPressed: () {
-                      // Save to wishlist functionality
-                      Provider.of<Courses>(context, listen: false).toggleWishlist(course.id!);
-                      CommonFunctions.showSuccessToast('Added to wishlist');
+                  InkWell(
+                    onTap: () {
+                      Provider.of<Courses>(context, listen: false).toggleWishlist(course.id!, false);
                     },
-                    icon: const Icon(
-                      Icons.favorite_border,
-                      size: 18,
-                      color: kDefaultColor,
-                    ),
-                    label: const Text(
-                      'Wishlist',
-                      style: TextStyle(
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Icon(
+                        Icons.favorite_border,
+                        size: 18,
                         color: kDefaultColor,
-                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),

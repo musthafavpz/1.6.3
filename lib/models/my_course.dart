@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-class MyCourse {
+class MyCourse with ChangeNotifier {
   int? id;
   String? title;
   String? thumbnail;
@@ -38,4 +38,10 @@ class MyCourse {
     this.total_reviews,
     this.average_rating,
   });
+  
+  void updateProgress(int progress, int completedLessons) {
+    courseCompletion = progress;
+    totalNumberOfCompletedLessons = completedLessons;
+    notifyListeners();
+  }
 }

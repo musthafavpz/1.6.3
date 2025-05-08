@@ -390,7 +390,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                           const SizedBox(width: 5),
                                           Expanded(
                                             child: Text(
-                                              loadedCourseDetails.instructorName.toString(),
+                                              loadedCourseDetails.instructor.toString(),
                                               style: const TextStyle(
                                                 color: Colors.white70,
                                                 fontSize: 14,
@@ -428,19 +428,19 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                               children: [
                                 _buildStatItem(
                                   icon: Icons.star,
-                                  value: loadedCourseDetails.averageRating.toString(),
+                                  value: loadedCourseDetails.average_rating.toString(),
                                   label: "Rating",
                                   iconColor: Colors.amber,
                                 ),
                                 _buildStatItem(
                                   icon: Icons.people,
-                                  value: loadedCourseDetails.totalEnrollment.toString(),
+                                  value: loadedCourseDetails.numberOfEnrollment.toString(),
                                   label: "Students",
                                   iconColor: Colors.blue,
                                 ),
                                 _buildStatItem(
                                   icon: Icons.play_lesson,
-                                  value: loadedCourseDetails.totalLessons.toString(),
+                                  value: loadedCourseDetails.totalNumberOfLessons.toString(),
                                   label: "Lessons",
                                   iconColor: Colors.green,
                                 ),
@@ -495,14 +495,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                               controller: _tabController,
                               children: [
                                 // About tab
-                                TabViewDetails(description: loadedCourseDetails.description!),
+                                TabViewDetails(description: loadedCourseDetails.description),
                                 
                                 // Lessons tab
                                 loadedCourseDetails.mSection != null
                                     ? ListView.builder(
                                         itemCount: loadedCourseDetails.mSection!.length,
                                         itemBuilder: (ctx, index) {
-                                          return LessonListItem(loadedCourseDetails.mSection![index]);
+                                          return LessonListItem.fromSection(loadedCourseDetails.mSection![index]);
                                         },
                                       )
                                     : const Center(child: Text('No lessons available')),
@@ -531,7 +531,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                               mainAxisAlignment: MainAxisAlignment.center,
                                               children: [
                                                 Text(
-                                                  loadedCourseDetails.averageRating ?? "0.0",
+                                                  loadedCourseDetails.average_rating ?? "0.0",
                                                   style: const TextStyle(
                                                     fontSize: 36,
                                                     fontWeight: FontWeight.bold,

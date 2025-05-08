@@ -12,8 +12,12 @@ class CourseDetail {
   int? isPaid;
   String? instructor;
   String? instructorImage;
+  String? instructorName;
   dynamic total_reviews;
   dynamic average_rating;
+  dynamic averageRating;
+  dynamic totalEnrollment;
+  dynamic totalLessons;
   dynamic price_cart;
   int? numberOfEnrollment;
   String? shareableLink;
@@ -24,6 +28,7 @@ class CourseDetail {
   bool? isPurchased;
   bool? is_cart;
   String? preview;
+  String? description;
   List<Section>? mSection;
 
   CourseDetail({
@@ -34,8 +39,12 @@ class CourseDetail {
     this.isPaid,
     this.instructor,
     this.instructorImage,
+    this.instructorName,
     this.total_reviews,
     this.average_rating,
+    this.averageRating,
+    this.totalEnrollment,
+    this.totalLessons,
     this.price_cart,
     this.numberOfEnrollment,
     this.shareableLink,
@@ -46,6 +55,7 @@ class CourseDetail {
     @required this.isPurchased,
     @required this.is_cart,
     this.preview,
+    this.description,
     @required this.mSection,
   });
 }
