@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
+import 'package:provider/provider.dart';
 
 import '../constants.dart';
 import '../models/my_course.dart';
 import '../screens/my_course_detail.dart';
 
 class MyCourseGrid extends StatefulWidget {
-  final MyCourse? myCourse;
-
   const MyCourseGrid({
     super.key,
-    @required this.myCourse,
   });
 
   @override
@@ -19,186 +17,240 @@ class MyCourseGrid extends StatefulWidget {
 
 class _MyCourseGridState extends State<MyCourseGrid> {
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        Navigator.of(context).push(MaterialPageRoute(builder: (_) {
-          return MyCourseDetailScreen(
-              courseId: widget.myCourse!.id!,
-              enableDripContent: widget.myCourse!.enableDripContent.toString());
-        }));
-      },
-      child: Padding(
-        padding: const EdgeInsets.only(right: 5.0),
-        child: SizedBox(
-          // width: 175,
-          width: MediaQuery.of(context).size.width * .45,
-          child: Container(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: kBackButtonBorderColor.withOpacity(0.07),
-                  blurRadius: 10,
-                  offset: const Offset(0, 0),
+    final myCourse = Provider.of<MyCourse>(context, listen: false);
+    
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => MyCourseDetailScreen(
+                  courseId: myCourse.id!,
+                  enableDripContent: myCourse.enableDripContent.toString(),
                 ),
-              ],
-            ),
-            child: Card(
-              color: kWhiteColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
               ),
-              elevation: 0,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Text(widget.myCourse!.id!.toString()),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Stack(
-                      fit: StackFit.loose,
-                      alignment: Alignment.center,
-                      clipBehavior: Clip.none,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          splashColor: kDefaultColor.withOpacity(0.1),
+          highlightColor: kDefaultColor.withOpacity(0.05),
+          child: Ink(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Course Thumbnail with overlay
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(16),
+                      ),
+                      child: AspectRatio(
+                        aspectRatio: 16 / 10,
+                        child: Hero(
+                          tag: 'course_image_${myCourse.id}',
                           child: FadeInImage.assetNetwork(
                             placeholder: 'assets/images/loading_animated.gif',
-                            image: widget.myCourse!.thumbnail.toString(),
-                            height: 120,
-                            width: double.infinity,
+                            image: myCourse.thumbnail.toString(),
                             fit: BoxFit.cover,
-                          ),
-                        ),
-                        // Positioned(
-                        //   top: 5,
-                        //   left: 5,
-                        //   child: Card(
-                        //     elevation: 0,
-                        //     shape: RoundedRectangleBorder(
-                        //       borderRadius: BorderRadius.circular(7.47)
-                        //     ),
-                        //     color: kWhiteColor,
-                        //     child: const Padding(
-                        //       padding: EdgeInsets.symmetric(horizontal: 6.0, vertical: 6.0),
-                        //       child: Icon(
-                        //           Icons.favorite_rounded,
-                        //           size: 18,
-                        //           color: kDefaultColor,
-                        //         ),
-                        //     ),
-                        //   ),
-                        // ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: SizedBox(
-                      height: 50,
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          widget.myCourse!.title!,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
+                            imageErrorBuilder: (context, error, stackTrace) => 
+                                Image.asset(
+                                  'assets/images/placeholder.png',
+                                  fit: BoxFit.cover,
+                                ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Icon(
-                            Icons.star,
-                            color: kStarColor,
-                            size: 18,
+                    // Gradient overlay to make the title more readable
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.7),
+                            ],
+                          ),
+                          borderRadius: const BorderRadius.vertical(
+                            bottom: Radius.circular(4),
                           ),
                         ),
-                        Expanded(
-                          flex: 1,
-                          child: Text(
-                            widget.myCourse!.average_rating.toString(),
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: kGreyLightColor,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 5,
-                          child: Text(
-                            '(${widget.myCourse!.total_reviews.toString()} Reviews)',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: kGreyLightColor,
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  SizedBox(
-                    width: double.infinity,
-                    child: LinearPercentIndicator(
-                      lineHeight: 8.0,
-                      percent: widget.myCourse!.courseCompletion! / 100,
-                      progressColor: kSignUpTextColor,
-                      backgroundColor: kGreyLightColor.withOpacity(0.3),
-                      barRadius: const Radius.circular(8),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 15,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Text(
-                            '${(widget.myCourse!.courseCompletion!).toString()}% completed',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: kGreyLightColor,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          '${widget.myCourse!.totalNumberOfCompletedLessons}/${widget.myCourse!.totalNumberOfLessons}',
+                    // Progress indicator as an overlay
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: CircularPercentIndicator(
+                        radius: 18.0,
+                        lineWidth: 3.0,
+                        percent: (myCourse.courseCompletion ?? 0) / 100,
+                        center: Text(
+                          '${myCourse.courseCompletion}%',
                           style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: kGreyLightColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
-                      ],
+                        progressColor: kDefaultColor,
+                        backgroundColor: Colors.white.withOpacity(0.3),
+                        circularStrokeCap: CircularStrokeCap.round,
+                      ),
+                    ),
+                  ],
+                ),
+                // Course title
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+                  child: Text(
+                    myCourse.title!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      height: 1.2,
                     ),
                   ),
-                  const SizedBox(
-                    height: 15,
+                ),
+                // Rating and reviews
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.star,
+                        color: kStarColor,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${myCourse.average_rating ?? 0}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '(${myCourse.total_reviews ?? 0})',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 12),
+                // Progress bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      LinearPercentIndicator(
+                        animation: true,
+                        animationDuration: 1000,
+                        lineHeight: 8.0,
+                        percent: (myCourse.courseCompletion ?? 0) / 100,
+                        progressColor: kDefaultColor,
+                        backgroundColor: Colors.grey[200],
+                        barRadius: const Radius.circular(8),
+                        padding: EdgeInsets.zero,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${(myCourse.courseCompletion ?? 0)}% completed',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          Text(
+                            '${myCourse.totalNumberOfCompletedLessons ?? 0}/${myCourse.totalNumberOfLessons ?? 0} lessons',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Continue button
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => MyCourseDetailScreen(
+                            courseId: myCourse.id!,
+                            enableDripContent: myCourse.enableDripContent.toString(),
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: (myCourse.courseCompletion ?? 0) > 0 
+                          ? kDefaultColor 
+                          : Colors.grey[300],
+                      foregroundColor: (myCourse.courseCompletion ?? 0) > 0 
+                          ? Colors.white 
+                          : Colors.grey[700],
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      minimumSize: const Size(double.infinity, 36),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      (myCourse.courseCompletion ?? 0) > 0 
+                          ? 'Continue Learning' 
+                          : 'Start Learning',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

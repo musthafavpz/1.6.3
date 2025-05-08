@@ -267,7 +267,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => const UpdatePasswordScreen(),
+                                      builder: (context) => const UpdatePassword(),
                                     ),
                                   );
                                 },
@@ -277,7 +277,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           ),
                         ),
                       ),
-
+                      
                       // App Settings Section
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -307,7 +307,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           ),
                         ),
                       ),
-
+ 
                       // Account Management Section
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -345,7 +345,8 @@ class _AccountScreenState extends State<AccountScreen> {
                         ),
                       ),
                       
-                      const SizedBox(height: 16),
+                      // Add bottom padding to avoid overlap with navigation bar
+                      const SizedBox(height: 80),
                     ],
                   ),
                 ),
