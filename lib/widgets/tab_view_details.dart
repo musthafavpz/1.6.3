@@ -29,7 +29,7 @@ class TabViewDetails extends StatelessWidget {
                 color: kTextColor,
               ),
               "li": Style(
-                margin: Margins(bottom: 8),
+                margin: const Margins(bottom: Margin(8)),
               ),
             },
           ),

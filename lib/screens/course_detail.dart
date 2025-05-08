@@ -25,7 +25,7 @@ import '../widgets/lesson_list_item.dart';
 import '../widgets/tab_view_details.dart';
 import '../widgets/util.dart';
 import 'filter_screen.dart';
-import 'payment_web_view.dart';
+import 'payment_webview.dart';
 
 class CourseDetailScreen extends StatefulWidget {
   static const routeName = '/course-details';
