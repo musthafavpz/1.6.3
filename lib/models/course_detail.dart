@@ -18,6 +18,7 @@ class CourseDetail {
   dynamic averageRating;
   dynamic totalEnrollment;
   dynamic totalLessons;
+  dynamic totalNumberOfLessons;
   dynamic price_cart;
   int? numberOfEnrollment;
   String? shareableLink;
@@ -45,6 +46,7 @@ class CourseDetail {
     this.averageRating,
     this.totalEnrollment,
     this.totalLessons,
+    this.totalNumberOfLessons,
     this.price_cart,
     this.numberOfEnrollment,
     this.shareableLink,

@@ -17,7 +17,7 @@ class LessonListItem extends StatefulWidget {
   // Constructor that takes a Section and extracts the first lesson
   factory LessonListItem.fromSection(Section section) {
     return LessonListItem(
-      lesson: section.mLesson.isNotEmpty ? section.mLesson.first : null,
+      lesson: section.mLesson?.isNotEmpty == true ? section.mLesson!.first : null,
       courseId: 0,
     );
   }
