@@ -46,6 +46,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
   bool isLoading = false;
   dynamic courseId;
   CourseDetail? loadedCourseDetail;
+  bool _isPreviewVisible = false;
+  Widget? _previewWidget;
   var msg = 'Removed from cart';
   var msg2 = 'Added to cart';
   var msg1 = 'please tap again to Buy Now';
@@ -89,7 +91,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
 
   @override
   void initState() {
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     super.initState();
   }
 
@@ -128,46 +130,84 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
     super.didChangeDependencies();
   }
 
+  void _showVideoPreview(String? previewUrl) {
+    if (previewUrl == null) {
+      setState(() {
+        _previewWidget = NoPreviewVideo();
+        _isPreviewVisible = true;
+      });
+      return;
+    }
+
+    final isYouTube = previewUrl.contains("youtube.com") || previewUrl.contains("youtu.be");
+    final isVimeo = previewUrl.contains("vimeo.com");
+    final isDrive = previewUrl.contains("drive.google.com");
+    final isMp4 = RegExp(r"\.mp4(\?|$)").hasMatch(previewUrl);
+    final isWebm = RegExp(r"\.webm(\?|$)").hasMatch(previewUrl);
+    final isOgg = RegExp(r"\.ogg(\?|$)").hasMatch(previewUrl);
+
+    Widget previewWidget;
+
+    if (isYouTube) {
+      previewWidget = YoutubeVideoPlayerFlutter(
+        courseId: courseId,
+        videoUrl: previewUrl,
+      );
+    } else if (isDrive) {
+      final RegExp regExp = RegExp(r'[-\w]{25,}');
+      final Match? match = regExp.firstMatch(previewUrl);
+      String url = 'https://drive.google.com/uc?export=download&id=${match!.group(0)}';
+      previewWidget = PlayVideoFromNetwork(
+        courseId: courseId,
+        videoUrl: url,
+      );
+    } else if (isVimeo) {
+      String vimeoVideoId = previewUrl.split('/').last;
+      previewWidget = FromVimeoPlayer(
+        courseId: courseId,
+        vimeoVideoId: vimeoVideoId,
+      );
+    } else if (isMp4 || isOgg || isWebm) {
+      previewWidget = PlayVideoFromNetwork(
+        courseId: courseId,
+        videoUrl: previewUrl,
+      );
+    } else {
+      previewWidget = NoPreviewVideo();
+    }
+
+    setState(() {
+      _previewWidget = previewWidget;
+      _isPreviewVisible = true;
+    });
+  }
+
+  void _hideVideoPreview() {
+    setState(() {
+      _isPreviewVisible = false;
+      _previewWidget = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.arrow_back, color: kDefaultColor),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          'Course Details',
+          style: TextStyle(
+            color: Color(0xFF333333),
+            fontWeight: FontWeight.w600,
           ),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: kDefaultColor),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.share, color: kDefaultColor),
-            ),
-            onPressed: () {
-              Consumer<Courses>(
-                builder: (context, courses, child) {
-                  final loadedCourseDetails = courses.getCourseDetail;
-                  Share.share(loadedCourseDetails.shareableLink.toString(),
-                      subject: loadedCourseDetails.title.toString());
-                  return const SizedBox();
-                },
-              );
-            },
-          ),
-        ],
       ),
       body: _isLoading
           ? const Center(
@@ -178,426 +218,239 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                 final loadedCourseDetails = courses.getCourseDetail;
                 return Stack(
                   children: [
-                    SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Course banner with play button
-                          Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              // Banner image
-                              Container(
-                                height: 250,
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  borderRadius: const BorderRadius.only(
-                                    bottomLeft: Radius.circular(25),
-                                    bottomRight: Radius.circular(25),
-                                  ),
-                                  image: DecorationImage(
-                                    fit: BoxFit.cover,
-                                    image: NetworkImage(
-                                      loadedCourseDetails.thumbnail.toString(),
-                                    ),
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                                ),
-                                foregroundDecoration: BoxDecoration(
-                                  borderRadius: const BorderRadius.only(
-                                    bottomLeft: Radius.circular(25),
-                                    bottomRight: Radius.circular(25),
-                                  ),
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      Colors.transparent,
-                                      Colors.black.withOpacity(0.7),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              
-                              // Play button
-                              GestureDetector(
-                                onTap: () {
-                                  if (loadedCourseDetails.preview != null) {
-                                    final previewUrl = loadedCourseDetails.preview!;
-                                    final isYouTube = previewUrl.contains("youtube.com") || previewUrl.contains("youtu.be");
-                                    final isVimeo = previewUrl.contains("vimeo.com");
-                                    final isDrive = previewUrl.contains("drive.google.com");
-                                    final isMp4 = RegExp(r"\.mp4(\?|$)").hasMatch(previewUrl);
-                                    final isWebm = RegExp(r"\.webm(\?|$)").hasMatch(previewUrl);
-                                    final isOgg = RegExp(r"\.ogg(\?|$)").hasMatch(previewUrl);
-
-                                    if (isYouTube) {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => YoutubeVideoPlayerFlutter(
-                                            courseId: loadedCourseDetails.courseId!,
-                                            videoUrl: previewUrl,
-                                          ),
-                                        ),
-                                      );
-                                    } else if (isDrive) {
-                                      final RegExp regExp = RegExp(r'[-\w]{25,}');
-                                      final Match? match = regExp.firstMatch(loadedCourseDetails.preview.toString());
-                                      String url = 'https://drive.google.com/uc?export=download&id=${match!.group(0)}';
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) => PlayVideoFromNetwork(
-                                                courseId: loadedCourseDetails.courseId!,
-                                                videoUrl: url)),
-                                      );
-                                    } else if (isVimeo) {
-                                      String vimeoVideoId = loadedCourseDetails.preview!.split('/').last;
-                                      Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => FromVimeoPlayer(
-                                                courseId: loadedCourseDetails.courseId!,
-                                                vimeoVideoId: vimeoVideoId),
-                                          ));
-                                    } else if (isMp4 || isOgg || isWebm) {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => PlayVideoFromNetwork(
-                                            courseId: loadedCourseDetails.courseId!,
-                                            videoUrl: previewUrl,
-                                          ),
-                                        ),
-                                      );
-                                    } else {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => NoPreviewVideo(),
-                                        ),
-                                      );
-                                    }
-                                  } else {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => NoPreviewVideo(),
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.all(18),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Icon(
-                                    Icons.play_arrow_rounded,
-                                    color: kDefaultColor,
-                                    size: 32,
-                                  ),
-                                ),
-                              ),
-                              
-                              // Wishlist button
-                              Positioned(
-                                top: 90,
-                                right: 15,
-                                child: Container(
-                                  height: 40,
-                                  width: 40,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 8,
-                                        spreadRadius: 1,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: IconButton(
-                                    icon: Icon(
-                                      loadedCourseDetails.isWishlisted!
-                                          ? Icons.favorite
-                                          : Icons.favorite_border,
-                                      size: 20,
-                                      color: loadedCourseDetails.isWishlisted!
-                                          ? Colors.red
-                                          : kGreyLightColor,
-                                    ),
-                                    onPressed: () {
-                                      if (_isAuth) {
-                                        var msg = loadedCourseDetails.isWishlisted;
-                                        showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) =>
-                                              buildPopupDialogWishList(
-                                                  context,
-                                                  loadedCourseDetails.isWishlisted,
-                                                  loadedCourseDetails.courseId,
-                                                  msg),
-                                        );
-                                      } else {
-                                        CommonFunctions.showSuccessToast('Please login first');
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ),
-                              
-                              // Course title and details positioned at bottom of image
-                              Positioned(
-                                bottom: 0,
-                                left: 0,
-                                right: 0,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(20),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        loadedCourseDetails.title.toString(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                          height: 1.3,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.person, color: Colors.white70, size: 16),
-                                          const SizedBox(width: 5),
-                                          Expanded(
-                                            child: Text(
-                                              loadedCourseDetails.instructor.toString(),
-                                              style: const TextStyle(
-                                                color: Colors.white70,
-                                                fontSize: 14,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          // Course stats
-                          Container(
-                            margin: const EdgeInsets.all(16),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(15),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    // Main content
+                    Column(
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildStatItem(
-                                  icon: Icons.star,
-                                  value: loadedCourseDetails.average_rating.toString(),
-                                  label: "Rating",
-                                  iconColor: Colors.amber,
-                                ),
-                                _buildStatItem(
-                                  icon: Icons.people,
-                                  value: loadedCourseDetails.numberOfEnrollment.toString(),
-                                  label: "Students",
-                                  iconColor: Colors.blue,
-                                ),
-                                _buildStatItem(
-                                  icon: Icons.play_lesson,
-                                  value: loadedCourseDetails.totalNumberOfLessons.toString(),
-                                  label: "Lessons",
-                                  iconColor: Colors.green,
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Tab bar
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Container(
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: TabBar(
-                                controller: _tabController,
-                                indicatorColor: kDefaultColor,
-                                indicatorWeight: 3,
-                                indicatorSize: TabBarIndicatorSize.label,
-                                labelColor: kDefaultColor,
-                                unselectedLabelColor: kGreyLightColor,
-                                labelStyle: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                unselectedLabelStyle: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                tabs: const [
-                                  Tab(text: 'About'),
-                                  Tab(text: 'Lessons'),
-                                  Tab(text: 'Reviews'),
-                                ],
-                              ),
-                            ),
-                          ),
-
-                          // Tab content
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.45,
-                            child: TabBarView(
-                              controller: _tabController,
-                              children: [
-                                // About tab
-                                TabViewDetails(description: loadedCourseDetails.description),
-                                
-                                // Lessons tab
-                                loadedCourseDetails.mSection != null
-                                    ? ListView.builder(
-                                        itemCount: loadedCourseDetails.mSection!.length,
-                                        itemBuilder: (ctx, index) {
-                                          return LessonListItem.fromSection(loadedCourseDetails.mSection![index]);
-                                        },
-                                      )
-                                    : const Center(child: Text('No lessons available')),
-                                
-                                // Reviews tab
-                                SingleChildScrollView(
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                        margin: const EdgeInsets.all(15),
-                                        padding: const EdgeInsets.all(15),
+                                // Course Banner and Video Preview
+                                Stack(
+                                  children: [
+                                    // Course Thumbnail
+                                    GestureDetector(
+                                      onTap: () {
+                                        _showVideoPreview(loadedCourseDetails.preview);
+                                      },
+                                      child: Container(
+                                        height: 200,
+                                        width: double.infinity,
                                         decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(15),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(0.05),
-                                              blurRadius: 10,
-                                              offset: const Offset(0, 5),
+                                          image: DecorationImage(
+                                            fit: BoxFit.cover,
+                                            image: NetworkImage(
+                                              loadedCourseDetails.thumbnail.toString(),
                                             ),
-                                          ],
+                                          ),
                                         ),
-                                        child: Column(
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  loadedCourseDetails.average_rating ?? "0.0",
-                                                  style: const TextStyle(
-                                                    fontSize: 36,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: kDefaultColor,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 5),
-                                                const Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Row(
-                                                      children: [
-                                                        Icon(Icons.star, color: Colors.amber, size: 16),
-                                                        Icon(Icons.star, color: Colors.amber, size: 16),
-                                                        Icon(Icons.star, color: Colors.amber, size: 16),
-                                                        Icon(Icons.star, color: Colors.amber, size: 16),
-                                                        Icon(Icons.star_half, color: Colors.amber, size: 16),
-                                                      ],
-                                                    ),
-                                                    SizedBox(height: 5),
-                                                    Text(
-                                                      "Based on reviews",
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: kGreyLightColor,
-                                                      ),
-                                                    ),
-                                                  ],
+                                        foregroundDecoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              Colors.transparent,
+                                              Colors.black.withOpacity(0.5),
+                                            ],
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Container(
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(0.9),
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withOpacity(0.2),
+                                                  blurRadius: 10,
+                                                  offset: const Offset(0, 5),
                                                 ),
                                               ],
                                             ),
-                                          ],
-                                        ),
-                                      ),
-                                      // Additional review content
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(horizontal: 16),
-                                        child: Text(
-                                          "Student Reviews",
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
+                                            child: const Icon(
+                                              Icons.play_arrow_rounded,
+                                              color: kDefaultColor,
+                                              size: 32,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                      // Placeholder for review items
-                                      const Center(
-                                        child: Padding(
-                                          padding: EdgeInsets.all(20),
-                                          child: Text("No reviews available"),
+                                    ),
+
+                                    // Course Info
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(16),
+                                      margin: const EdgeInsets.only(top: 180),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(24),
+                                          topRight: Radius.circular(24),
                                         ),
                                       ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            loadedCourseDetails.title.toString(),
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF333333),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.person,
+                                                color: kGreyLightColor,
+                                                size: 16,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                loadedCourseDetails.instructor.toString(),
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                  color: kGreyLightColor,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              _buildInfoChip(
+                                                icon: Icons.people,
+                                                text: "${loadedCourseDetails.numberOfEnrollment} Students",
+                                              ),
+                                              const SizedBox(width: 8),
+                                              _buildInfoChip(
+                                                icon: Icons.play_lesson,
+                                                text: "${loadedCourseDetails.totalNumberOfLessons} Lessons",
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                                // Tabs
+                                Container(
+                                  color: Colors.white,
+                                  child: TabBar(
+                                    controller: _tabController,
+                                    indicatorColor: kDefaultColor,
+                                    indicatorWeight: 3,
+                                    labelColor: kDefaultColor,
+                                    unselectedLabelColor: kGreyLightColor,
+                                    tabs: const [
+                                      Tab(text: 'About'),
+                                      Tab(text: 'Lessons'),
+                                    ],
+                                  ),
+                                ),
+                                
+                                // Tab Content
+                                Container(
+                                  color: Colors.white,
+                                  height: MediaQuery.of(context).size.height * 0.5,
+                                  child: TabBarView(
+                                    controller: _tabController,
+                                    children: [
+                                      // About Tab
+                                      SingleChildScrollView(
+                                        padding: const EdgeInsets.all(16),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            _buildSectionTitle("Description"),
+                                            TabViewDetails(description: loadedCourseDetails.description),
+                                            const SizedBox(height: 16),
+                                            
+                                            if (loadedCourseDetails.requirements != null && 
+                                                loadedCourseDetails.requirements!.isNotEmpty)
+                                              Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  _buildSectionTitle("Requirements"),
+                                                  TabViewDetails(description: loadedCourseDetails.requirements),
+                                                  const SizedBox(height: 16),
+                                                ],
+                                              ),
+                                              
+                                            if (loadedCourseDetails.outcomes != null && 
+                                                loadedCourseDetails.outcomes!.isNotEmpty)
+                                              Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  _buildSectionTitle("What You'll Learn"),
+                                                  TabViewDetails(description: loadedCourseDetails.outcomes),
+                                                  const SizedBox(height: 16),
+                                                ],
+                                              ),
+                                              
+                                            const SizedBox(height: 100), // Bottom padding for action buttons
+                                          ],
+                                        ),
+                                      ),
+                                      
+                                      // Lessons Tab
+                                      loadedCourseDetails.mSection != null
+                                          ? ListView.builder(
+                                              padding: const EdgeInsets.only(bottom: 100),
+                                              itemCount: loadedCourseDetails.mSection!.length,
+                                              itemBuilder: (ctx, index) {
+                                                return LessonListItem.fromSection(loadedCourseDetails.mSection![index]);
+                                              },
+                                            )
+                                          : const Center(child: Text('No lessons available'))
                                     ],
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          
-                          // Add bottom spacing to prevent overlap with button bar
-                          const SizedBox(height: 100),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                     
-                    // Floating action buttons at bottom
+                    // Video Preview Overlay
+                    if (_isPreviewVisible && _previewWidget != null)
+                      Container(
+                        color: Colors.black.withOpacity(0.9),
+                        child: Stack(
+                          children: [
+                            Center(child: _previewWidget!),
+                            Positioned(
+                              top: 20,
+                              right: 20,
+                              child: GestureDetector(
+                                onTap: _hideVideoPreview,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.8),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: Colors.black,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    
+                    // Bottom Action Bar
                     Positioned(
                       bottom: 0,
                       left: 0,
@@ -669,31 +522,42 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
     );
   }
   
-  Widget _buildStatItem({
-    required IconData icon,
-    required String value,
-    required String label,
-    required Color iconColor,
-  }) {
-    return Column(
-      children: [
-        Icon(icon, color: iconColor, size: 24),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF333333),
         ),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: kGreyLightColor,
+      ),
+    );
+  }
+  
+  Widget _buildInfoChip({required IconData icon, required String text}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: kDefaultColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: kDefaultColor),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 12,
+              color: kDefaultColor,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
   

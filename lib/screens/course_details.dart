@@ -3,6 +3,9 @@ import 'dart:convert';
 
 import 'package:academy_lms_app/models/course_detail.dart';
 import 'package:academy_lms_app/screens/tab_screen.dart';
+import 'package:academy_lms_app/widgets/from_vimeo_player.dart';
+import 'package:academy_lms_app/widgets/new_youtube_player.dart';
+import 'package:academy_lms_app/widgets/no_preview_video.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -11,7 +14,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../constants.dart';
 import '../providers/courses.dart';
@@ -23,16 +26,15 @@ import '../widgets/tab_view_details.dart';
 import '../widgets/util.dart';
 import 'filter_screen.dart';
 
-class CourseDetailScreen1 extends StatefulWidget {
-  static const routeName = '/course-details1';
-  final String? courseId;
-  const CourseDetailScreen1({super.key, this.courseId});
+class CourseDetailScreen extends StatefulWidget {
+  static const routeName = '/course-details';
+  const CourseDetailScreen({super.key});
 
   @override
-  State<CourseDetailScreen1> createState() => _CourseDetailScreen1State();
+  State<CourseDetailScreen> createState() => _CourseDetailScreenState();
 }
 
-class _CourseDetailScreen1State extends State<CourseDetailScreen1>
+class _CourseDetailScreenState extends State<CourseDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int? selected;
@@ -41,9 +43,10 @@ class _CourseDetailScreen1State extends State<CourseDetailScreen1>
   bool _isAuth = false;
   bool _isLoading = false;
   bool isLoading = false;
-  // dynamic courseId;
-  CourseDetails? loadedCourse;
+  dynamic courseId;
+  CourseDetail? loadedCourseDetail;
   var msg = 'Removed from cart';
+  var msg2 = 'Added to cart';
   var msg1 = 'please tap again to Buy Now';
 
   getEnroll(String course_id) async {
@@ -106,12 +109,15 @@ class _CourseDetailScreen1State extends State<CourseDetailScreen1>
         }
       });
 
-      // courseId = ModalRoute.of(context)!.settings.arguments;
+      courseId = ModalRoute.of(context)!.settings.arguments as int;
 
       Provider.of<Courses>(context, listen: false)
-          .fetchCourseDetails(widget.courseId)
+          .fetchCourseDetailById(courseId)
           .then((_) {
+        Provider.of<Courses>(context, listen: false).getCourseDetail;
+
         // Provider.of<Courses>(context, listen: false).findById(courseId);
+
         setState(() {
           _isLoading = false;
         });
@@ -128,286 +134,333 @@ class _CourseDetailScreen1State extends State<CourseDetailScreen1>
     //   context,
     //   listen: false,
     // ).findById(courseId);
-    // final loadedCourse = Provider.of<Courses>(
+    // final loadedCourseDetail = Provider.of<Courses>(
     //   context,
     //   listen: false,
     // ).getCourseDetail;
 
-    // customNavBar() {
-    //   return Padding(
-    //     padding: const EdgeInsets.symmetric(horizontal: 20.0),
-    //     child: SizedBox(
-    //       height: 65,
-    //       child: Row(
-    //         mainAxisAlignment: MainAxisAlignment.spaceAround,
-    //         children: [
-    //           _isLoading
-    //               ? const Center(
-    //                   child: CircularProgressIndicator(color: kDefaultColor),
-    //                 )
-    //               : Column(
-    //                   mainAxisSize: MainAxisSize.min,
-    //                   children: [
-    //                     // Text(loadedCourse.isPurchased.toString()),
-    //                     IconButton(
-    //                         icon: SvgPicture.asset(
-    //                           'assets/icons/account.svg',
-    //                           colorFilter: const ColorFilter.mode(
-    //                               kGreyLightColor, BlendMode.srcIn),
-    //                         ),
-    //                         onPressed: () {
-    //                           // Handle account icon tap
-    //                           // You can navigate to the account page or show a user menu here
-    //                           Navigator.push(
-    //                               context,
-    //                               MaterialPageRoute(
-    //                                   builder: (context) => const TabsScreen(
-    //                                         pageIndex: 3,
-    //                                       )));
-    //                         },
-    //                         visualDensity: const VisualDensity(
-    //                             horizontal: -4, vertical: -4)),
-    //                     const Text(
-    //                       'Account',
-    //                       style: TextStyle(
-    //                         fontSize: 12,
-    //                         fontWeight: FontWeight.w500,
-    //                         color: kGreyLightColor,
-    //                       ),
-    //                     ),
-    //                   ],
-    //                 ),
-    //           const Padding(
-    //             padding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 15),
-    //             child: VerticalDivider(
-    //               thickness: 1.0, // Adjust the thickness of the divider
-    //               color: kGreyLightColor, // Adjust the color of the divider
-    //             ),
-    //           ),
-    //           loadedCourse.isPurchased!
-    //               ? SizedBox()
-    //               : loadedCourse.isPaid == 1
-    //                   ? Padding(
-    //                       padding: const EdgeInsets.only(right: 10.0),
-    //                       child: MaterialButton(
-    //                         elevation: 0,
-    //                         padding: const EdgeInsets.symmetric(horizontal: 10),
-    //                         onPressed: () async {
-    //                           final prefs =
-    //                               await SharedPreferences.getInstance();
-    //                           final authToken =
-    //                               (prefs.getString('access_token') ?? '');
-    //                           if (authToken.isNotEmpty) {
-    //                             if (loadedCourse.isPaid == 1) {
-    //                               if (msg1 == 'please tap again to Buy Now') {
-    //                                 setState(() {
-    //                                   msg1 = 'Added to cart';
-    //                                 });
+    customNavBar() {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        child: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(color: kDefaultColor),
+              )
+            : Consumer<Courses>(builder: (context, courses, child) {
+                final loadedCourseDetails = courses.getCourseDetail;
 
-    //                                 final prefs =
-    //                                     await SharedPreferences.getInstance();
-    //                                 final emailPre = prefs.getString('email');
-    //                                 final passwordPre =
-    //                                     prefs.getString('password');
-    //                                 var email = emailPre;
-    //                                 var password = passwordPre;
-    //                                 // print(email);
-    //                                 // print(password);
-    //                                 // var email = "student@example.com";
-    //                                 // var password = "12345678";
-    //                                 DateTime currentDateTime = DateTime.now();
-    //                                 int currentTimestamp = (currentDateTime
-    //                                             .millisecondsSinceEpoch /
-    //                                         1000)
-    //                                     .floor();
+                return SizedBox(
+                  height: 65,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                  color: Colors.transparent),
+                            )
+                          : Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Text(loadedCourseDetail.isPurchased.toString()),
+                                IconButton(
+                                    icon: SvgPicture.asset(
+                                      'assets/icons/account.svg',
+                                      colorFilter: const ColorFilter.mode(
+                                          kGreyLightColor, BlendMode.srcIn),
+                                    ),
+                                    onPressed: () {
+                                      // Handle account icon tap
+                                      // You can navigate to the account page or show a user menu here
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const TabsScreen(
+                                                    pageIndex: 3,
+                                                  )));
+                                    },
+                                    visualDensity: const VisualDensity(
+                                        horizontal: -4, vertical: -4)),
+                                const Text(
+                                  'Account',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: kGreyLightColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 15.0, vertical: 15),
+                        child: VerticalDivider(
+                          thickness: 1.0, // Adjust the thickness of the divider
+                          color:
+                              kGreyLightColor, // Adjust the color of the divider
+                        ),
+                      ),
+                      loadedCourseDetails.isPurchased!
+                          ? SizedBox()
+                          : loadedCourseDetails.isPaid == 1
+                              ? Padding(
+                                  padding: const EdgeInsets.only(right: 10.0),
+                                  child: MaterialButton(
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10),
+                                    onPressed: () async {
+                                      final prefs =
+                                          await SharedPreferences.getInstance();
+                                      final authToken =
+                                          (prefs.getString('access_token') ??
+                                              '');
+                                      if (authToken.isNotEmpty) {
+                                        if (loadedCourseDetails.isPaid == 1) {
+                                          // if (msg1 ==
+                                          //     'please tap again to Buy Now') {
 
-    //                                 String authToken =
-    //                                     'Basic ${base64Encode(utf8.encode('$email:$password:$currentTimestamp'))}';
-    //                                 // print(authToken);
-    //                                 final url =
-    //                                     '$baseUrl/payment/web_redirect_to_pay_fee?auth=$authToken&unique_id=academylaravelbycreativeitem';
-    //                                 // print(url);
-    //                                 // _launchURL(url);
+                                          final prefs = await SharedPreferences
+                                              .getInstance();
+                                          final emailPre =
+                                              prefs.getString('email');
+                                          final passwordPre =
+                                              prefs.getString('password');
+                                          var email = emailPre;
+                                          var password = passwordPre;
+                                          // print(email);
+                                          // print(password);
+                                          // var email = "student@example.com";
+                                          // var password = "12345678";
+                                          DateTime currentDateTime =
+                                              DateTime.now();
+                                          int currentTimestamp = (currentDateTime
+                                                      .millisecondsSinceEpoch /
+                                                  1000)
+                                              .floor();
 
-    //                                 if (await canLaunchUrl(Uri.parse(url))) {
-    //                                   await launchUrl(
-    //                                     Uri.parse(url),
-    //                                     mode: LaunchMode.externalApplication,
-    //                                   );
-    //                                 } else {
-    //                                   throw 'Could not launch $url';
-    //                                 }
-    //                               } else if (msg1 == 'Added to cart') {
-    //                                 setState(() {
-    //                                   msg1 = 'please tap again to Buy Now';
-    //                                 });
-    //                               }
-    //                               CommonFunctions.showSuccessToast(msg1);
-    //                               Provider.of<Courses>(context, listen: false)
-    //                                   .toggleCart(loadedCourse.id!, false);
-    //                             }
+                                          String authToken =
+                                              'Basic ${base64Encode(utf8.encode('$email:$password:$currentTimestamp'))}';
+                                          // print(authToken);
+                                          final url =
+                                              '$baseUrl/payment/web_redirect_to_pay_fee?auth=$authToken&unique_id=academylaravelbycreativeitem';
+                                          // print(url);
+                                          // _launchURL(url);
 
-    //                             // CommonFunctions.showSuccessToast('Failed to connect');
-    //                           } else {
-    //                             CommonFunctions.showWarningToast(
-    //                                 'Please login first');
-    //                           }
-    //                         },
-    //                         color: kDefaultColor,
-    //                         height: 45,
-    //                         minWidth: 111,
-    //                         textColor: Colors.white,
-    //                         shape: RoundedRectangleBorder(
-    //                           borderRadius: BorderRadius.circular(13.0),
-    //                           side: const BorderSide(color: kDefaultColor),
-    //                         ),
-    //                         child: const Text(
-    //                           'Buy Now',
-    //                           style: TextStyle(
-    //                             fontWeight: FontWeight.w500,
-    //                             fontSize: 13,
-    //                           ),
-    //                         ),
-    //                       ),
-    //                     )
-    //                   : SizedBox(
-    //                       width: 111,
-    //                     ),
-    //           loadedCourse.isPurchased!
-    //               ? Padding(
-    //                   padding: const EdgeInsets.only(right: 10.0),
-    //                   child: MaterialButton(
-    //                     elevation: 0,
-    //                     padding: const EdgeInsets.symmetric(horizontal: 10),
-    //                     onPressed: () async {
-    //                       // await getEnroll(loadedCourse.id.toString());
-    //                       final prefs = await SharedPreferences.getInstance();
-    //                       final authToken =
-    //                           (prefs.getString('access_token') ?? '');
-    //                       if (authToken.isNotEmpty) {
-    //                         Navigator.of(context).pushReplacement(
-    //                           MaterialPageRoute(
-    //                               builder: (context) => TabsScreen(
-    //                                     pageIndex: 1,
-    //                                   )),
-    //                         );
-    //                       } else {
-    //                         CommonFunctions.showWarningToast(
-    //                             'Please login first');
-    //                       }
-    //                     },
-    //                     color: kGreenPurchaseColor,
-    //                     height: 45,
-    //                     minWidth: 111,
-    //                     textColor: Colors.white,
-    //                     shape: RoundedRectangleBorder(
-    //                       borderRadius: BorderRadius.circular(13.0),
-    //                       side: const BorderSide(color: kGreenPurchaseColor),
-    //                     ),
-    //                     child: const Text(
-    //                       'Purchased',
-    //                       style: TextStyle(
-    //                         fontWeight: FontWeight.w500,
-    //                         fontSize: 13,
-    //                       ),
-    //                     ),
-    //                   ),
-    //                 )
-    //               : loadedCourse.isPaid == 1
-    //                   ? MaterialButton(
-    //                       elevation: 0,
-    //                       padding: const EdgeInsets.symmetric(horizontal: 10),
-    //                       onPressed: () async {
-    //                         final prefs = await SharedPreferences.getInstance();
-    //                         final authToken =
-    //                             (prefs.getString('access_token') ?? '');
-    //                         if (authToken.isNotEmpty) {
-    //                           if (loadedCourse.isPaid == 1) {
-    //                             if (msg == 'Removed from cart') {
-    //                               setState(() {
-    //                                 msg = 'Added to cart';
-    //                               });
-    //                             } else if (msg == 'Added to cart') {
-    //                               setState(() {
-    //                                 msg = 'Removed from cart';
-    //                               });
-    //                             }
-    //                             CommonFunctions.showSuccessToast(msg);
-    //                             Provider.of<Courses>(context, listen: false)
-    //                                 .toggleCart(loadedCourse.id!, false);
-    //                           } else {
-    //                             CommonFunctions.showWarningToast(
-    //                                 "It's a free course! Click on Buy Now");
-    //                           }
-    //                         } else {
-    //                           CommonFunctions.showSuccessToast(
-    //                               'Please login first');
-    //                         }
-    //                       },
-    //                       color: kWhiteColor,
-    //                       height: 45,
-    //                       minWidth: 111,
-    //                       textColor: const Color.fromARGB(255, 102, 76, 76),
-    //                       shape: RoundedRectangleBorder(
-    //                         borderRadius: BorderRadius.circular(13.0),
-    //                         side: const BorderSide(color: kDefaultColor),
-    //                       ),
-    //                       child: const Text(
-    //                         'Add to Cart',
-    //                         style: TextStyle(
-    //                             fontWeight: FontWeight.w500,
-    //                             fontSize: 13,
-    //                             color: kDefaultColor),
-    //                       ),
-    //                     )
-    //                   : Padding(
-    //                       padding: const EdgeInsets.only(right: 10.0),
-    //                       child: MaterialButton(
-    //                         elevation: 0,
-    //                         padding: const EdgeInsets.symmetric(horizontal: 10),
-    //                         onPressed: () async {
-    //                           // await getEnroll(loadedCourse.id.toString());
-    //                           final prefs =
-    //                               await SharedPreferences.getInstance();
-    //                           final authToken =
-    //                               (prefs.getString('access_token') ?? '');
-    //                           if (authToken.isNotEmpty) {
-    //                             if (loadedCourse.isPaid == 0) {
-    //                               await getEnroll(loadedCourse.id.toString());
-    //                               // print(loadedCourse.id.toString());
-    //                               CommonFunctions.showSuccessToast(
-    //                                   'Course Succesfully Enrolled');
-    //                             }
+                                          if (await canLaunchUrl(
+                                              Uri.parse(url))) {
+                                            await launchUrl(
+                                              Uri.parse(url),
+                                              mode: LaunchMode
+                                                  .externalApplication,
+                                            );
+                                          } else {
+                                            throw 'Could not launch $url';
+                                          }
+                                          // } else if (msg1 == 'Added to cart') {
+                                          //   setState(() {
+                                          //     msg1 =
+                                          //         'please tap again to Buy Now';
+                                          //   });
+                                          // }
+                                          CommonFunctions.showSuccessToast(
+                                              msg1);
+                                              if (!loadedCourseDetails.is_cart!) {
+                                                Provider.of<Courses>(context,
+                                                listen: false)
+                                            .toggleCart(
+                                                loadedCourseDetails.courseId!,
+                                                false);
+                                              }
+                                          
+                                        }
 
-    //                             // CommonFunctions.showSuccessToast(
-    //                             //     'Failed to connect');
-    //                           } else {
-    //                             CommonFunctions.showWarningToast(
-    //                                 'Please login first');
-    //                           }
-    //                         },
-    //                         color: kDefaultColor,
-    //                         height: 45,
-    //                         minWidth: 111,
-    //                         textColor: Colors.white,
-    //                         shape: RoundedRectangleBorder(
-    //                           borderRadius: BorderRadius.circular(13.0),
-    //                           side: const BorderSide(color: kDefaultColor),
-    //                         ),
-    //                         child: Text(
-    //                           'Enroll Now',
-    //                           style: TextStyle(
-    //                             fontWeight: FontWeight.w500,
-    //                             fontSize: 13,
-    //                           ),
-    //                         ),
-    //                       ),
-    //                     )
-    //         ],
-    //       ),
-    //     ),
-    //   );
-    // }
+                                        // CommonFunctions.showSuccessToast('Failed to connect');
+                                      } else {
+                                        CommonFunctions.showWarningToast(
+                                            'Please login first');
+                                      }
+                                    },
+                                    color: kDefaultColor,
+                                    height: 45,
+                                    minWidth: 111,
+                                    textColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(13.0),
+                                      side: const BorderSide(
+                                          color: kDefaultColor),
+                                    ),
+                                    child: const Text(
+                                      'Buy Now',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : SizedBox(
+                                  width: 111,
+                                ),
+                      loadedCourseDetails.isPurchased!
+                          ? Padding(
+                              padding: const EdgeInsets.only(right: 10.0),
+                              child: MaterialButton(
+                                elevation: 0,
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 10),
+                                onPressed: () async {
+                                  // await getEnroll(loadedCourse.id.toString());
+                                  final prefs =
+                                      await SharedPreferences.getInstance();
+                                  final authToken =
+                                      (prefs.getString('access_token') ?? '');
+                                  if (authToken.isNotEmpty) {
+                                    Navigator.of(context).pushReplacement(
+                                      MaterialPageRoute(
+                                          builder: (context) => TabsScreen(
+                                                pageIndex: 1,
+                                              )),
+                                    );
+                                  } else {
+                                    CommonFunctions.showWarningToast(
+                                        'Please login first');
+                                  }
+                                },
+                                color: kGreenPurchaseColor,
+                                height: 45,
+                                minWidth: 111,
+                                textColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(13.0),
+                                  side: const BorderSide(
+                                      color: kGreenPurchaseColor),
+                                ),
+                                child: const Text(
+                                  'Purchased',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : loadedCourseDetails.isPaid == 1
+                              ? MaterialButton(
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10),
+                                  onPressed: () async {
+                                    final prefs =
+                                        await SharedPreferences.getInstance();
+                                    final authToken =
+                                        (prefs.getString('access_token') ?? '');
+
+                                    if (authToken.isNotEmpty) {
+                                      if (loadedCourseDetails.isPaid == 1) {
+                                        // Call the provider method to toggle the cart state
+                                        Provider.of<Courses>(context,
+                                                listen: false)
+                                            .toggleCart(
+                                                loadedCourseDetails.courseId!,
+                                                false);
+
+                                        // Show toast based on current state
+                                        if (loadedCourseDetails.is_cart!) {
+                                          CommonFunctions.showSuccessToast(
+                                              "Removed from cart");
+                                        } else {
+                                          CommonFunctions.showSuccessToast(
+                                              "Added to cart");
+                                        }
+                                      } else {
+                                        CommonFunctions.showWarningToast(
+                                            "It's a free course! Click on Buy Now");
+                                      }
+                                    } else {
+                                      CommonFunctions.showSuccessToast(
+                                          'Please login first');
+                                    }
+                                  },
+                                  color: loadedCourseDetails.is_cart!
+                                      ? kDefaultColor
+                                      : kWhiteColor,
+                                  height: 45,
+                                  minWidth: 111,
+                                  textColor:
+                                      const Color.fromARGB(255, 102, 76, 76),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(13.0),
+                                    side:
+                                        const BorderSide(color: kDefaultColor),
+                                  ),
+                                  child: Text(
+                                    loadedCourseDetails.is_cart!
+                                        ? "Added to cart"
+                                        : 'Add to Cart',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 13,
+                                      color: loadedCourseDetails.is_cart!
+                                          ? kWhiteColor
+                                          : kDefaultColor,
+                                    ),
+                                  ),
+                                )
+                              : Padding(
+                                  padding: const EdgeInsets.only(right: 10.0),
+                                  child: MaterialButton(
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10),
+                                    onPressed: () async {
+                                      // await getEnroll(loadedCourse.id.toString());
+                                      final prefs =
+                                          await SharedPreferences.getInstance();
+                                      final authToken =
+                                          (prefs.getString('access_token') ??
+                                              '');
+                                      if (authToken.isNotEmpty) {
+                                        if (loadedCourseDetails.isPaid == 0) {
+                                          await getEnroll(loadedCourseDetails
+                                              .courseId
+                                              .toString());
+                                          // print(loadedCourse.id.toString());
+                                          CommonFunctions.showSuccessToast(
+                                              'Course Succesfully Enrolled');
+                                        }
+                                        // CommonFunctions.showSuccessToast(
+                                        //     'Failed to connect');
+                                      } else {
+                                        CommonFunctions.showWarningToast(
+                                            'Please login first');
+                                      }
+                                    },
+                                    color: kDefaultColor,
+                                    height: 45,
+                                    minWidth: 111,
+                                    textColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(13.0),
+                                      side: const BorderSide(
+                                          color: kDefaultColor),
+                                    ),
+                                    child: Text(
+                                      'Enroll Now',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                    ],
+                  ),
+                );
+              }),
+      );
+    }
 
     return Scaffold(
       appBar: const AppBarOne(logo: 'light_logo.png'),
@@ -419,14 +472,14 @@ class _CourseDetailScreen1State extends State<CourseDetailScreen1>
                 child: CircularProgressIndicator(color: kDefaultColor),
               )
             : Consumer<Courses>(builder: (context, courses, child) {
-                final loadedCourse = courses.courseDetails;
+                final loadedCourseDetails = courses.getCourseDetail;
                 return SingleChildScrollView(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Text(loadedCourse.isPurchased.toString()),
+                        // Text(loadedCourseDetail.isPurchased.toString()),
                         Stack(
                           fit: StackFit.loose,
                           alignment: Alignment.center,
@@ -445,7 +498,7 @@ class _CourseDetailScreen1State extends State<CourseDetailScreen1>
                                       Colors.black.withOpacity(0.6),
                                       BlendMode.dstATop),
                                   image: NetworkImage(
-                                    loadedCourse.thumbnail.toString(),
+                                    loadedCourseDetails.thumbnail.toString(),
                                   ),
                                 )),
                               ),
@@ -453,16 +506,113 @@ class _CourseDetailScreen1State extends State<CourseDetailScreen1>
                             ClipOval(
                               child: InkWell(
                                 onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            PlayVideoFromNetwork(
-                                                courseId: loadedCourse.id!,
-                                                videoUrl:
-                                                    loadedCourse.preview!)),
-                                  );
+                                  if (loadedCourseDetails.preview != null) {
+                                    final previewUrl =
+                                        loadedCourseDetails.preview!;
+                                    print(previewUrl);
+
+                                    final isYouTube =
+                                        previewUrl.contains("youtube.com") ||
+                                            previewUrl.contains("youtu.be");
+                                    final isVimeo =
+                                        previewUrl.contains("vimeo.com");
+                                    final isDrive =
+                                        previewUrl.contains("drive.google.com");
+                                    final isMp4 = RegExp(r"\.mp4(\?|$)")
+                                        .hasMatch(previewUrl);
+                                    final isWebm = RegExp(r"\.webm(\?|$)")
+                                        .hasMatch(previewUrl);
+                                    final isOgg = RegExp(r"\.ogg(\?|$)")
+                                        .hasMatch(previewUrl);
+
+                                    if (isYouTube) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              YoutubeVideoPlayerFlutter(
+                                            courseId:
+                                                loadedCourseDetails.courseId!,
+                                            videoUrl: previewUrl,
+                                          ),
+                                        ),
+                                      );
+                                    } else if (isDrive) {
+                                      final RegExp regExp =
+                                          RegExp(r'[-\w]{25,}');
+                                      final Match? match = regExp.firstMatch(
+                                          loadedCourseDetails.preview
+                                              .toString());
+                                      // print(match);
+                                      String url =
+                                          'https://drive.google.com/uc?export=download&id=${match!.group(0)}';
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                PlayVideoFromNetwork(
+                                                    courseId:
+                                                        loadedCourseDetails
+                                                            .courseId!,
+                                                    videoUrl: url)),
+                                      );
+                                    } else if (isVimeo) {
+                                      String vimeoVideoId = loadedCourseDetails
+                                          .preview!
+                                          .split('/')
+                                          .last;
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                FromVimeoPlayer(
+                                                    courseId:
+                                                        loadedCourseDetails
+                                                            .courseId!,
+                                                    vimeoVideoId: vimeoVideoId),
+                                          ));
+                                    } else if (isMp4 || isOgg || isWebm) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              PlayVideoFromNetwork(
+                                            courseId:
+                                                loadedCourseDetails.courseId!,
+                                            videoUrl: previewUrl,
+                                          ),
+                                        ),
+                                      );
+                                    } else {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              NoPreviewVideo(),
+                                        ),
+                                      );
+                                    }
+                                  } else {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => NoPreviewVideo(),
+                                      ),
+                                    );
+                                    print("Preview URL is null");
+                                  }
                                 },
+                                // onTap: () {
+                                //   Navigator.push(
+                                //     context,
+                                //     MaterialPageRoute(
+                                //         builder: (context) =>
+                                //             PlayVideoFromNetwork(
+                                //                 courseId: loadedCourse.id!,
+                                //                 videoUrl:
+                                //                     loadedCourse.preview!)),
+                                //   );
+                                // },
                                 child: Container(
                                   width: 50,
                                   height: 50,
@@ -490,14 +640,16 @@ class _CourseDetailScreen1State extends State<CourseDetailScreen1>
                                   child: FloatingActionButton(
                                     onPressed: () {
                                       if (_isAuth) {
-                                        var msg = loadedCourse.isWishlisted;
+                                        var msg =
+                                            loadedCourseDetails.isWishlisted;
                                         showDialog(
                                           context: context,
                                           builder: (BuildContext context) =>
                                               buildPopupDialogWishList(
                                                   context,
-                                                  loadedCourse.isWishlisted,
-                                                  loadedCourse.id,
+                                                  loadedCourseDetails
+                                                      .isWishlisted,
+                                                  loadedCourseDetails.courseId,
                                                   msg),
                                         );
                                       } else {
@@ -506,18 +658,19 @@ class _CourseDetailScreen1State extends State<CourseDetailScreen1>
                                       }
                                     },
                                     tooltip: 'Wishlist',
-                                    backgroundColor: loadedCourse.isWishlisted!
-                                        ? Colors.white
-                                        : kGreyLightColor.withOpacity(0.3),
+                                    backgroundColor:
+                                        loadedCourseDetails.isWishlisted!
+                                            ? Colors.white
+                                            : kGreyLightColor.withOpacity(0.3),
                                     shape: RoundedRectangleBorder(
                                         borderRadius:
                                             BorderRadius.circular(57)),
                                     child: Icon(
-                                      loadedCourse.isWishlisted!
+                                      loadedCourseDetails.isWishlisted!
                                           ? Icons.favorite
                                           : Icons.favorite,
                                       size: 30,
-                                      color: loadedCourse.isWishlisted!
+                                      color: loadedCourseDetails.isWishlisted!
                                           ? kDefaultColor
                                           : Colors.white,
                                     ),
@@ -535,7 +688,7 @@ class _CourseDetailScreen1State extends State<CourseDetailScreen1>
                               Expanded(
                                 flex: 1,
                                 child: Text(
-                                  loadedCourse.title.toString(),
+                                  loadedCourseDetails.title.toString(),
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w500,
@@ -544,8 +697,9 @@ class _CourseDetailScreen1State extends State<CourseDetailScreen1>
                               ),
                               InkWell(
                                 onTap: () async {
-                                  await Share.share(
-                                      loadedCourse.shareableLink.toString());
+                                  await Share.share(loadedCourseDetails
+                                      .shareableLink
+                                      .toString());
                                 },
                                 child: SvgPicture.asset(
                                   'assets/icons/share.svg',
@@ -574,7 +728,7 @@ class _CourseDetailScreen1State extends State<CourseDetailScreen1>
                               Padding(
                                 padding: EdgeInsets.only(right: 5),
                                 child: Text(
-                                  loadedCourse.averageRating.toString(),
+                                  loadedCourseDetails.average_rating,
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w400,
@@ -583,7 +737,7 @@ class _CourseDetailScreen1State extends State<CourseDetailScreen1>
                                 ),
                               ),
                               Text(
-                                '(${loadedCourse.total_reviews.toString()} Reviews)',
+                                '(${loadedCourseDetails.total_reviews.toString()} Reviews)',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w400,
@@ -592,7 +746,7 @@ class _CourseDetailScreen1State extends State<CourseDetailScreen1>
                               ),
                               const Spacer(),
                               Text(
-                                loadedCourse.price.toString(),
+                                loadedCourseDetails.price.toString(),
                                 style: const TextStyle(
                                     fontSize: 28, fontWeight: FontWeight.w500),
                               ),
@@ -694,15 +848,18 @@ class _CourseDetailScreen1State extends State<CourseDetailScreen1>
                                           children: [
                                             TabViewDetails(
                                               titleText: 'What is Included',
-                                              listText: loadedCourse.includes,
+                                              listText: loadedCourseDetails
+                                                  .courseIncludes,
                                             ),
                                             TabViewDetails(
                                               titleText: 'What you will learn',
-                                              listText: loadedCourse.includes,
+                                              listText: loadedCourseDetails
+                                                  .courseOutcomes,
                                             ),
                                             TabViewDetails(
                                               titleText: 'Course Requirements',
-                                              listText: loadedCourse.includes,
+                                              listText: loadedCourseDetails
+                                                  .courseRequirements,
                                             ),
                                           ],
                                         ),
@@ -725,9 +882,10 @@ class _CourseDetailScreen1State extends State<CourseDetailScreen1>
                                 key: Key('builder ${selected.toString()}'),
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
-                                itemCount: loadedCourse.sections!.length,
+                                itemCount: loadedCourseDetails.mSection!.length,
                                 itemBuilder: (ctx, index) {
-                                  final section = loadedCourse.sections![index];
+                                  final section =
+                                      loadedCourseDetails.mSection![index];
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 5.0),
                                     child: Container(
@@ -909,7 +1067,8 @@ class _CourseDetailScreen1State extends State<CourseDetailScreen1>
                                                         lesson: section
                                                             .mLesson![index],
                                                         courseId:
-                                                            loadedCourse.id!,
+                                                            loadedCourseDetails
+                                                                .courseId!,
                                                       ),
                                                       if ((section.mLesson!
                                                                   .length -
@@ -973,7 +1132,7 @@ class _CourseDetailScreen1State extends State<CourseDetailScreen1>
           ),
         ),
       ),
-      // bottomNavigationBar: customNavBar(),
+      bottomNavigationBar: customNavBar(),
     );
   }
 }

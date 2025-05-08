@@ -274,679 +274,212 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final deviceSize = MediaQuery.of(context).size;
+    final coursesProvider = Provider.of<Courses>(context);
+    final cartCourses = coursesProvider.cartItems;
+
+    double subtotal = calculateSubtotal(cartCourses);
+    double tax = 0.00;
+    double total = subtotal;
+
+    if (_cartTools != null) {
+      tax = calculateTax(subtotal, _cartTools!.tax.toString());
+      total = subtotal + tax;
+    }
+
     return Scaffold(
-      backgroundColor: kBackGroundColor,
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         title: const Text(
-          'Shopping Cart',
+          'My Cart',
           style: TextStyle(
-            color: kBlackColor,
-            fontWeight: FontWeight.bold,
             fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF333333),
           ),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.shopping_bag_outlined, color: kDefaultColor),
-            onPressed: () {
-              Navigator.of(context).pushReplacementNamed('/home');
-            },
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: RefreshIndicator(
-            color: kDefaultColor,
-            onRefresh: () async {
-              await fetchCartTools();
-              await Provider.of<Courses>(context, listen: false).fetchCartlist();
-            },
-            child: FutureBuilder(
-              future: Provider.of<Courses>(context, listen: false).fetchCartlist(),
-              builder: (ctx, dataSnapshot) {
-                if (dataSnapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CupertinoActivityIndicator(
-                      color: kDefaultColor,
-                    ),
-                  );
-                } else if (dataSnapshot.error != null) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          color: Colors.red,
-                          size: 60,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Error occurred: ${dataSnapshot.error}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kDefaultColor,
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: () {
-                            setState(() {});
-                          },
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  return Consumer<Courses>(
-                    builder: (context, cartData, child) {
-                      if (cartData.items.isEmpty) {
-                        return _buildEmptyCart();
-                      }
-                      
-                      double subtotal = calculateSubtotal(cartData.items);
-                      double tax = _cartTools != null
-                          ? calculateTax(subtotal, _cartTools!.courseSellingTax)
-                          : 0.0;
-                      double total = subtotal + tax;
-                      
-                      return Stack(
-                        children: [
-                          CustomScrollView(
-                            slivers: [
-                              SliverToBoxAdapter(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        '${cartData.items.length} ${cartData.items.length == 1 ? 'Course' : 'Courses'} in Cart',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: kBlackColor,
-                                        ),
-                                      ),
-                                      TextButton.icon(
-                                        onPressed: () {
-                                          // Implement wishlist all or similar functionality
-                                          CommonFunctions.showSuccessToast('All courses added to wishlist');
-                                        },
-                                        icon: const Icon(
-                                          Icons.favorite_border,
-                                          size: 18,
-                                          color: kDefaultColor,
-                                        ),
-                                        label: const Text(
-                                          'Save All',
-                                          style: TextStyle(
-                                            color: kDefaultColor,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) {
-                                    final course = cartData.items[index];
-                                    return _buildCartItem(context, course);
-                                  },
-                                  childCount: cartData.items.length,
-                                ),
-                              ),
-                              SliverToBoxAdapter(
-                                child: isLoading || _cartTools == null
-                                    ? const Center(child: CupertinoActivityIndicator(color: kDefaultColor))
-                                    : _buildOrderSummary(subtotal, tax, total),
-                              ),
-                              // Add extra space at the bottom for the fixed checkout button
-                              const SliverToBoxAdapter(
-                                child: SizedBox(height: 100),
-                              ),
-                            ],
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            child: _buildCheckoutButton(total),
-                          ),
-                          if (isLoading)
-                            Container(
-                              color: Colors.black.withOpacity(0.3),
-                              child: const Center(
-                                child: CupertinoActivityIndicator(
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                        ],
-                      );
-                    },
-                  );
-                }
-              },
-            ),
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: kDefaultColor),
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
+      body: isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: kDefaultColor),
+            )
+          : FadeTransition(
+              opacity: _fadeAnimation,
+              child: Column(
+                children: [
+                  // Cart items
+                  Expanded(
+                    child: cartCourses.isEmpty
+                        ? _buildEmptyCart()
+                        : _buildCartItems(cartCourses, coursesProvider),
+                  ),
+
+                  // Bottom order summary
+                  if (cartCourses.isNotEmpty)
+                    _buildOrderSummary(subtotal, tax, total),
+                ],
+              ),
+            ),
     );
   }
 
   Widget _buildEmptyCart() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const SizedBox(height: 40),
-        Container(
-          padding: const EdgeInsets.all(30),
-          decoration: BoxDecoration(
-            color: kDefaultColor.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.shopping_cart_outlined,
-            size: 80,
-            color: kDefaultColor,
-          ),
-        ),
-        const SizedBox(height: 32),
-        const Text(
-          'Your cart is empty',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
-          child: Text(
-            'Explore our top courses and add them to your cart to start your learning journey',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-              height: 1.5,
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: kDefaultColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.shopping_cart_outlined,
+              size: 72,
+              color: kDefaultColor,
             ),
           ),
-        ),
-        const SizedBox(height: 40),
-        ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: kDefaultColor,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 0,
-          ),
-          icon: const Icon(Icons.explore),
-          onPressed: () {
-            // Navigate to home screen or explore page
-            Navigator.of(context).pushReplacementNamed('/home');
-          },
-          label: const Text(
-            'Explore Courses',
+          const SizedBox(height: 24),
+          const Text(
+            'Your Cart is Empty',
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
+              color: Color(0xFF333333),
             ),
           ),
-        ),
-        const Spacer(),
-        // Add this to ensure proper bottom spacing with navigation bar
-        const SizedBox(height: 80),
-      ],
-    );
-  }
-
-  Widget _buildCartItem(BuildContext context, Course course) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            // Course content
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Thumbnail with overlay
-                Stack(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          course.thumbnail.toString(),
-                          width: 110,
-                          height: 110,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            width: 110,
-                            height: 110,
-                            color: Colors.grey[200],
-                            child: const Icon(Icons.error, color: Colors.grey),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 16,
-                      left: 16,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: kDefaultColor,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          course.price.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                // Course details
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 16, right: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          course.title.toString(),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            height: 1.3,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        // Instructor name
-                        Text(
-                          'By ${course.instructor_name ?? "Unknown Instructor"}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        // Rating and reviews
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.star,
-                              color: kStarColor,
-                              size: 16,
-                            ),
-                            Text(
-                              " ${course.average_rating}",
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              ' (${course.total_reviews} Reviews)',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        // Course details like lessons, hours
-                        Row(
-                          children: [
-                            Icon(Icons.play_circle_outline, size: 14, color: Colors.grey[600]),
-                            const SizedBox(width: 4),
-                            Text(
-                              "${course.total_lessons ?? '0'} lessons",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
-                            const SizedBox(width: 4),
-                            Text(
-                              "${course.total_duration ?? '0h'} total",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            // Divider
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Divider(
-                color: Colors.grey[200],
-                thickness: 1,
+          const SizedBox(height: 12),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              'Looks like you haven\'t added any courses to your cart yet.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: kGreyLightColor,
               ),
             ),
-            // Action buttons row
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  InkWell(
-                    onTap: () {
-                      Provider.of<Courses>(context, listen: false).toggleWishlist(course.id!, false);
-                    },
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(
-                        Icons.favorite_border,
-                        size: 18,
-                        color: kDefaultColor,
-                      ),
-                    ),
-                  ),
-                  TextButton.icon(
-                    onPressed: () {
-                      _showRemoveDialog(context, course.id!);
-                    },
-                    icon: const Icon(
-                      Icons.delete_outline,
-                      size: 18,
-                      color: Colors.red,
-                    ),
-                    label: const Text(
-                      'Remove',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOrderSummary(double subtotal, double tax, double total) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: kDefaultColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.receipt_long,
-                    color: kDefaultColor,
-                    size: 18,
-                  ),
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => const TabsScreen(pageIndex: 0),
                 ),
-                const SizedBox(width: 12),
-                const Text(
-                  'Order Summary',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            // Coupon code section
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: kDefaultColor.withOpacity(0.05),
+              );
+            },
+            icon: const Icon(Icons.explore),
+            label: const Text('Explore Courses'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kDefaultColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: kDefaultColor.withOpacity(0.2),
-                  width: 1,
-                ),
               ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.local_offer_outlined,
-                    color: kDefaultColor,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Enter coupon code',
-                        hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Apply coupon logic
-                      CommonFunctions.showSuccessToast('Coupon applied successfully');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kDefaultColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Apply',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              elevation: 0,
             ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Subtotal',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: kGreyLightColor,
-                  ),
-                ),
-                Text(
-                  formatCurrency(subtotal, _cartTools!.currencyPosition, _cartTools!.currencySymbol),
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Tax (${_cartTools!.courseSellingTax}%)',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: kGreyLightColor,
-                  ),
-                ),
-                Text(
-                  formatCurrency(tax, _cartTools!.currencyPosition, _cartTools!.currencySymbol),
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-            // Add discount row conditionally if there's a discount
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Discount',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.green,
-                  ),
-                ),
-                Text(
-                  '- ${formatCurrency(0.00, _cartTools!.currencyPosition, _cartTools!.currencySymbol)}',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.green,
-                  ),
-                ),
-              ],
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Divider(height: 1, thickness: 1),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Total',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  formatCurrency(total, _cartTools!.currencyPosition, _cartTools!.currencySymbol),
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: kDefaultColor,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCheckoutButton(double total) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
           ),
         ],
       ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Expanded(
+    );
+  }
+
+  Widget _buildCartItems(List<Course> cartCourses, Courses coursesProvider) {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      itemCount: cartCourses.length,
+      itemBuilder: (ctx, index) {
+        final course = cartCourses[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Course thumbnail
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  bottomLeft: Radius.circular(16),
+                ),
+                child: Image.network(
+                  course.thumbnail.toString(),
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: 100,
+                    height: 100,
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.image_not_supported, color: kGreyLightColor),
+                  ),
+                ),
+              ),
+              
+              // Course details
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
-                        'Total Price',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: kGreyLightColor,
-                          fontWeight: FontWeight.w500,
+                      Text(
+                        course.title.toString(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          height: 1.3,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.person,
+                            color: kGreyLightColor,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              course.instructor.toString(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: kGreyLightColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
                       Text(
-                        _cartTools != null
-                            ? formatCurrency(total, _cartTools!.currencyPosition, _cartTools!.currencySymbol)
-                            : '',
+                        course.price.toString(),
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: kDefaultColor,
                         ),
@@ -954,60 +487,162 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton(
-                    onPressed: isLoading ? null : handleCheckout,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kDefaultColor,
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor: Colors.grey,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Checkout',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 18,
-                        ),
-                      ],
-                    ),
+              ),
+              
+              // Remove button
+              IconButton(
+                onPressed: () {
+                  _showRemoveDialog(context, course.id!);
+                },
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: Color(0xFFFF5252),
+                ),
+                splashRadius: 20,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOrderSummary(double subtotal, double tax, double total) {
+    String? currencyPosition, currencySymbol;
+    
+    if (_cartTools != null) {
+      currencyPosition = _cartTools!.currency_position;
+      currencySymbol = _cartTools!.currency_symbol;
+    } else {
+      currencyPosition = "left";
+      currencySymbol = "\$";
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(24),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Order Summary",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF333333),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Subtotal
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Subtotal",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: kGreyLightColor,
+                  ),
+                ),
+                Text(
+                  formatCurrency(subtotal, currencyPosition!, currencySymbol!),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
+            
+            // Tax
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(
-                  Icons.lock_outline,
-                  size: 14,
-                  color: kGreyLightColor,
-                ),
-                const SizedBox(width: 4),
                 Text(
-                  'Secure Checkout',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
+                  "Tax (${_cartTools?.tax ?? 0}%)",
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: kGreyLightColor,
+                  ),
+                ),
+                Text(
+                  formatCurrency(tax, currencyPosition, currencySymbol),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
+            ),
+            const Divider(height: 24, thickness: 1),
+            
+            // Total
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Total",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  formatCurrency(total, currencyPosition, currencySymbol),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: kDefaultColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            
+            // Checkout button
+            ElevatedButton(
+              onPressed: isLoading ? null : () => handleCheckout(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kDefaultColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                minimumSize: const Size(double.infinity, 50),
+                elevation: 0,
+              ),
+              child: isLoading 
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Text(
+                    'Proceed to Checkout',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
             ),
           ],
         ),
