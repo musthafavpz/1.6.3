@@ -22,10 +22,8 @@ import '../widgets/common_functions.dart';
 import '../widgets/from_network.dart';
 import '../widgets/live_class_tab_widget.dart';
 import 'file_data_screen.dart';
-// import 'meeting_screen.dart';
 import 'webview_screen_iframe.dart';
-  import 'package:http/http.dart' as http;
-
+import 'package:http/http.dart' as http;
 
 class MyCourseDetailScreen extends StatefulWidget {
   final int courseId;
@@ -45,20 +43,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
   int? selected;
   var _isInit = true;
   var _isLoading = false;
-  // ignore: unused_field
   Lesson? _activeLesson;
-  dynamic data;
-
-  String downloadId = "";
-
-  dynamic path;
-  dynamic fileName;
-  dynamic lessonId;
-  dynamic courseId;
-  dynamic sectionId;
-  dynamic courseTitle;
-  dynamic sectionTitle;
-  dynamic thumbnail;
 
   @override
   void initState() {
@@ -67,9 +52,6 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
     _scrollController.addListener(_scrollListener);
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_smoothScrollToTop);
-    _tabController.addListener(_smoothScrollToTop);
-
-    super.initState();
   }
 
   @override
@@ -83,7 +65,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
 
   _smoothScrollToTop() {
     _scrollController.animateTo(0,
-        duration: const Duration(microseconds: 300), curve: Curves.ease);
+        duration: const Duration(milliseconds: 300), curve: Curves.ease);
   }
 
   @override
@@ -98,42 +80,41 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
           .then((_) {
         final activeSections =
             Provider.of<MyCourses>(context, listen: false).sectionItems;
-        setState(() {
-          _isLoading = false;
-          _activeLesson = activeSections.first.mLesson!.first;
-        });
+        if (mounted && activeSections.isNotEmpty && activeSections.first.mLesson != null && activeSections.first.mLesson!.isNotEmpty) {
+          setState(() {
+            _isLoading = false;
+            _activeLesson = activeSections.first.mLesson!.first;
+          });
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       });
     }
     _isInit = false;
     super.didChangeDependencies();
   }
 
-Future<String> getGoogleDriveDownloadUrl(String fileId) async {
-  try {
-    // Initial request to get the confirmation token
-    final initialUrl = 'https://drive.google.com/uc?export=download&id=$fileId';
-    final response = await http.get(Uri.parse(initialUrl));
+  Future<String> getGoogleDriveDownloadUrl(String fileId) async {
+    try {
+      final initialUrl = 'https://drive.google.com/uc?export=download&id=$fileId';
+      final response = await http.get(Uri.parse(initialUrl));
 
-    // Check if a confirmation token is needed
-    if (response.headers.containsKey('set-cookie')) {
-      final cookies = response.headers['set-cookie']!;
-      final tokenMatch = RegExp(r'confirm=([0-9A-Za-z\-_]+)').firstMatch(cookies);
+      if (response.headers.containsKey('set-cookie')) {
+        final cookies = response.headers['set-cookie']!;
+        final tokenMatch = RegExp(r'confirm=([0-9A-Za-z\-_]+)').firstMatch(cookies);
 
-      if (tokenMatch != null) {
-        final token = tokenMatch.group(1)!;
-
-        // Generate the confirmed URL
-        return 'https://drive.google.com/uc?export=download&id=$fileId&confirm=$token';
+        if (tokenMatch != null) {
+          final token = tokenMatch.group(1)!;
+          return 'https://drive.google.com/uc?export=download&id=$fileId&confirm=$token';
+        }
       }
+      return initialUrl;
+    } catch (e) {
+      throw Exception('Failed to generate download URL: $e');
     }
-
-    // If no token is required, return the original URL
-    return initialUrl;
-  } catch (e) {
-    throw Exception('Failed to generate download URL: $e');
   }
-}
-
 
   void lessonAction(Lesson lesson) async {
     if (lesson.lessonType == 'text') {
@@ -150,8 +131,7 @@ Future<String> getGoogleDriveDownloadUrl(String fileId) async {
               builder: (context) => WebViewScreenIframe(url: url)));
     } else if (lesson.lessonType == 'quiz') {
       Fluttertoast.showToast(
-        msg:
-            "This option is not available on Mobile Phone, Please go to the Browser",
+        msg: "This option is not available on Mobile Phone, Please go to the Browser",
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.BOTTOM,
         backgroundColor: Colors.redAccent,
@@ -159,11 +139,6 @@ Future<String> getGoogleDriveDownloadUrl(String fileId) async {
         timeInSecForIosWeb: 15,
         fontSize: 16.0,
       );
-      // final url = lesson.videoUrl;
-      // Navigator.push(
-      //     context,
-      //     MaterialPageRoute(
-      //         builder: (context) => WebViewScreenIframe(url: url)));
     } else if (lesson.lessonType == 'image') {
       final url = lesson.attachmentUrl;
       Navigator.push(context,
@@ -186,17 +161,7 @@ Future<String> getGoogleDriveDownloadUrl(String fileId) async {
         final Match? match = regExp.firstMatch(lesson.videoUrl.toString());
         final fileId = match!.group(0)!;
 
-        print(lesson.videoUrl);
-        print(match);
-
-        // String url =
-        //     'https://drive.google.com/uc?export=download&id=${match!.group(0)}';
-    //     String url =
-    // 'https://drive.google.com/uc?export=view&id=${match!.group(0)}';
-        String url =
-    "https://www.googleapis.com/drive/v3/files/$fileId?alt=media";
-
-        print(url);
+        String url = "https://www.googleapis.com/drive/v3/files/$fileId?alt=media";
 
         Navigator.push(
           context,
@@ -207,14 +172,6 @@ Future<String> getGoogleDriveDownloadUrl(String fileId) async {
                   videoUrl: url)),
         );
       } else if (lesson.lessonType == 'html5') {
-        // final RegExp regExp = RegExp(r'[-\w]{25,}');
-        // final Match? match = regExp.firstMatch(lesson.videoUrl.toString());
-
-        // print(match);
-
-        // String url =
-        //     'https://drive.google.com/uc?export=download&id=${match!.group(0)}';
-
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -224,142 +181,51 @@ Future<String> getGoogleDriveDownloadUrl(String fileId) async {
                   videoUrl: lesson.videoUrl!)),
         );
       } else if (lesson.lessonType == 'vimeo-url') {
-        // print(lesson.videoUrl);
         String vimeoVideoId = lesson.videoUrl!.split('/').last;
-        // AspectRatio(
-        //   aspectRatio: 16.0 / 9.0,
-        //   child: VimeoEmbedPlayer(
-        //     vimeoId: vimeoVideoId,
-        //     autoPlay: true,
-        //   ),
-        // );
 
         showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
               backgroundColor: kBackgroundColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
               titlePadding: EdgeInsets.zero,
               title: const Padding(
                 padding: EdgeInsets.only(left: 15.0, right: 15, top: 20),
                 child: Center(
                   child: Text('Choose Video player',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
                 ),
               ),
               actions: <Widget>[
-                const SizedBox(
-                  height: 20,
-                ),
-                MaterialButton(
-                  elevation: 0,
-                  color: kPrimaryColor,
+                const SizedBox(height: 20),
+                _buildPlayerButton(
+                  title: 'Vimeo Iframe',
                   onPressed: () {
-                    String vimUrl =
-                        'https://player.vimeo.com/video/$vimeoVideoId';
+                    String vimUrl = 'https://player.vimeo.com/video/$vimeoVideoId';
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => VimeoIframe(url: vimUrl)));
+                      context,
+                      MaterialPageRoute(builder: (context) => VimeoIframe(url: vimUrl)),
+                    );
                   },
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadiusDirectional.circular(6),
-                    // side: const BorderSide(color: kPrimaryColor),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Vimeo Iframe',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
+                ),
+                const SizedBox(height: 10),
+                _buildPlayerButton(
+                  title: 'Vimeo',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FromVimeoPlayer(
+                          courseId: widget.courseId,
+                          lessonId: lesson.id!,
+                          vimeoVideoId: vimeoVideoId,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                // MaterialButton(
-                //   elevation: 0,
-                //   color: kPrimaryColor,
-                //   onPressed: () {
-                //     Navigator.push(
-                //         context,
-                //         MaterialPageRoute(
-                //           builder: (context) => PlayVideoFromVimeoId(
-                //               courseId: widget.courseId,
-                //               lessonId: lesson.id!,
-                //               vimeoVideoId: vimeoVideoId),
-                //         ));
-                //   },
-                //   padding:
-                //       const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                //   shape: RoundedRectangleBorder(
-                //     borderRadius: BorderRadiusDirectional.circular(6),
-                //     // side: const BorderSide(color: kPrimaryColor),
-                //   ),
-                //   child: const Row(
-                //     mainAxisAlignment: MainAxisAlignment.center,
-                //     children: [
-                //       Text(
-                //         'Vimeo Pro',
-                //         style: TextStyle(
-                //           fontSize: 16,
-                //           color: Colors.white,
-                //           fontWeight: FontWeight.w500,
-                //         ),
-                //       ),
-                //     ],
-                //   ),
-                // ),
-                // const SizedBox(height: 10),
-                MaterialButton(
-                  elevation: 0,
-                  color: kPrimaryColor,
-                  onPressed: () {
-                    // String vimUrl =
-                    //     'https://player.vimeo.com/video/$vimeoVideoId';
-                    // Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //       builder: (context) =>
-                    //           WebViewScreenIframe(url: vimUrl),
-                    //     ));
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FromVimeoPlayer(
-                              courseId: widget.courseId,
-                              lessonId: lesson.id!,
-                              vimeoVideoId: vimeoVideoId),
-                        ));
+                    );
                   },
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadiusDirectional.circular(6),
-                    // side: const BorderSide(color: kPrimaryColor),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Vimeo',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
                 const SizedBox(height: 10),
               ],
@@ -367,18 +233,43 @@ Future<String> getGoogleDriveDownloadUrl(String fileId) async {
           },
         );
       } else {
-        print(lesson.videoUrl);
-        print(lesson.lessonType);
         Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => YoutubeVideoPlayerFlutter(
-                  courseId: widget.courseId,
-                  lessonId: lesson.id!,
-                  videoUrl: lesson.videoUrl!),
-            ));
+          context,
+          MaterialPageRoute(
+            builder: (context) => YoutubeVideoPlayerFlutter(
+              courseId: widget.courseId,
+              lessonId: lesson.id!,
+              videoUrl: lesson.videoUrl!,
+            ),
+          ),
+        );
       }
     }
+  }
+
+  Widget _buildPlayerButton({required String title, required VoidCallback onPressed}) {
+    return MaterialButton(
+      elevation: 0,
+      color: kPrimaryColor,
+      onPressed: onPressed,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadiusDirectional.circular(10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _launchURL(lessonUrl) async {
@@ -389,8 +280,7 @@ Future<String> getGoogleDriveDownloadUrl(String fileId) async {
     }
   }
 
-  getLessonIcon(String lessonType) {
-    // print(lessonType);
+  Widget getLessonIcon(String lessonType) {
     if (lessonType == 'video-url' ||
         lessonType == 'vimeo-url' ||
         lessonType == 'google_drive' ||
@@ -429,262 +319,45 @@ Future<String> getGoogleDriveDownloadUrl(String fileId) async {
     final sections =
         Provider.of<MyCourses>(context, listen: false).sectionItems;
 
-    lessonBody() {
-      return SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            ListView.builder(
-              key: Key('builder ${selected.toString()}'),
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: sections.length,
-              itemBuilder: (ctx, index) {
-                final section = sections[index];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20.0, vertical: 5.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          color: kBackButtonBorderColor.withOpacity(0.05),
-                          blurRadius: 25,
-                          offset: const Offset(0, 0),
-                        ),
-                      ],
-                    ),
-                    child: Card(
-                      elevation: 0.0,
-                      child: ExpansionTile(
-                        key: Key(index.toString()),
-                        initiallyExpanded: index == selected,
-                        onExpansionChanged: ((newState) {
-                          if (newState) {
-                            setState(() {
-                              selected = index;
-                            });
-                          } else {
-                            setState(() {
-                              selected = -1;
-                            });
-                          }
-                        }),
-                        iconColor: kDefaultColor,
-                        collapsedIconColor: kSelectItemColor,
-                        trailing: Icon(
-                          selected == index
-                              ? Icons.keyboard_arrow_up_rounded
-                              : Icons.keyboard_arrow_down_rounded,
-                          size: 35,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadiusDirectional.circular(16),
-                          side: const BorderSide(color: Colors.white),
-                        ),
-                        title: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 5.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 5.0,
-                                  ),
-                                  child: Text(
-                                    '${index + 1}. ${HtmlUnescape().convert(section.title.toString())}',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 5.0),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 1,
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color:
-                                              kTimeBackColor.withOpacity(0.12),
-                                          borderRadius:
-                                              BorderRadius.circular(5),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 5.0,
-                                        ),
-                                        child: Align(
-                                          alignment: Alignment.center,
-                                          child: Text(
-                                            section.totalDuration.toString(),
-                                            style: const TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w400,
-                                              color: kTimeColor,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      width: 10.0,
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: kLessonBackColor
-                                              .withOpacity(0.12),
-                                          borderRadius:
-                                              BorderRadius.circular(5),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 5.0),
-                                        child: Align(
-                                          alignment: Alignment.center,
-                                          child: Text(
-                                            '${section.mLesson!.length} Lessons',
-                                            style: const TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w400,
-                                              color: kLessonColor,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const Expanded(
-                                      flex: 1,
-                                      child: Text(""),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        children: [
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: section.mLesson!.length,
-                            itemBuilder: (ctx, indexLess) {
-                              final lesson = section.mLesson![indexLess];
-                              return InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    _activeLesson = lesson;
-                                  });
-                                  lessonAction(_activeLesson!);
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 15.0),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Checkbox(
-                                              activeColor: kDefaultColor,
-                                              value: lesson.isCompleted == '1'
-                                                  ? true
-                                                  : false,
-                                              onChanged: (bool? value) {
-                                                // print(value);
-
-                                                setState(() {
-                                                  lesson.isCompleted =
-                                                      value! ? '1' : '0';
-                                                  if (value) {
-                                                    myLoadedCourse
-                                                            .totalNumberOfCompletedLessons =
-                                                        myLoadedCourse
-                                                                .totalNumberOfCompletedLessons! +
-                                                            1;
-                                                  } else {
-                                                    myLoadedCourse
-                                                            .totalNumberOfCompletedLessons =
-                                                        myLoadedCourse
-                                                                .totalNumberOfCompletedLessons! -
-                                                            1;
-                                                  }
-                                                  var completePerc = (myLoadedCourse
-                                                              .totalNumberOfCompletedLessons! /
-                                                          myLoadedCourse
-                                                              .totalNumberOfLessons!) *
-                                                      100;
-                                                  myLoadedCourse
-                                                          .courseCompletion =
-                                                      completePerc.round();
-                                                });
-                                                Provider.of<MyCourses>(context,
-                                                        listen: false)
-                                                    .toggleLessonCompleted(
-                                                        lesson.id!.toInt(),
-                                                        value! ? 1 : 0)
-                                                    .then((_) => CommonFunctions
-                                                        .showSuccessToast(
-                                                            'Course Progress Updated'));
-                                              }),
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 4.0),
-                                            child: getLessonIcon(section
-                                                .mLesson![indexLess].lessonType
-                                                .toString()),
-                                          ),
-                                          Expanded(
-                                            flex: 1,
-                                            child: Text(
-                                              lesson.title.toString(),
-                                              style: const TextStyle(
-                                                fontSize: 14,
-                                                color: kGreyLightColor,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      if ((section.mLesson!.length - 1) !=
-                                          indexLess)
-                                        Divider(
-                                          color:
-                                              kGreyLightColor.withOpacity(0.3),
-                                        ),
-                                      if ((section.mLesson!.length - 1) ==
-                                          indexLess)
-                                        const SizedBox(height: 10),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-          ],
-        ),
-      );
-    }
-
     return Scaffold(
-      appBar: const AppBarOne(logo: 'light_logo.png'),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: kWhiteColor,
+        title: Image.asset(
+          'assets/images/light_logo.png',
+          height: 32,
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: const Icon(Icons.arrow_back_ios_new, size: 18, color: kDefaultColor),
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        actions: [
+          IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: const Icon(Icons.share_outlined, size: 18, color: kDefaultColor),
+            ),
+            onPressed: () async {
+              await Share.share(myLoadedCourse.shareableLink.toString());
+            },
+          ),
+          const SizedBox(width: 10),
+        ],
+      ),
       body: Container(
-        height: MediaQuery.of(context).size.height * 1,
+        height: MediaQuery.of(context).size.height,
         color: kBackGroundColor,
         child: _isLoading
             ? const Center(
@@ -694,234 +367,46 @@ Future<String> getGoogleDriveDownloadUrl(String fileId) async {
                 controller: _scrollController,
                 headerSliverBuilder: (context, value) {
                   return [
+                    // Course Header with Image and Progress
                     SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 20),
-                            Text(
-                              myLoadedCourse.title.toString(),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 18,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            Container(
-                              decoration: BoxDecoration(
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: kBackButtonBorderColor
-                                        .withOpacity(0.05),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 0),
-                                  ),
-                                ],
-                              ),
-                              child: Card(
-                                elevation: 0.0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8.0),
-                                  child: Column(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 10,
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              flex: 1,
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(10.0),
-                                                child: ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                  child:
-                                                      FadeInImage.assetNetwork(
-                                                    placeholder:
-                                                        'assets/images/loading_animated.gif',
-                                                    image: myLoadedCourse
-                                                        .thumbnail
-                                                        .toString(),
-                                                    height: 63,
-                                                    width: double.infinity,
-                                                    fit: BoxFit.cover,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              flex: 2,
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(
-                                                    left: 8.0),
-                                                child: RichText(
-                                                  textAlign: TextAlign.left,
-                                                  text: TextSpan(
-                                                    text: myLoadedCourse.title
-                                                        .toString(),
-                                                    style: const TextStyle(
-                                                        fontSize: 15,
-                                                        color: Colors.black),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            PopupMenuButton(
-                                              onSelected: (value) async {
-                                                if (value == 'details') {
-                                                  Navigator.of(context).push(
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          CourseDetailScreen(),
-                                                      settings: RouteSettings(
-                                                        arguments:
-                                                            widget.courseId,
-                                                      ),
-                                                    ),
-                                                  );
-
-                                                  print(myLoadedCourse.id);
-                                                } else {
-                                                  await Share.share(
-                                                      myLoadedCourse
-                                                          .shareableLink
-                                                          .toString());
-                                                }
-                                              },
-                                              icon: const Icon(
-                                                Icons.more_vert,
-                                                color: kGreyLightColor,
-                                              ),
-                                              itemBuilder: (_) => [
-                                                // const PopupMenuItem(
-                                                //   value: 'details',
-                                                //   child: Text('Course Details'),
-                                                // ),
-                                                const PopupMenuItem(
-                                                  value: 'share',
-                                                  child:
-                                                      Text('Share this Course'),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      LinearPercentIndicator(
-                                        lineHeight: 8.0,
-                                        backgroundColor:
-                                            kGreyLightColor.withOpacity(0.3),
-                                        percent:
-                                            myLoadedCourse.courseCompletion! /
-                                                100,
-                                        progressColor: kDefaultColor,
-                                        barRadius: const Radius.circular(8),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 15),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              flex: 1,
-                                              child: Text(
-                                                '${myLoadedCourse.courseCompletion}% Complete',
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: 12,
-                                                  color: kGreyLightColor,
-                                                ),
-                                              ),
-                                            ),
-                                            Text(
-                                              '${myLoadedCourse.totalNumberOfCompletedLessons}/${myLoadedCourse.totalNumberOfLessons}',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w500,
-                                                fontSize: 12,
-                                                color: kGreyLightColor,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      child: _buildCourseHeader(myLoadedCourse),
                     ),
+                    // Tab Bar
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 25.0, vertical: 10),
-                        child: SizedBox(
-                          height: 60,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 5),
-                            child: TabBar(
-                              controller: _tabController,
-                              isScrollable: false,
-                              dividerHeight: 0,
-                              indicatorColor: kDefaultColor,
-                              indicatorSize: TabBarIndicatorSize.tab,
-                              indicator: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                  color: kDefaultColor),
-                              // unselectedLabelColor: Colors.black87,
-                              labelColor: kWhiteColor,
-                              unselectedLabelColor: kDefaultColor,
-                              unselectedLabelStyle: const TextStyle(
-                                // fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                              tabs: const [
-                                Tab(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.play_lesson,
-                                        size: 15,
-                                      ),
-                                      Text(
-                                        'Lessons',
-                                        style: TextStyle(
-                                          // fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Tab(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.video_call_outlined),
-                                      Text(
-                                        'Live Class',
-                                        style: TextStyle(
-                                          // fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                            horizontal: 20.0, vertical: 15),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: TabBar(
+                            controller: _tabController,
+                            isScrollable: false,
+                            dividerHeight: 0,
+                            indicatorSize: TabBarIndicatorSize.tab,
+                            indicator: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              color: kDefaultColor,
                             ),
+                            labelColor: kWhiteColor,
+                            unselectedLabelColor: Colors.grey.shade700,
+                            labelStyle: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                            labelPadding: const EdgeInsets.symmetric(vertical: 12),
+                            tabs: const [
+                              Tab(
+                                icon: Icon(Icons.play_lesson, size: 20),
+                                text: 'Lessons',
+                              ),
+                              Tab(
+                                icon: Icon(Icons.video_call_outlined, size: 20),
+                                text: 'Live Class',
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -931,12 +416,443 @@ Future<String> getGoogleDriveDownloadUrl(String fileId) async {
                 body: TabBarView(
                   controller: _tabController,
                   children: [
-                    lessonBody(),
+                    _buildLessonsTabContent(sections, myLoadedCourse),
                     LiveClassTabWidget(courseId: widget.courseId),
-                    // lessonBodyTwo(),
                   ],
                 ),
               ),
+      ),
+    );
+  }
+
+  Widget _buildCourseHeader(dynamic myLoadedCourse) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Course Image Banner
+        Container(
+          height: 200,
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 20),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Course image
+              FadeInImage.assetNetwork(
+                placeholder: 'assets/images/loading_animated.gif',
+                image: myLoadedCourse.thumbnail.toString(),
+                fit: BoxFit.cover,
+              ),
+              // Gradient overlay
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.7),
+                    ],
+                  ),
+                ),
+              ),
+              // Course title at bottom
+              Positioned(
+                bottom: 15,
+                left: 20,
+                right: 20,
+                child: Text(
+                  myLoadedCourse.title.toString(),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        offset: Offset(0, 1),
+                        blurRadius: 3,
+                        color: Colors.black54,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        
+        // Progress card
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Your Progress",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 15),
+              LinearPercentIndicator(
+                animation: true,
+                animationDuration: 1000,
+                lineHeight: 10.0,
+                percent: myLoadedCourse.courseCompletion! / 100,
+                backgroundColor: Colors.grey.shade200,
+                progressColor: kDefaultColor,
+                barRadius: const Radius.circular(10),
+                padding: EdgeInsets.zero,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${myLoadedCourse.courseCompletion}% Completed',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: myLoadedCourse.courseCompletion! > 0 
+                          ? kDefaultColor 
+                          : Colors.grey.shade600,
+                    ),
+                  ),
+                  Text(
+                    '${myLoadedCourse.totalNumberOfCompletedLessons}/${myLoadedCourse.totalNumberOfLessons} lessons',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLessonsTabContent(List sections, dynamic myLoadedCourse) {
+    return sections.isEmpty
+        ? const Center(child: Text('No lessons available'))
+        : SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Column(
+              children: [
+                ListView.builder(
+                  key: Key('builder ${selected.toString()}'),
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: sections.length,
+                  itemBuilder: (ctx, index) {
+                    final section = sections[index];
+                    return _buildSectionCard(
+                      section: section, 
+                      index: index, 
+                      myLoadedCourse: myLoadedCourse
+                    );
+                  },
+                ),
+              ],
+            ),
+          );
+  }
+
+  Widget _buildSectionCard({required dynamic section, required int index, required dynamic myLoadedCourse}) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ExpansionTile(
+        key: Key(index.toString()),
+        initiallyExpanded: index == selected,
+        onExpansionChanged: ((newState) {
+          setState(() {
+            selected = newState ? index : -1;
+          });
+        }),
+        tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        collapsedShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        iconColor: kDefaultColor,
+        collapsedIconColor: Colors.grey.shade700,
+        childrenPadding: const EdgeInsets.symmetric(horizontal: 20),
+        trailing: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: selected == index 
+                ? kDefaultColor.withOpacity(0.1) 
+                : Colors.grey.shade100,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            selected == index
+                ? Icons.keyboard_arrow_up_rounded
+                : Icons.keyboard_arrow_down_rounded,
+            size: 24,
+            color: selected == index ? kDefaultColor : Colors.grey.shade700,
+          ),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: kDefaultColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${index + 1}',
+                    style: const TextStyle(
+                      color: kDefaultColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    HtmlUnescape().convert(section.title.toString()),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                // Duration
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.access_time,
+                        size: 14,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        section.totalDuration.toString(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // Lesson count
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.play_lesson,
+                        size: 14,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${section.mLesson!.length} Lessons',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        children: [
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: section.mLesson!.length,
+            separatorBuilder: (context, index) => Divider(
+              color: Colors.grey.shade200,
+              height: 1,
+            ),
+            itemBuilder: (ctx, indexLess) {
+              final lesson = section.mLesson![indexLess];
+              final bool isCompleted = lesson.isCompleted == '1';
+              
+              return InkWell(
+                onTap: () {
+                  setState(() {
+                    _activeLesson = lesson;
+                  });
+                  lessonAction(_activeLesson!);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    children: [
+                      // Completion checkbox
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: isCompleted 
+                              ? kDefaultColor 
+                              : Colors.grey.shade200,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Checkbox(
+                          activeColor: Colors.transparent,
+                          checkColor: Colors.white,
+                          value: isCompleted,
+                          shape: const CircleBorder(),
+                          side: BorderSide.none,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              lesson.isCompleted = value! ? '1' : '0';
+                              if (value) {
+                                myLoadedCourse.totalNumberOfCompletedLessons =
+                                    myLoadedCourse.totalNumberOfCompletedLessons! + 1;
+                              } else {
+                                myLoadedCourse.totalNumberOfCompletedLessons =
+                                    myLoadedCourse.totalNumberOfCompletedLessons! - 1;
+                              }
+                              var completePerc = 
+                                  (myLoadedCourse.totalNumberOfCompletedLessons! / 
+                                  myLoadedCourse.totalNumberOfLessons!) * 100;
+                              myLoadedCourse.courseCompletion = completePerc.round();
+                            });
+                            
+                            Provider.of<MyCourses>(context, listen: false)
+                                .toggleLessonCompleted(
+                                    lesson.id!.toInt(),
+                                    value! ? 1 : 0)
+                                .then((_) => CommonFunctions.showSuccessToast(
+                                    'Course Progress Updated'));
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      
+                      // Lesson icon
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: getLessonIcon(lesson.lessonType.toString()),
+                      ),
+                      
+                      const SizedBox(width: 15),
+                      
+                      // Lesson title
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              lesson.title.toString(),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: isCompleted 
+                                    ? FontWeight.w500 
+                                    : FontWeight.w400,
+                                color: isCompleted 
+                                    ? Colors.black87 
+                                    : Colors.grey.shade700,
+                              ),
+                            ),
+                            if (lesson.duration != null && lesson.duration!.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  lesson.duration!,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Play button
+                      IconButton(
+                        icon: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: kDefaultColor.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.play_arrow,
+                            size: 16,
+                            color: kDefaultColor,
+                          ),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _activeLesson = lesson;
+                          });
+                          lessonAction(_activeLesson!);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 15),
+        ],
       ),
     );
   }
