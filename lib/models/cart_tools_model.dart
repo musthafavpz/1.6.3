@@ -28,10 +28,10 @@ class CartTools {
     factory CartTools.fromJson(Map<String, dynamic> json) => CartTools(
         courseSellingTax: json["course_selling_tax"] ?? "0",
         currencyPosition: json["currency_position"] ?? "left",
-        currencySymbol: json["currency_symbol"] ?? "$",
+        currencySymbol: json["currency_symbol"] ?? "\$",
         tax: json["tax"] ?? json["course_selling_tax"] ?? "0",
         currency_position: json["currency_position"] ?? "left",
-        currency_symbol: json["currency_symbol"] ?? "$",
+        currency_symbol: json["currency_symbol"] ?? "\$",
     );
 
     Map<String, dynamic> toJson() => {
