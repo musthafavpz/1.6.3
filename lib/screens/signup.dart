@@ -215,15 +215,15 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
     return InputDecoration(
       enabledBorder: OutlineInputBorder(
         borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: Colors.transparent, width: 1),
+        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: Color(0xFFFF0080).withOpacity(0.5), width: 1),
+        borderSide: BorderSide(color: kDefaultColor, width: 1),
       ),
       border: OutlineInputBorder(
         borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: Colors.transparent, width: 1),
+        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
       ),
       focusedErrorBorder: const OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(16.0)),
@@ -234,13 +234,13 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
         borderSide: BorderSide(color: Color(0xFFF65054)),
       ),
       filled: true,
-      hintStyle: const TextStyle(color: Colors.black54, fontSize: 16),
+      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 16),
       hintText: hintext,
-      fillColor: Colors.white.withOpacity(0.9),
+      fillColor: Colors.grey.shade50,
       contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
       prefixIcon: Icon(
         icon,
-        color: Color(0xFFFF0080).withOpacity(0.7),
+        color: kDefaultColor,
         size: 22,
       ),
     );
@@ -251,6 +251,7 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
     final screenSize = MediaQuery.of(context).size;
     
     return Scaffold(
+      backgroundColor: Colors.white,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -259,111 +260,94 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white,
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  spreadRadius: 0,
+                ),
+              ],
             ),
-            child: Icon(Icons.arrow_back, color: Color(0xFFFF0080)),
+            child: Icon(Icons.arrow_back, color: kDefaultColor, size: 20),
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: Container(
-        height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFFFF8A00),
-              Color(0xFFFF0080),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SafeArea(
-          child: Stack(
-            children: [
-              // Decorative circles
-              Positioned(
-                top: -screenSize.height * 0.15,
-                right: -screenSize.width * 0.3,
-                child: Container(
-                  height: screenSize.height * 0.4,
-                  width: screenSize.height * 0.4,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.15),
-                  ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // Subtle design elements
+            Positioned(
+              top: -100,
+              right: -50,
+              child: Container(
+                height: 200,
+                width: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: kDefaultColor.withOpacity(0.05),
                 ),
               ),
-              Positioned(
-                bottom: -screenSize.height * 0.1,
-                left: -screenSize.width * 0.3,
-                child: Container(
-                  height: screenSize.height * 0.4,
-                  width: screenSize.height * 0.4,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.15),
-                  ),
+            ),
+            Positioned(
+              bottom: -150,
+              left: -100,
+              child: Container(
+                height: 300,
+                width: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: kDefaultColor.withOpacity(0.05),
                 ),
               ),
-              
-              AnimatedBuilder(
-                animation: _controller,
-                builder: (context, child) {
-                  return FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: SlideTransition(
-                      position: _slideAnimation,
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                        child: SingleChildScrollView(
-                          child: Container(
-                            margin: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-                            padding: const EdgeInsets.all(25),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(30),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
-                                width: 1,
+            ),
+            
+            AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SizedBox(height: 10),
+                            // Title
+                            Text(
+                              'Create Account',
+                              style: TextStyle(
+                                fontSize: 30,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                                letterSpacing: 0.5,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 20,
-                                  spreadRadius: 5,
-                                  offset: Offset(0, 10),
-                                ),
-                              ],
                             ),
-                            child: Form(
+                            SizedBox(height: 12),
+                            Text(
+                              'Join our learning community',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey.shade600,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: 40),
+                            
+                            // Registration Form
+                            Form(
                               key: globalFormKey,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  // Title
-                                  Text(
-                                    'Create Account',
-                                    style: TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    'Join our learning community',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white.withOpacity(0.9),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 30),
-                                  
                                   // Name field
                                   TextFormField(
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 16,
                                       color: Colors.black87,
                                     ),
@@ -379,11 +363,11 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                       return null;
                                     },
                                   ),
-                                  const SizedBox(height: 20),
+                                  SizedBox(height: 20),
                                   
                                   // Email field
                                   TextFormField(
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 16,
                                       color: Colors.black87,
                                     ),
@@ -399,11 +383,11 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                             ? "Email should be valid"
                                             : null,
                                   ),
-                                  const SizedBox(height: 20),
+                                  SizedBox(height: 20),
                                   
                                   // Password field
                                   TextFormField(
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 16,
                                       color: Colors.black87,
                                     ),
@@ -421,25 +405,25 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                     obscureText: hidePassword,
                                     decoration: InputDecoration(
                                       enabledBorder: OutlineInputBorder(
-                                        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-                                        borderSide: BorderSide(color: Colors.transparent, width: 1),
+                                        borderRadius: BorderRadius.all(Radius.circular(16.0)),
+                                        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
                                       ),
                                       focusedBorder: OutlineInputBorder(
-                                        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-                                        borderSide: BorderSide(color: Color(0xFFFF0080).withOpacity(0.5), width: 1),
+                                        borderRadius: BorderRadius.all(Radius.circular(16.0)),
+                                        borderSide: BorderSide(color: kDefaultColor, width: 1),
                                       ),
                                       border: OutlineInputBorder(
-                                        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-                                        borderSide: BorderSide(color: Colors.transparent, width: 1),
+                                        borderRadius: BorderRadius.all(Radius.circular(16.0)),
+                                        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
                                       ),
                                       filled: true,
-                                      hintStyle: const TextStyle(color: Colors.black54, fontSize: 16),
+                                      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 16),
                                       hintText: "Password",
-                                      fillColor: Colors.white.withOpacity(0.9),
+                                      fillColor: Colors.grey.shade50,
                                       contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
                                       prefixIcon: Icon(
                                         Icons.lock_outline,
-                                        color: Color(0xFFFF0080).withOpacity(0.7),
+                                        color: kDefaultColor,
                                         size: 22,
                                       ),
                                       suffixIcon: IconButton(
@@ -448,7 +432,7 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                             hidePassword = !hidePassword;
                                           });
                                         },
-                                        color: kInputBoxIconColor,
+                                        color: Colors.grey.shade500,
                                         icon: Icon(
                                           hidePassword
                                               ? Icons.visibility_off_outlined
@@ -457,11 +441,11 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 20),
+                                  SizedBox(height: 20),
                                   
                                   // Confirm Password field
                                   TextFormField(
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 16,
                                       color: Colors.black87,
                                     ),
@@ -479,25 +463,25 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                     obscureText: hideConPassword,
                                     decoration: InputDecoration(
                                       enabledBorder: OutlineInputBorder(
-                                        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-                                        borderSide: BorderSide(color: Colors.transparent, width: 1),
+                                        borderRadius: BorderRadius.all(Radius.circular(16.0)),
+                                        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
                                       ),
                                       focusedBorder: OutlineInputBorder(
-                                        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-                                        borderSide: BorderSide(color: Color(0xFFFF0080).withOpacity(0.5), width: 1),
+                                        borderRadius: BorderRadius.all(Radius.circular(16.0)),
+                                        borderSide: BorderSide(color: kDefaultColor, width: 1),
                                       ),
                                       border: OutlineInputBorder(
-                                        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-                                        borderSide: BorderSide(color: Colors.transparent, width: 1),
+                                        borderRadius: BorderRadius.all(Radius.circular(16.0)),
+                                        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
                                       ),
                                       filled: true,
-                                      hintStyle: const TextStyle(color: Colors.black54, fontSize: 16),
+                                      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 16),
                                       hintText: "Confirm Password",
-                                      fillColor: Colors.white.withOpacity(0.9),
+                                      fillColor: Colors.grey.shade50,
                                       contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
                                       prefixIcon: Icon(
                                         Icons.lock_outline,
-                                        color: Color(0xFFFF0080).withOpacity(0.7),
+                                        color: kDefaultColor,
                                         size: 22,
                                       ),
                                       suffixIcon: IconButton(
@@ -506,7 +490,7 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                             hideConPassword = !hideConPassword;
                                           });
                                         },
-                                        color: kInputBoxIconColor,
+                                        color: Colors.grey.shade500,
                                         icon: Icon(
                                           hideConPassword
                                               ? Icons.visibility_off_outlined
@@ -515,89 +499,86 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(height: 30),
+                                  SizedBox(height: 40),
                                   
                                   // Sign Up Button
-                                  _isLoading
-                                      ? Center(
-                                          child: CircularProgressIndicator(
-                                            color: Colors.white,
-                                            strokeWidth: 3,
+                                  if (_isLoading)
+                                    Container(
+                                      height: 56,
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade100,
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          color: kDefaultColor,
+                                          strokeWidth: 3,
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    Container(
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        color: kDefaultColor,
+                                        borderRadius: BorderRadius.circular(16),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: kDefaultColor.withOpacity(0.25),
+                                            blurRadius: 20,
+                                            offset: Offset(0, 10),
                                           ),
-                                        )
-                                      : Container(
-                                          width: double.infinity,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
+                                        ],
+                                      ),
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          if (globalFormKey.currentState!.validate()) {
+                                            globalFormKey.currentState!.save();
+                                            if (_passwordController.text == _conPasswordController.text) {
+                                              signup(
+                                                _nameController.text.toString(),
+                                                _emailController.text.toString(),
+                                                _passwordController.text.toString(),
+                                                _conPasswordController.text.toString(),
+                                                context,
+                                              );
+                                            } else {
+                                              Fluttertoast.showToast(msg: "Passwords do not match!");
+                                            }
+                                          }
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.transparent,
+                                          foregroundColor: Colors.white,
+                                          disabledForegroundColor: Colors.transparent.withOpacity(0.38),
+                                          disabledBackgroundColor: Colors.transparent.withOpacity(0.12),
+                                          elevation: 0,
+                                          padding: EdgeInsets.symmetric(vertical: 16),
+                                          shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(16),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withOpacity(0.1),
-                                                blurRadius:
-                                                    10,
-                                                offset: Offset(0, 5),
-                                              ),
-                                            ],
-                                          ),
-                                          child: ElevatedButton(
-                                            onPressed: () {
-                                              if (_nameController.text.isEmpty) {
-                                                Fluttertoast.showToast(
-                                                    msg: "Name field cannot be empty");
-                                              } else if (_emailController.text.isEmpty) {
-                                                Fluttertoast.showToast(
-                                                    msg: "Email field cannot be empty");
-                                              } else if (_passwordController.text.isEmpty) {
-                                                Fluttertoast.showToast(
-                                                    msg: "Password field cannot be empty");
-                                              } else if (_conPasswordController.text.isEmpty) {
-                                                Fluttertoast.showToast(
-                                                    msg: "Confirm Password field cannot be empty");
-                                              } else if (_passwordController.text !=
-                                                  _conPasswordController.text) {
-                                                Fluttertoast.showToast(
-                                                    msg: "Confirm password not matched");
-                                              } else {
-                                                signup(
-                                                    _nameController.text,
-                                                    _emailController.text,
-                                                    _passwordController.text,
-                                                    _conPasswordController.text,
-                                                    context);
-                                              }
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Color(0xFFFF0080),
-                                              disabledForegroundColor:
-                                                  Colors.transparent.withOpacity(0.38),
-                                              disabledBackgroundColor:
-                                                  Colors.transparent.withOpacity(0.12),
-                                              elevation: 0,
-                                              padding: EdgeInsets.symmetric(vertical: 16),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(16),
-                                              ),
-                                            ),
-                                            child: Text(
-                                              'CREATE ACCOUNT',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white,
-                                              ),
-                                            ),
                                           ),
                                         ),
-                                  const SizedBox(height: 20),
-                                  
-                                  // Already have account
+                                        child: Text(
+                                          'SIGN UP',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 1,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    
+                                  SizedBox(height: 30),
+                                  // Already have an account
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
                                         "Already have an account? ",
                                         style: TextStyle(
-                                          color: Colors.white,
+                                          color: Colors.grey.shade600,
                                           fontSize: 14,
                                         ),
                                       ),
@@ -606,29 +587,29 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                           Navigator.of(context).pop();
                                         },
                                         child: Text(
-                                          'Login',
+                                          "Login",
                                           style: TextStyle(
-                                            color: Colors.white,
+                                            color: kDefaultColor,
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 15,
+                                            fontSize: 14,
                                           ),
                                         ),
                                       ),
                                     ],
                                   ),
-                                  SizedBox(height: 10),
+                                  SizedBox(height: 20),
                                 ],
                               ),
                             ),
-                          ),
+                          ],
                         ),
                       ),
                     ),
-                  );
-                },
-              ),
-            ],
-          ),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

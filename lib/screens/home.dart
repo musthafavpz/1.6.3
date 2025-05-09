@@ -254,38 +254,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildCustomBanner() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      width: double.infinity,
-      height: 160,
+    // Use full screen width banner without container margins
+    return SizedBox(
+      width: MediaQuery.of(context).size.width, // Full width of screen
+      height: MediaQuery.of(context).size.height * 0.3, // 30% of screen height
       child: Stack(
+        fit: StackFit.expand,
         children: [
-          // Animated Container
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Image.asset(
-                'assets/images/code_the_ledger.png',
-                width: double.infinity,
-                height: 160,
-                fit: BoxFit.cover,
-              ),
-            ),
+          // Banner Image
+          Image.asset(
+            'assets/images/code_the_ledger.png',
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height * 0.3,
+            fit: BoxFit.cover,
           ),
           // Gradient Overlay
           Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
               gradient: LinearGradient(
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
@@ -928,7 +913,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           
                           // Custom Banner with Join Now button
                           _buildCustomBanner(),
-                          const SizedBox(height: 15),
+                          const SizedBox(height: 25),
                           
                           // Continue Learning Section
                           Consumer<MyCourses>(
