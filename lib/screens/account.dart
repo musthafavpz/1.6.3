@@ -11,6 +11,7 @@ import '../constants.dart';
 import '../providers/auth.dart';
 import '../widgets/custom_text.dart';
 import 'account_remove_screen.dart';
+import 'certificates_screen.dart';
 import 'edit_profile.dart';
 import 'my_wishlist.dart';
 import 'update_password.dart';
@@ -190,8 +191,11 @@ class _AccountScreenState extends State<AccountScreen> {
                                 color: Colors.indigo.shade50,
                                 iconColor: Colors.indigo,
                                 onTap: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("Certificates feature coming soon")),
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const CertificatesScreen(),
+                                    ),
                                   );
                                 },
                               ),

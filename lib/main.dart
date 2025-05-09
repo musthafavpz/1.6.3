@@ -14,6 +14,7 @@ import 'providers/misc_provider.dart';
 import 'providers/my_courses.dart';
 import 'screens/account_remove_screen.dart';
 import 'screens/category_details.dart';
+import 'screens/certificates_screen.dart';
 import 'screens/course_detail.dart';
 import 'screens/courses_screen.dart';
 import 'screens/sub_category.dart';
@@ -89,6 +90,7 @@ class MyApp extends StatelessWidget {
             CourseDetailScreen.routeName: (ctx) => const CourseDetailScreen(),
             SubCategoryScreen.routeName: (ctx) => const SubCategoryScreen(),
             AccountRemoveScreen.routeName: (ctx) => const AccountRemoveScreen(),
+            CertificatesScreen.routeName: (ctx) => const CertificatesScreen(),
           },
         ),
       ),

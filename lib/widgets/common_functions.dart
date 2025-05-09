@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../constants.dart';
 
@@ -42,5 +43,16 @@ class CommonFunctions {
         backgroundColor: Colors.red.shade300,
         textColor: kToastTextColor,
         fontSize: 16.0);
+  }
+
+  static Future<void> launchURL(String urlString) async {
+    final Uri url = Uri.parse(urlString);
+    try {
+      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+        showWarningToast('Could not launch URL');
+      }
+    } catch (e) {
+      showWarningToast('Error launching URL: $e');
+    }
   }
 }

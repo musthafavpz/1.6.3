@@ -261,23 +261,29 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Banner Image
-          Image.asset(
-            'assets/images/code_the_ledger.png',
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height * 0.3,
-            fit: BoxFit.cover,
+          // Banner Image with rounded corners
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20), // Added rounded corners
+            child: Image.asset(
+              'assets/images/code_the_ledger.png',
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height * 0.3,
+              fit: BoxFit.cover,
+            ),
           ),
-          // Gradient Overlay
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [
-                  Colors.black.withOpacity(0.4),
-                  Colors.transparent,
-                ],
+          // Gradient Overlay with rounded corners
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20), // Added rounded corners
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Colors.black.withOpacity(0.4),
+                    Colors.transparent,
+                  ],
+                ),
               ),
             ),
           ),
@@ -287,20 +293,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             right: 15,
             child: InkWell(
               onTap: () {
-                // Add your join now action here
+                // Launch WhatsApp group URL
+                CommonFunctions.launchURL('https://chat.whatsapp.com/IEekUggTZaI77NHW6ruu10');
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+                  // Shadow removed
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
