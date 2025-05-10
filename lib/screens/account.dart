@@ -86,16 +86,16 @@ class _AccountScreenState extends State<AccountScreen> {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              kPrimaryColor,
-                              kPrimaryDarkColor,
+                              Colors.purple,
+                              Colors.blue,
                             ],
                           ),
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: kPrimaryColor.withOpacity(0.2),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                              color: Colors.purple.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
                             ),
                           ],
                         ),
@@ -106,28 +106,21 @@ class _AccountScreenState extends State<AccountScreen> {
                               padding: const EdgeInsets.all(2),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border: Border.all(color: kWhiteColor, width: 2),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: kBlackColor.withOpacity(0.1),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
+                                border: Border.all(color: Colors.white, width: 2),
                               ),
                               child: CircleAvatar(
                                 radius: 30,
                                 backgroundImage: user?['photo'] != null
                                     ? NetworkImage(user!['photo'])
                                     : null,
-                                backgroundColor: kWhiteColor,
+                                backgroundColor: Colors.white,
                                 child: user?['photo'] == null
                                     ? SvgPicture.asset(
                                         'assets/icons/profile_vector.svg',
                                         height: 36,
                                         width: 36,
                                         colorFilter: const ColorFilter.mode(
-                                          kGreyColor,
+                                          Colors.grey,
                                           BlendMode.srcIn,
                                         ),
                                       )
@@ -143,9 +136,9 @@ class _AccountScreenState extends State<AccountScreen> {
                                   Text(
                                     user?['name'] ?? 'No Name',
                                     style: const TextStyle(
-                                      fontSize: 20,
+                                      fontSize: 18,
                                       fontWeight: FontWeight.w600,
-                                      color: kWhiteColor,
+                                      color: Colors.white,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -155,38 +148,32 @@ class _AccountScreenState extends State<AccountScreen> {
                                     user?['phone'] ?? "No phone number",
                                     style: TextStyle(
                                       fontSize: 14,
-                                      color: kWhiteColor.withOpacity(0.9),
+                                      color: Colors.white.withOpacity(0.9),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
                             // Edit Profile Button
-                            Container(
-                              decoration: BoxDecoration(
-                                color: kWhiteColor.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.edit,
+                                color: Colors.white,
+                                size: 20,
                               ),
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.edit,
-                                  color: kWhiteColor,
-                                  size: 20,
-                                ),
-                                onPressed: () async {
-                                  final result = await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const EditPrfileScreen(),
-                                    ),
-                                  );
-                                  if (result == true) {
-                                    setState(() {
-                                      _dataUpdated = true;
-                                    });
-                                  }
-                                },
-                              ),
+                              onPressed: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const EditPrfileScreen(),
+                                  ),
+                                );
+                                if (result == true) {
+                                  setState(() {
+                                    _dataUpdated = true;
+                                  });
+                                }
+                              },
                             ),
                           ],
                         ),
@@ -201,8 +188,8 @@ class _AccountScreenState extends State<AccountScreen> {
                               child: _buildQuickActionButton(
                                 title: "Certificates",
                                 icon: Icons.verified_user_outlined,
-                                color: kPrimaryColor.withOpacity(0.1),
-                                iconColor: kPrimaryColor,
+                                color: Colors.indigo.shade50,
+                                iconColor: Colors.indigo,
                                 onTap: () {
                                   Navigator.push(
                                     context,
@@ -218,8 +205,8 @@ class _AccountScreenState extends State<AccountScreen> {
                               child: _buildQuickActionButton(
                                 title: "Wishlist",
                                 icon: Icons.favorite_border,
-                                color: kPrimaryColor.withOpacity(0.1),
-                                iconColor: kPrimaryColor,
+                                color: Colors.pink.shade50,
+                                iconColor: Colors.pink,
                                 onTap: () {
                                   Navigator.push(
                                     context,
@@ -235,8 +222,8 @@ class _AccountScreenState extends State<AccountScreen> {
                               child: _buildQuickActionButton(
                                 title: "Notifications",
                                 icon: Icons.notifications_outlined,
-                                color: kPrimaryColor.withOpacity(0.1),
-                                iconColor: kPrimaryColor,
+                                color: Colors.amber.shade50,
+                                iconColor: Colors.amber,
                                 onTap: () {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(content: Text("Notifications feature coming soon")),
@@ -254,7 +241,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         child: Card(
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: Column(
                             children: [
@@ -274,7 +261,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                     });
                                   }
                                 },
-                                iconColor: kPrimaryColor,
+                                iconColor: Colors.blue,
                               ),
                               _divider(),
                               _buildProfileOption(
@@ -288,7 +275,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                     ),
                                   );
                                 },
-                                iconColor: kPrimaryColor,
+                                iconColor: Colors.amber,
                               ),
                             ],
                           ),
@@ -301,7 +288,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         child: Card(
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: Column(
                             children: [
@@ -309,7 +296,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                 title: 'About App',
                                 icon: Icons.info_outline,
                                 onTap: () {},
-                                iconColor: kPrimaryColor,
+                                iconColor: Colors.grey,
                                 showSubtitle: true,
                                 subtitle: "Version 1.3.0",
                               ),
@@ -318,7 +305,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                 title: 'Privacy Policy',
                                 icon: Icons.privacy_tip_outlined,
                                 onTap: () {},
-                                iconColor: kPrimaryColor,
+                                iconColor: Colors.blueGrey,
                               ),
                             ],
                           ),
@@ -331,7 +318,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         child: Card(
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: Column(
                             children: [
@@ -341,8 +328,8 @@ class _AccountScreenState extends State<AccountScreen> {
                                 onTap: () {
                                   Navigator.of(context).pushNamed(AccountRemoveScreen.routeName);
                                 },
-                                iconColor: kErrorColor,
-                                textColor: kErrorColor,
+                                iconColor: Colors.grey,
+                                textColor: Colors.red,
                               ),
                               _divider(),
                               _buildProfileOption(
@@ -354,8 +341,8 @@ class _AccountScreenState extends State<AccountScreen> {
                                     builder: (BuildContext context) => _buildLogoutDialog(context),
                                   );
                                 },
-                                iconColor: kErrorColor,
-                                textColor: kErrorColor,
+                                iconColor: Colors.red,
+                                textColor: Colors.red,
                               ),
                             ],
                           ),
@@ -379,35 +366,28 @@ class _AccountScreenState extends State<AccountScreen> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: kBlackColor.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               icon,
-              size: 28,
+              size: 24,
               color: iconColor,
             ),
             const SizedBox(height: 8),
             Text(
               title,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: kPrimaryColor,
+                color: Colors.black87,
               ),
             ),
           ],
@@ -420,27 +400,27 @@ class _AccountScreenState extends State<AccountScreen> {
     required String title,
     required IconData icon,
     required VoidCallback onTap,
-    Color iconColor = kPrimaryColor,
-    Color textColor = kTextPrimaryColor,
+    Color iconColor = kDefaultColor,
+    Color textColor = Colors.black87,
     bool showSubtitle = false,
     String subtitle = "",
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: iconColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 icon,
-                size: 22,
+                size: 20,
                 color: iconColor,
               ),
             ),
@@ -452,7 +432,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: textColor,
                     ),
@@ -464,7 +444,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         subtitle,
                         style: TextStyle(
                           fontSize: 12,
-                          color: kTextSecondaryColor,
+                          color: Colors.grey.shade600,
                         ),
                       ),
                     ),
@@ -473,8 +453,8 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
             Icon(
               Icons.chevron_right,
-              size: 22,
-              color: kTextLightColor,
+              size: 20,
+              color: Colors.grey.shade400,
             ),
           ],
         ),
@@ -488,7 +468,7 @@ class _AccountScreenState extends State<AccountScreen> {
       child: Divider(
         thickness: 0.5,
         height: 0.5,
-        color: kDividerColor,
+        color: Colors.grey.withOpacity(0.1),
       ),
     );
   }
@@ -496,85 +476,69 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget _buildLogoutDialog(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(16.0),
       ),
       elevation: 0,
       backgroundColor: Colors.transparent,
       child: Container(
         decoration: BoxDecoration(
-          color: kCardBackgroundColor,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: kBlackColor.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: kErrorColor.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.logout_rounded,
-                      color: kErrorColor,
-                      size: 48,
-                    ),
+                  Icon(
+                    Icons.logout_rounded,
+                    color: Colors.red,
+                    size: 48,
                   ),
-                  const SizedBox(height: 20),
-                  Text(
+                  const SizedBox(height: 16),
+                  const Text(
                     "Log Out?",
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: kTextPrimaryColor,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Text(
                     "Are you sure you want to logout?",
                     style: TextStyle(
-                      fontSize: 15,
-                      color: kTextSecondaryColor,
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
                     ),
                   ),
                 ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        side: BorderSide(color: kBorderColor),
+                        side: BorderSide(color: Colors.grey.shade300),
                       ),
-                      child: Text(
+                      child: const Text(
                         "Cancel",
                         style: TextStyle(
-                          fontSize: 15,
-                          color: kTextPrimaryColor,
+                          color: Colors.black87,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
@@ -583,18 +547,16 @@ class _AccountScreenState extends State<AccountScreen> {
                                 context, '/home', (r) => false));
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: kErrorColor,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        elevation: 0,
                       ),
                       child: const Text(
                         'Log Out',
                         style: TextStyle(
-                          fontSize: 15,
-                          color: kWhiteColor,
+                          color: Colors.white,
                         ),
                       ),
                     ),
