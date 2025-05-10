@@ -170,32 +170,32 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     return InputDecoration(
       enabledBorder: OutlineInputBorder(
         borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+        borderSide: BorderSide(color: kBorderColor, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: kDefaultColor, width: 1),
+        borderSide: BorderSide(color: kPrimaryColor, width: 1),
       ),
       border: OutlineInputBorder(
         borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+        borderSide: BorderSide(color: kBorderColor, width: 1),
       ),
-      focusedErrorBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: Color(0xFFF65054)),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
+        borderSide: BorderSide(color: kErrorColor, width: 1),
       ),
-      errorBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: Color(0xFFF65054)),
+      errorBorder: OutlineInputBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(16.0)),
+        borderSide: BorderSide(color: kErrorColor, width: 1),
       ),
       filled: true,
-      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 16),
+      hintStyle: TextStyle(color: kTextLightColor, fontSize: 16),
       hintText: hintext,
-      fillColor: Colors.grey.shade50,
+      fillColor: kInputBackgroundColor,
       contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
       prefixIcon: Icon(
         icon,
-        color: kDefaultColor,
+        color: kPrimaryColor,
         size: 22,
       ),
     );
@@ -206,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     final screenSize = MediaQuery.of(context).size;
     
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: kCardBackgroundColor,
       body: SafeArea(
         child: Stack(
           children: [
@@ -219,7 +219,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 width: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: kDefaultColor.withOpacity(0.05),
+                  color: kPrimaryColor.withOpacity(0.05),
                 ),
               ),
             ),
@@ -231,7 +231,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 width: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: kDefaultColor.withOpacity(0.05),
+                  color: kPrimaryColor.withOpacity(0.05),
                 ),
               ),
             ),
@@ -248,255 +248,152 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(height: 30),
-                            // App Logo
-                            Container(
-                              height: 100,
-                              width: 100,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 20,
-                                    spreadRadius: 5,
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: Image.asset(
-                                  'assets/images/logo.png',
-                                  height: 70,
-                                  width: 70,
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 40),
-                            
-                            // Welcome Text
+                            const SizedBox(height: 40),
                             Text(
-                              'Welcome Back',
+                              'Welcome Back!',
                               style: TextStyle(
-                                fontSize: 30,
+                                fontSize: 32,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                                letterSpacing: 0.5,
+                                color: kTextPrimaryColor,
                               ),
                             ),
-                            SizedBox(height: 12),
+                            const SizedBox(height: 8),
                             Text(
-                              'Login to continue your learning journey',
+                              'Sign in to continue',
                               style: TextStyle(
                                 fontSize: 16,
-                                color: Colors.grey.shade600,
+                                color: kTextSecondaryColor,
                               ),
-                              textAlign: TextAlign.center,
                             ),
-                            SizedBox(height: 60),
-                            
-                            // Login Form
+                            const SizedBox(height: 40),
                             Form(
                               key: globalFormKey,
                               child: Column(
                                 children: [
-                                  // Email TextField
                                   TextFormField(
-                                    style: TextStyle(
-                                      fontSize: 16, 
-                                      color: Colors.black87,
-                                    ),
-                                    decoration: getInputDecoration(
-                                      'Email Address',
-                                      Icons.email_rounded,
-                                    ),
                                     controller: _emailController,
                                     keyboardType: TextInputType.emailAddress,
-                                    validator: (input) =>
-                                        !RegExp(r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")
-                                                .hasMatch(input!)
-                                            ? "Email should be valid"
-                                            : null,
-                                  ),
-                                  SizedBox(height: 20),
-                                  
-                                  // Password TextField
-                                  TextFormField(
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.black87,
+                                    style: TextStyle(color: kTextPrimaryColor),
+                                    decoration: getInputDecoration(
+                                      "Email",
+                                      Icons.email_outlined,
                                     ),
-                                    keyboardType: TextInputType.text,
-                                    controller: _passwordController,
-                                    validator: (input) => input!.length < 3
-                                        ? "Password should be more than 3 characters"
+                                    validator: (input) => input!.isEmpty
+                                        ? "Please enter your email"
                                         : null,
+                                  ),
+                                  const SizedBox(height: 20),
+                                  TextFormField(
+                                    controller: _passwordController,
                                     obscureText: hidePassword,
-                                    decoration: InputDecoration(
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(Radius.circular(16.0)),
-                                        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(Radius.circular(16.0)),
-                                        borderSide: BorderSide(color: kDefaultColor, width: 1),
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.all(Radius.circular(16.0)),
-                                        borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
-                                      ),
-                                      filled: true,
-                                      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 16),
-                                      hintText: "Password",
-                                      fillColor: Colors.grey.shade50,
-                                      contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-                                      prefixIcon: Icon(
-                                        Icons.lock_rounded,
-                                        color: kDefaultColor,
-                                        size: 22,
-                                      ),
+                                    style: TextStyle(color: kTextPrimaryColor),
+                                    decoration: getInputDecoration(
+                                      "Password",
+                                      Icons.lock_outline,
+                                    ).copyWith(
                                       suffixIcon: IconButton(
                                         onPressed: () {
                                           setState(() {
                                             hidePassword = !hidePassword;
                                           });
                                         },
-                                        color: Colors.grey.shade500,
+                                        color: kTextLightColor,
                                         icon: Icon(
                                           hidePassword
-                                              ? Icons.visibility_off_outlined
-                                              : Icons.visibility_outlined
+                                              ? Icons.visibility_off
+                                              : Icons.visibility,
                                         ),
                                       ),
                                     ),
+                                    validator: (input) => input!.isEmpty
+                                        ? "Please enter your password"
+                                        : null,
                                   ),
-                                  
-                                  SizedBox(height: 15),
-                                  // Forgot Password
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => const ForgetPassword(),
-                                          ),
-                                        );
-                                      },
-                                      child: Text(
-                                        'Forgot Password?',
-                                        style: TextStyle(
-                                          color: kDefaultColor,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  
-                                  SizedBox(height: 40),
-                                  // Login Button
-                                  if (_isLoading)
-                                    Container(
-                                      height: 56,
-                                      width: double.infinity,
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.shade100,
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Center(
-                                        child: CircularProgressIndicator(
-                                          color: kDefaultColor,
-                                          strokeWidth: 3,
-                                        ),
-                                      ),
-                                    )
-                                  else
-                                    Container(
-                                      width: double.infinity,
-                                      decoration: BoxDecoration(
-                                        color: kDefaultColor,
-                                        borderRadius: BorderRadius.circular(16),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: kDefaultColor.withOpacity(0.25),
-                                            blurRadius: 20,
-                                            offset: Offset(0, 10),
-                                          ),
-                                        ],
-                                      ),
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          if (_emailController.text.isNotEmpty &&
-                                              _passwordController.text.isNotEmpty) {
-                                            getLogin();
-                                          } else if (_emailController.text.isEmpty) {
-                                            Fluttertoast.showToast(
-                                                msg: "Email field cannot be empty");
-                                          } else if (_passwordController.text.isEmpty) {
-                                            Fluttertoast.showToast(
-                                                msg: "Password field cannot be empty");
-                                          } else {
-                                            Fluttertoast.showToast(
-                                                msg: "Email & password field cannot be empty");
-                                          }
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.transparent,
-                                          foregroundColor: Colors.white,
-                                          disabledForegroundColor: Colors.transparent.withOpacity(0.38),
-                                          disabledBackgroundColor: Colors.transparent.withOpacity(0.12),
-                                          elevation: 0,
-                                          padding: EdgeInsets.symmetric(vertical: 16),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(16),
-                                          ),
-                                        ),
-                                        child: Text(
-                                          'LOGIN',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            letterSpacing: 1,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
                                 ],
                               ),
                             ),
-                            
-                            SizedBox(height: 40),
-                            // Sign Up Link
+                            const SizedBox(height: 16),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const ForgetPassword(),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  'Forgot Password?',
+                                  style: TextStyle(
+                                    color: kPrimaryColor,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 50,
+                              child: ElevatedButton(
+                                onPressed: _isLoading ? null : getLogin,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: kPrimaryColor,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          color: kWhiteColor,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Sign In',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: kWhiteColor,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
                                   "Don't have an account? ",
                                   style: TextStyle(
-                                    color: Colors.grey.shade600,
+                                    color: kTextSecondaryColor,
                                     fontSize: 14,
                                   ),
                                 ),
-                                GestureDetector(
-                                  onTap: () {
+                                TextButton(
+                                  onPressed: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => const SignUpScreen(),
+                                        builder: (context) => const SignupScreen(),
                                       ),
                                     );
                                   },
                                   child: Text(
-                                    "Sign Up",
+                                    'Sign Up',
                                     style: TextStyle(
-                                      color: kDefaultColor,
-                                      fontWeight: FontWeight.bold,
+                                      color: kPrimaryColor,
                                       fontSize: 14,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ),
@@ -516,3 +413,4 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
   }
 }
+
