@@ -361,7 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             child: Center(
                               child: Image.network(
-                                categories.items[i].imageUrl,
+                                categories.items[i].thumbnail ?? '',
                                 height: 40,
                                 width: 40,
                                 fit: BoxFit.contain,
@@ -370,7 +370,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            categories.items[i].title,
+                            categories.items[i].title ?? '',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
@@ -709,7 +709,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 top: Radius.circular(15),
                               ),
                               child: Image.network(
-                                myCourses.items[i].imageUrl,
+                                myCourses.items[i].thumbnail ?? '',
                                 height: 150,
                                 width: double.infinity,
                                 fit: BoxFit.cover,
@@ -721,7 +721,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    myCourses.items[i].title,
+                                    myCourses.items[i].title ?? '',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
@@ -740,7 +740,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        myCourses.items[i].rating.toString(),
+                                        myCourses.items[i].average_rating?.toString() ?? '0',
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,
@@ -755,7 +755,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        '${myCourses.items[i].students} students',
+                                        '${myCourses.items[i].numberOfEnrollment ?? 0} students',
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,

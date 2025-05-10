@@ -3,41 +3,61 @@ import 'package:flutter/material.dart';
 const baseUrl = 'https://app.eleganceprep.com'; // Example: const BASE_URL = 'http://creativeitem.com/academy';
 
 // Primary Colors
-const kPrimaryColor = Color(0xFF6366F1);
-const kPrimaryDarkColor = Color(0xFF4F46E5);
-const kPrimaryLightColor = Color(0xFF818CF8);
+const Color kPrimaryColor = Color(0xFF6366F1);
+const Color kPrimaryDarkColor = Color(0xFF4F46E5);
+const Color kPrimaryLightColor = Color(0xFF818CF8);
 
 // Secondary Colors
-const kSecondaryColor = Color(0xFF10B981);
-const kSecondaryDarkColor = Color(0xFF059669);
-const kSecondaryLightColor = Color(0xFF34D399);
+const Color kSecondaryColor = Color(0xFF10B981);
+const Color kSecondaryDarkColor = Color(0xFF059669);
+const Color kSecondaryLightColor = Color(0xFF34D399);
 
 // Background Colors
-const kBackgroundColor = Color(0xFFF8F9FA);
-const kCardBackgroundColor = Colors.white;
-const kInputBackgroundColor = Color(0xFFF3F4F6);
+const Color kBackgroundColor = Color(0xFFF9FAFB);
+const Color kCardBackgroundColor = Color(0xFFFFFFFF);
+const Color kInputBackgroundColor = Color(0xFFF3F4F6);
 
 // Text Colors
-const kTextPrimaryColor = Color(0xFF1F2937);
-const kTextSecondaryColor = Color(0xFF4B5563);
-const kTextLightColor = Color(0xFF9CA3AF);
+const Color kTextPrimaryColor = Color(0xFF1F2937);
+const Color kTextSecondaryColor = Color(0xFF4B5563);
+const Color kTextLightColor = Color(0xFF9CA3AF);
+const Color kTextLowBlackColor = Color(0xFF6B7280);
 
 // Status Colors
-const kSuccessColor = Color(0xFF10B981);
-const kErrorColor = Color(0xFFEF4444);
-const kWarningColor = Color(0xFFF59E0B);
-const kInfoColor = Color(0xFF3B82F6);
+const Color kSuccessColor = Color(0xFF10B981);
+const Color kErrorColor = Color(0xFFEF4444);
+const Color kWarningColor = Color(0xFFF59E0B);
+const Color kInfoColor = Color(0xFF3B82F6);
 
 // Border Colors
-const kBorderColor = Color(0xFFE5E7EB);
-const kDividerColor = Color(0xFFE5E7EB);
+const Color kBorderColor = Color(0xFFE5E7EB);
+const Color kBackButtonBorderColor = Color(0xFFD1D5DB);
 
-// Shadow
-const kDefaultShadow = BoxShadow(
-  color: Color(0x1A000000),
-  offset: Offset(0, 4),
-  blurRadius: 10,
-);
+// Shadow Colors
+const Color kShadowColor = Color(0xFF000000);
+
+// Legacy Colors (for backward compatibility)
+const Color kBlueColor = Color(0xFF3B82F6);
+const Color kRedColor = Color(0xFFEF4444);
+const Color kGreenColor = Color(0xFF10B981);
+const Color kYellowColor = Color(0xFFF59E0B);
+const Color kPurpleColor = Color(0xFF8B5CF6);
+const Color kPinkColor = Color(0xFFEC4899);
+const Color kOrangeColor = Color(0xFFF97316);
+const Color kTealColor = Color(0xFF14B8A6);
+const Color kCyanColor = Color(0xFF06B6D4);
+const Color kIndigoColor = Color(0xFF6366F1);
+const Color kLimeColor = Color(0xFF84CC16);
+const Color kAmberColor = Color(0xFFF59E0B);
+const Color kBrownColor = Color(0xFF92400E);
+const Color kGreyColor = Color(0xFF6B7280);
+const Color kBlackColor = Color(0xFF000000);
+const Color kWhiteColor = Color(0xFFFFFFFF);
+
+// Form Colors
+const Color kFormInputColor = Color(0xFF9CA3AF);
+const Color kInputBoxBackGroundColor = Color(0xFFF3F4F6);
+const Color kSelectItemColor = Color(0xFF1F2937);
 
 // Input Borders
 const kDefaultInputBorder = OutlineInputBorder(
@@ -56,11 +76,6 @@ const kDefaultFocusErrorBorder = OutlineInputBorder(
 );
 
 // Legacy Colors (to be gradually replaced)
-const kWhiteColor = Colors.white;
-const kBlackColor = Colors.black;
-const kGreyColor = Colors.grey;
-const kGreyLightColor = Color(0xFF9CA3AF);
-const kDefaultColor = kPrimaryColor;
 const kSignUpTextColor = kPrimaryColor;
 const kStarColor = Color(0xFFF59E0B);
 const kTimeColor = kSuccessColor;
