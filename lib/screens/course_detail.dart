@@ -2,6 +2,7 @@
 import 'dart:convert';
 
 import 'package:academy_lms_app/models/course_detail.dart';
+import 'package:academy_lms_app/screens/payment_webview.dart';
 import 'package:academy_lms_app/screens/tab_screen.dart';
 import 'package:academy_lms_app/widgets/from_vimeo_player.dart';
 import 'package:academy_lms_app/widgets/new_youtube_player.dart';
@@ -88,7 +89,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
 
   @override
   void initState() {
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     super.initState();
   }
 
@@ -473,638 +474,559 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
               )
             : Consumer<Courses>(builder: (context, courses, child) {
                 final loadedCourseDetails = courses.getCourseDetail;
-                return SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Text(loadedCourseDetail.isPurchased.toString()),
-                        Stack(
-                          fit: StackFit.loose,
-                          alignment: Alignment.center,
-                          clipBehavior: Clip.none,
+                return Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(30),
-                              child: Container(
-                                alignment: Alignment.center,
-                                height:
-                                    MediaQuery.of(context).size.height * .31,
-                                decoration: BoxDecoration(
+                            // Full width thumbnail without radius
+                            Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // Full width image with no radius or opacity overlay
+                                Container(
+                                  width: double.infinity,
+                                  height: MediaQuery.of(context).size.height * .35,
+                                  decoration: BoxDecoration(
                                     image: DecorationImage(
-                                  fit: BoxFit.cover,
-                                  colorFilter: ColorFilter.mode(
-                                      Colors.black.withOpacity(0.6),
-                                      BlendMode.dstATop),
-                                  image: NetworkImage(
-                                    loadedCourseDetails.thumbnail.toString(),
+                                      fit: BoxFit.cover,
+                                      image: NetworkImage(
+                                        loadedCourseDetails.thumbnail.toString(),
+                                      ),
+                                    ),
                                   ),
-                                )),
-                              ),
-                            ),
-                            ClipOval(
-                              child: InkWell(
-                                onTap: () {
-                                  if (loadedCourseDetails.preview != null) {
-                                    final previewUrl =
-                                        loadedCourseDetails.preview!;
-                                    print(previewUrl);
+                                ),
+                                // Play button overlay
+                                GestureDetector(
+                                  onTap: () {
+                                    if (loadedCourseDetails.preview != null) {
+                                      final previewUrl = loadedCourseDetails.preview!;
+                                      final isYouTube = previewUrl.contains("youtube.com") || previewUrl.contains("youtu.be");
+                                      final isVimeo = previewUrl.contains("vimeo.com");
+                                      final isDrive = previewUrl.contains("drive.google.com");
+                                      final isMp4 = RegExp(r"\.mp4(\?|$)").hasMatch(previewUrl);
+                                      final isWebm = RegExp(r"\.webm(\?|$)").hasMatch(previewUrl);
+                                      final isOgg = RegExp(r"\.ogg(\?|$)").hasMatch(previewUrl);
 
-                                    final isYouTube =
-                                        previewUrl.contains("youtube.com") ||
-                                            previewUrl.contains("youtu.be");
-                                    final isVimeo =
-                                        previewUrl.contains("vimeo.com");
-                                    final isDrive =
-                                        previewUrl.contains("drive.google.com");
-                                    final isMp4 = RegExp(r"\.mp4(\?|$)")
-                                        .hasMatch(previewUrl);
-                                    final isWebm = RegExp(r"\.webm(\?|$)")
-                                        .hasMatch(previewUrl);
-                                    final isOgg = RegExp(r"\.ogg(\?|$)")
-                                        .hasMatch(previewUrl);
-
-                                    if (isYouTube) {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              YoutubeVideoPlayerFlutter(
-                                            courseId:
-                                                loadedCourseDetails.courseId!,
-                                            videoUrl: previewUrl,
-                                          ),
-                                        ),
-                                      );
-                                    } else if (isDrive) {
-                                      final RegExp regExp =
-                                          RegExp(r'[-\w]{25,}');
-                                      final Match? match = regExp.firstMatch(
-                                          loadedCourseDetails.preview
-                                              .toString());
-                                      // print(match);
-                                      String url =
-                                          'https://drive.google.com/uc?export=download&id=${match!.group(0)}';
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                PlayVideoFromNetwork(
-                                                    courseId:
-                                                        loadedCourseDetails
-                                                            .courseId!,
-                                                    videoUrl: url)),
-                                      );
-                                    } else if (isVimeo) {
-                                      String vimeoVideoId = loadedCourseDetails
-                                          .preview!
-                                          .split('/')
-                                          .last;
-                                      Navigator.push(
+                                      if (isYouTube) {
+                                        Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) =>
-                                                FromVimeoPlayer(
-                                                    courseId:
-                                                        loadedCourseDetails
-                                                            .courseId!,
-                                                    vimeoVideoId: vimeoVideoId),
-                                          ));
-                                    } else if (isMp4 || isOgg || isWebm) {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              PlayVideoFromNetwork(
-                                            courseId:
-                                                loadedCourseDetails.courseId!,
-                                            videoUrl: previewUrl,
+                                            builder: (context) => YoutubeVideoPlayerFlutter(
+                                              courseId: loadedCourseDetails.courseId!,
+                                              videoUrl: previewUrl,
+                                            ),
                                           ),
-                                        ),
-                                      );
+                                        );
+                                      } else if (isDrive) {
+                                        final RegExp regExp = RegExp(r'[-\w]{25,}');
+                                        final Match? match = regExp.firstMatch(loadedCourseDetails.preview.toString());
+                                        String url = 'https://drive.google.com/uc?export=download&id=${match!.group(0)}';
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => PlayVideoFromNetwork(
+                                              courseId: loadedCourseDetails.courseId!,
+                                              videoUrl: url
+                                            ),
+                                          ),
+                                        );
+                                      } else if (isVimeo) {
+                                        String vimeoVideoId = loadedCourseDetails.preview!.split('/').last;
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => FromVimeoPlayer(
+                                              courseId: loadedCourseDetails.courseId!,
+                                              vimeoVideoId: vimeoVideoId
+                                            ),
+                                          )
+                                        );
+                                      } else if (isMp4 || isOgg || isWebm) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => PlayVideoFromNetwork(
+                                              courseId: loadedCourseDetails.courseId!,
+                                              videoUrl: previewUrl,
+                                            ),
+                                          ),
+                                        );
+                                      } else {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => NoPreviewVideo(),
+                                          ),
+                                        );
+                                      }
                                     } else {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) =>
-                                              NoPreviewVideo(),
+                                          builder: (context) => NoPreviewVideo(),
                                         ),
                                       );
                                     }
-                                  } else {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => NoPreviewVideo(),
+                                  },
+                                  child: Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.9),
+                                      borderRadius: BorderRadius.circular(40),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.2),
+                                          blurRadius: 10,
+                                          spreadRadius: 2,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(20.0),
+                                      child: Image.asset(
+                                        'assets/images/play.png',
+                                        fit: BoxFit.contain,
                                       ),
-                                    );
-                                    print("Preview URL is null");
-                                  }
-                                },
-                                // onTap: () {
-                                //   Navigator.push(
-                                //     context,
-                                //     MaterialPageRoute(
-                                //         builder: (context) =>
-                                //             PlayVideoFromNetwork(
-                                //                 courseId: loadedCourse.id!,
-                                //                 videoUrl:
-                                //                     loadedCourse.preview!)),
-                                //   );
-                                // },
-                                child: Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    boxShadow: [kDefaultShadow],
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(5.0),
-                                    child: Image.asset(
-                                      'assets/images/play.png',
-                                      fit: BoxFit.contain,
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
-                            Positioned(
-                              top: 15,
-                              right: 15,
-                              child: SizedBox(
-                                height: 45,
-                                width: 45,
-                                child: FittedBox(
-                                  child: FloatingActionButton(
-                                    onPressed: () {
-                                      if (_isAuth) {
-                                        var msg =
-                                            loadedCourseDetails.isWishlisted;
-                                        showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) =>
-                                              buildPopupDialogWishList(
-                                                  context,
-                                                  loadedCourseDetails
-                                                      .isWishlisted,
-                                                  loadedCourseDetails.courseId,
-                                                  msg),
-                                        );
-                                      } else {
-                                        CommonFunctions.showSuccessToast(
-                                            'Please login first');
-                                      }
-                                    },
-                                    tooltip: 'Wishlist',
-                                    backgroundColor:
-                                        loadedCourseDetails.isWishlisted!
+                                // Wishlist button
+                                Positioned(
+                                  top: 15,
+                                  right: 15,
+                                  child: SizedBox(
+                                    height: 45,
+                                    width: 45,
+                                    child: FittedBox(
+                                      child: FloatingActionButton(
+                                        onPressed: () {
+                                          if (_isAuth) {
+                                            var msg = loadedCourseDetails.isWishlisted;
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) => buildPopupDialogWishList(
+                                                context,
+                                                loadedCourseDetails.isWishlisted,
+                                                loadedCourseDetails.courseId,
+                                                msg
+                                              ),
+                                            );
+                                          } else {
+                                            CommonFunctions.showSuccessToast('Please login first');
+                                          }
+                                        },
+                                        tooltip: 'Wishlist',
+                                        backgroundColor: loadedCourseDetails.isWishlisted!
                                             ? Colors.white
                                             : kGreyLightColor.withOpacity(0.3),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(57)),
-                                    child: Icon(
-                                      loadedCourseDetails.isWishlisted!
-                                          ? Icons.favorite
-                                          : Icons.favorite,
-                                      size: 30,
-                                      color: loadedCourseDetails.isWishlisted!
-                                          ? kDefaultColor
-                                          : Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(57)
+                                        ),
+                                        child: Icon(
+                                          loadedCourseDetails.isWishlisted! ? Icons.favorite : Icons.favorite,
+                                          size: 30,
+                                          color: loadedCourseDetails.isWishlisted! ? kDefaultColor : Colors.white,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
+                                // Share button
+                                Positioned(
+                                  top: 15,
+                                  left: 15,
+                                  child: SizedBox(
+                                    height: 45,
+                                    width: 45,
+                                    child: FittedBox(
+                                      child: FloatingActionButton(
+                                        onPressed: () async {
+                                          await Share.share(loadedCourseDetails.shareableLink.toString());
+                                        },
+                                        tooltip: 'Share',
+                                        backgroundColor: kGreyLightColor.withOpacity(0.3),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(57)
+                                        ),
+                                        child: const Icon(
+                                          Icons.share,
+                                          size: 25,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            
+                            // Course tabs
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                children: [
+                                  DefaultTabController(
+                                    length: 2,
+                                    child: Column(
+                                      children: [
+                                        TabBar(
+                                          controller: _tabController,
+                                          indicatorSize: TabBarIndicatorSize.tab,
+                                          indicator: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(10),
+                                            color: kDefaultColor,
+                                          ),
+                                          unselectedLabelStyle: const TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 16,
+                                          ),
+                                          labelStyle: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 16,
+                                            color: kWhiteColor,
+                                          ),
+                                          padding: const EdgeInsets.symmetric(vertical: 10),
+                                          dividerHeight: 0,
+                                          tabs: const <Widget>[
+                                            Tab(
+                                              child: Text(
+                                                "About",
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 16,
+                                                ),
+                                              ),
+                                            ),
+                                            Tab(
+                                              child: Text(
+                                                "Lessons",
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 16,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Container(
+                                          constraints: BoxConstraints(
+                                            minHeight: 500,
+                                            maxHeight: MediaQuery.of(context).size.height * 0.7,
+                                          ),
+                                          padding: const EdgeInsets.only(top: 20),
+                                          child: TabBarView(
+                                            controller: _tabController,
+                                            children: [
+                                              // About Tab
+                                              SingleChildScrollView(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    // Course Title
+                                                    Text(
+                                                      loadedCourseDetails.title.toString(),
+                                                      style: const TextStyle(
+                                                        fontSize: 24,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 15),
+                                                    
+                                                    // Rating and Reviews
+                                                    Row(
+                                                      children: [
+                                                        const Icon(
+                                                          Icons.star,
+                                                          color: kStarColor,
+                                                          size: 18,
+                                                        ),
+                                                        const SizedBox(width: 5),
+                                                        Text(
+                                                          loadedCourseDetails.average_rating,
+                                                          style: const TextStyle(
+                                                            fontSize: 16,
+                                                            fontWeight: FontWeight.w400,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(width: 5),
+                                                        Text(
+                                                          '(${loadedCourseDetails.total_reviews.toString()} Reviews)',
+                                                          style: const TextStyle(
+                                                            fontSize: 14,
+                                                            fontWeight: FontWeight.w400,
+                                                            color: kGreyLightColor,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 25),
+                                                    
+                                                    // What You Will Learn
+                                                    const Text(
+                                                      'What You Will Learn',
+                                                      style: TextStyle(
+                                                        fontSize: 18,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 10),
+                                                    ...loadedCourseDetails.courseOutcomes.map((item) => 
+                                                      Padding(
+                                                        padding: const EdgeInsets.only(bottom: 8.0),
+                                                        child: Row(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: [
+                                                            const Icon(Icons.check_circle, color: kDefaultColor, size: 18),
+                                                            const SizedBox(width: 8),
+                                                            Expanded(
+                                                              child: Text(
+                                                                item,
+                                                                style: const TextStyle(fontSize: 15),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      )
+                                                    ).toList(),
+                                                    const SizedBox(height: 25),
+                                                    
+                                                    // What is Included
+                                                    const Text(
+                                                      'What is Included',
+                                                      style: TextStyle(
+                                                        fontSize: 18,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 10),
+                                                    ...loadedCourseDetails.courseIncludes.map((item) => 
+                                                      Padding(
+                                                        padding: const EdgeInsets.only(bottom: 8.0),
+                                                        child: Row(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: [
+                                                            const Icon(Icons.check_circle, color: kDefaultColor, size: 18),
+                                                            const SizedBox(width: 8),
+                                                            Expanded(
+                                                              child: Text(
+                                                                item,
+                                                                style: const TextStyle(fontSize: 15),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      )
+                                                    ).toList(),
+                                                    const SizedBox(height: 25),
+                                                    
+                                                    // Course Requirements
+                                                    const Text(
+                                                      'Course Requirements',
+                                                      style: TextStyle(
+                                                        fontSize: 18,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 10),
+                                                    ...loadedCourseDetails.courseRequirements.map((item) => 
+                                                      Padding(
+                                                        padding: const EdgeInsets.only(bottom: 8.0),
+                                                        child: Row(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: [
+                                                            const Icon(Icons.arrow_right, color: kDefaultColor, size: 22),
+                                                            const SizedBox(width: 8),
+                                                            Expanded(
+                                                              child: Text(
+                                                                item,
+                                                                style: const TextStyle(fontSize: 15),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      )
+                                                    ).toList(),
+                                                    const SizedBox(height: 50),
+                                                  ],
+                                                ),
+                                              ),
+                                              
+                                              // Lessons Tab
+                                              SingleChildScrollView(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Text(
+                                                      'Course Curriculum',
+                                                      style: TextStyle(
+                                                          fontSize: 20,
+                                                          fontWeight: FontWeight.bold),
+                                                    ),
+                                                    const SizedBox(height: 15),
+                                                    
+                                                    // Course sections and lessons
+                                                    ListView.builder(
+                                                      key: Key('builder ${selected.toString()}'),
+                                                      shrinkWrap: true,
+                                                      physics: const NeverScrollableScrollPhysics(),
+                                                      itemCount: loadedCourseDetails.mSection!.length,
+                                                      itemBuilder: (ctx, index) {
+                                                        final section = loadedCourseDetails.mSection![index];
+                                                        return Padding(
+                                                          padding: const EdgeInsets.only(bottom: 10.0),
+                                                          child: Container(
+                                                            decoration: BoxDecoration(
+                                                              boxShadow: [
+                                                                BoxShadow(
+                                                                  color: kBackButtonBorderColor.withOpacity(0.05),
+                                                                  blurRadius: 10,
+                                                                  offset: const Offset(0, 2),
+                                                                ),
+                                                              ],
+                                                              borderRadius: BorderRadius.circular(10),
+                                                            ),
+                                                            child: Card(
+                                                              elevation: 0.5,
+                                                              shape: RoundedRectangleBorder(
+                                                                borderRadius: BorderRadius.circular(10),
+                                                              ),
+                                                              child: ExpansionTile(
+                                                                key: Key(index.toString()),
+                                                                initiallyExpanded: index == selected,
+                                                                onExpansionChanged: ((newState) {
+                                                                  if (newState) {
+                                                                    setState(() {
+                                                                      selected = index;
+                                                                    });
+                                                                  } else {
+                                                                    setState(() {
+                                                                      selected = -1;
+                                                                    });
+                                                                  }
+                                                                }),
+                                                                iconColor: kDefaultColor,
+                                                                collapsedIconColor: kSelectItemColor,
+                                                                trailing: Icon(
+                                                                  selected == index
+                                                                      ? Icons.keyboard_arrow_up_rounded
+                                                                      : Icons.keyboard_arrow_down_rounded,
+                                                                  size: 30,
+                                                                ),
+                                                                shape: RoundedRectangleBorder(
+                                                                  borderRadius: BorderRadius.circular(10),
+                                                                ),
+                                                                title: Padding(
+                                                                  padding: const EdgeInsets.symmetric(vertical: 5.0),
+                                                                  child: Column(
+                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                                    children: [
+                                                                      Text(
+                                                                        '${index + 1}. ${HtmlUnescape().convert(section.title.toString())}',
+                                                                        style: const TextStyle(
+                                                                          fontSize: 16,
+                                                                          fontWeight: FontWeight.w500,
+                                                                        ),
+                                                                      ),
+                                                                      const SizedBox(height: 8),
+                                                                      Row(
+                                                                        children: [
+                                                                          Container(
+                                                                            padding: const EdgeInsets.symmetric(
+                                                                              horizontal: 10,
+                                                                              vertical: 5,
+                                                                            ),
+                                                                            decoration: BoxDecoration(
+                                                                              color: kTimeBackColor.withOpacity(0.12),
+                                                                              borderRadius: BorderRadius.circular(5),
+                                                                            ),
+                                                                            child: Text(
+                                                                              section.totalDuration.toString(),
+                                                                              style: const TextStyle(
+                                                                                fontSize: 12,
+                                                                                fontWeight: FontWeight.w400,
+                                                                                color: kTimeColor,
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                          const SizedBox(width: 10),
+                                                                          Container(
+                                                                            padding: const EdgeInsets.symmetric(
+                                                                              horizontal: 10,
+                                                                              vertical: 5,
+                                                                            ),
+                                                                            decoration: BoxDecoration(
+                                                                              color: kLessonBackColor.withOpacity(0.12),
+                                                                              borderRadius: BorderRadius.circular(5),
+                                                                            ),
+                                                                            child: Text(
+                                                                              '${section.mLesson!.length} Lessons',
+                                                                              style: const TextStyle(
+                                                                                fontSize: 12,
+                                                                                fontWeight: FontWeight.w400,
+                                                                                color: kLessonColor,
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                                children: [
+                                                                  ListView.builder(
+                                                                    shrinkWrap: true,
+                                                                    physics: const NeverScrollableScrollPhysics(),
+                                                                    itemCount: section.mLesson!.length,
+                                                                    itemBuilder: (ctx, index) {
+                                                                      return Padding(
+                                                                        padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                                                                        child: Column(
+                                                                          children: [
+                                                                            LessonListItem(
+                                                                              lesson: section.mLesson![index],
+                                                                              courseId: loadedCourseDetails.courseId!,
+                                                                            ),
+                                                                            if ((section.mLesson!.length - 1) != index)
+                                                                              Divider(
+                                                                                color: kGreyLightColor.withOpacity(0.3),
+                                                                              ),
+                                                                            if ((section.mLesson!.length - 1) == index)
+                                                                              const SizedBox(height: 10),
+                                                                          ],
+                                                                        ),
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              top: 25.0, left: 5, right: 5),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                flex: 1,
-                                child: Text(
-                                  loadedCourseDetails.title.toString(),
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                              InkWell(
-                                onTap: () async {
-                                  await Share.share(loadedCourseDetails
-                                      .shareableLink
-                                      .toString());
-                                },
-                                child: SvgPicture.asset(
-                                  'assets/icons/share.svg',
-                                  height: 24,
-                                  width: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(5.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: <Widget>[
-                              const Padding(
-                                padding: EdgeInsets.only(
-                                  right: 10,
-                                ),
-                                child: Icon(
-                                  Icons.star,
-                                  color: kStarColor,
-                                  size: 18,
-                                ),
-                              ),
-                              Padding(
-                                padding: EdgeInsets.only(right: 5),
-                                child: Text(
-                                  loadedCourseDetails.average_rating,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w400,
-                                    color: kGreyLightColor,
-                                  ),
-                                ),
-                              ),
-                              Text(
-                                '(${loadedCourseDetails.total_reviews.toString()} Reviews)',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
-                                  color: kGreyLightColor,
-                                ),
-                              ),
-                              const Spacer(),
-                              Text(
-                                loadedCourseDetails.price.toString(),
-                                style: const TextStyle(
-                                    fontSize: 28, fontWeight: FontWeight.w500),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Container(
-                                decoration: BoxDecoration(
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: kBackButtonBorderColor
-                                          .withOpacity(0.07),
-                                      blurRadius: 15,
-                                      offset: const Offset(0, 0),
-                                    ),
-                                  ],
-                                ),
-                                child: Card(
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      SizedBox(
-                                        width: double.infinity,
-                                        child: TabBar(
-                                          controller: _tabController,
-                                          indicatorSize:
-                                              TabBarIndicatorSize.tab,
-                                          indicator: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(13),
-                                              color: kDefaultColor),
-                                          // unselectedLabelColor: kTextColor,
-                                          unselectedLabelStyle: const TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 13,
-                                          ),
-                                          labelStyle: const TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 13,
-                                            color: kWhiteColor,
-                                          ),
-                                          padding: const EdgeInsets.all(10),
-                                          dividerHeight: 0,
-                                          // labelColor: Colors.white,
-                                          tabs: const <Widget>[
-                                            Tab(
-                                              child: Text(
-                                                "Includes",
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ),
-                                            Tab(
-                                              child: Align(
-                                                alignment: Alignment.center,
-                                                child: Text(
-                                                  "Outcomes",
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w500,
-                                                    fontSize: 14,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            Tab(
-                                              child: Align(
-                                                alignment: Alignment.center,
-                                                child: Text(
-                                                  "Required",
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.w500,
-                                                    fontSize: 14,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Container(
-                                        width: double.infinity,
-                                        height: 215,
-                                        padding: const EdgeInsets.only(
-                                            right: 10,
-                                            left: 10,
-                                            top: 0,
-                                            bottom: 10),
-                                        child: TabBarView(
-                                          controller: _tabController,
-                                          children: [
-                                            TabViewDetails(
-                                              titleText: 'What is Included',
-                                              listText: loadedCourseDetails
-                                                  .courseIncludes,
-                                            ),
-                                            TabViewDetails(
-                                              titleText: 'What you will learn',
-                                              listText: loadedCourseDetails
-                                                  .courseOutcomes,
-                                            ),
-                                            TabViewDetails(
-                                              titleText: 'Course Requirements',
-                                              listText: loadedCourseDetails
-                                                  .courseRequirements,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.symmetric(
-                                    vertical: 20, horizontal: 10),
-                                child: Text(
-                                  'Course curriculum',
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                              ),
-                              ListView.builder(
-                                key: Key('builder ${selected.toString()}'),
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: loadedCourseDetails.mSection!.length,
-                                itemBuilder: (ctx, index) {
-                                  final section =
-                                      loadedCourseDetails.mSection![index];
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 5.0),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: kBackButtonBorderColor
-                                                .withOpacity(0.05),
-                                            blurRadius: 25,
-                                            offset: const Offset(0, 0),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Card(
-                                        elevation: 0.0,
-                                        child: ExpansionTile(
-                                          key: Key(index.toString()),
-                                          initiallyExpanded: index == selected,
-                                          onExpansionChanged: ((newState) {
-                                            if (newState) {
-                                              setState(() {
-                                                selected = index;
-                                              });
-                                            } else {
-                                              setState(() {
-                                                selected = -1;
-                                              });
-                                            }
-                                          }),
-                                          iconColor: kDefaultColor,
-                                          collapsedIconColor: kSelectItemColor,
-                                          trailing: Icon(
-                                            selected == index
-                                                ? Icons
-                                                    .keyboard_arrow_up_rounded
-                                                : Icons
-                                                    .keyboard_arrow_down_rounded,
-                                            size: 35,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadiusDirectional
-                                                    .circular(16),
-                                            side: const BorderSide(
-                                                color: Colors.white),
-                                          ),
-                                          title: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 5.0),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Align(
-                                                  alignment:
-                                                      Alignment.centerLeft,
-                                                  child: Padding(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                      vertical: 5.0,
-                                                    ),
-                                                    child: Text(
-                                                      '${index + 1}. ${HtmlUnescape().convert(section.title.toString())}',
-                                                      style: const TextStyle(
-                                                        fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                Padding(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(vertical: 5.0),
-                                                  child: Row(
-                                                    children: [
-                                                      Expanded(
-                                                        flex: 1,
-                                                        child: Container(
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: kTimeBackColor
-                                                                .withOpacity(
-                                                                    0.12),
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        5),
-                                                          ),
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .symmetric(
-                                                            vertical: 5.0,
-                                                          ),
-                                                          child: Align(
-                                                            alignment: Alignment
-                                                                .center,
-                                                            child: Text(
-                                                              section
-                                                                  .totalDuration
-                                                                  .toString(),
-                                                              style:
-                                                                  const TextStyle(
-                                                                fontSize: 10,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w400,
-                                                                color:
-                                                                    kTimeColor,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      const SizedBox(
-                                                        width: 10.0,
-                                                      ),
-                                                      Expanded(
-                                                        flex: 1,
-                                                        child: Container(
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color:
-                                                                kLessonBackColor
-                                                                    .withOpacity(
-                                                                        0.12),
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        5),
-                                                          ),
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .symmetric(
-                                                            vertical: 5.0,
-                                                          ),
-                                                          child: Align(
-                                                            alignment: Alignment
-                                                                .center,
-                                                            child: Text(
-                                                              '${section.mLesson!.length} Lessons',
-                                                              style:
-                                                                  const TextStyle(
-                                                                fontSize: 10,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w400,
-                                                                color:
-                                                                    kLessonColor,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      const Expanded(
-                                                          flex: 1,
-                                                          child: Text("")),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          children: [
-                                            ListView.builder(
-                                              shrinkWrap: true,
-                                              physics:
-                                                  const NeverScrollableScrollPhysics(),
-                                              itemCount:
-                                                  section.mLesson!.length,
-                                              itemBuilder: (ctx, index) {
-                                                return Padding(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 15.0),
-                                                  child: Column(
-                                                    children: [
-                                                      LessonListItem(
-                                                        lesson: section
-                                                            .mLesson![index],
-                                                        courseId:
-                                                            loadedCourseDetails
-                                                                .courseId!,
-                                                      ),
-                                                      if ((section.mLesson!
-                                                                  .length -
-                                                              1) !=
-                                                          index)
-                                                        Divider(
-                                                          color: kGreyLightColor
-                                                              .withOpacity(0.3),
-                                                        ),
-                                                      if ((section.mLesson!
-                                                                  .length -
-                                                              1) ==
-                                                          index)
-                                                        const SizedBox(
-                                                            height: 10),
-                                                    ],
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                    // Bottom price bar with action buttons
+                    bottomPriceBar(),
+                  ],
                 );
               }),
       ),
@@ -1132,7 +1054,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
           ),
         ),
       ),
-      bottomNavigationBar: customNavBar(),
     );
   }
 }
