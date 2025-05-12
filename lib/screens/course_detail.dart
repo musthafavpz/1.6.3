@@ -409,33 +409,78 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                                 ),
                                                 const SizedBox(height: 15),
                                                 
-                                                // Rating and Reviews
-                                                Row(
-                                                  children: [
-                                                    const Icon(
-                                                      Icons.star,
-                                                      color: kStarColor,
-                                                      size: 18,
-                                                    ),
-                                                    const SizedBox(width: 5),
-                                                    Text(
-                                                      loadedCourseDetails.average_rating,
-                                                      style: const TextStyle(
-                                                        fontSize: 16,
-                                                        fontWeight: FontWeight.w400,
+                                                // Instructor information
+                                                if (loadedCourseDetails.instructor != null && 
+                                                   loadedCourseDetails.instructor!.isNotEmpty)
+                                                  Container(
+                                                    margin: const EdgeInsets.only(bottom: 10),
+                                                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                                    decoration: BoxDecoration(
+                                                      color: const Color(0xFF6366F1).withOpacity(0.05),
+                                                      borderRadius: BorderRadius.circular(8),
+                                                      border: Border.all(
+                                                        color: const Color(0xFF6366F1).withOpacity(0.2),
+                                                        width: 1,
                                                       ),
                                                     ),
-                                                    const SizedBox(width: 5),
-                                                    Text(
-                                                      '(${loadedCourseDetails.total_reviews.toString()} Reviews)',
-                                                      style: const TextStyle(
-                                                        fontSize: 14,
-                                                        fontWeight: FontWeight.w400,
-                                                        color: kGreyLightColor,
-                                                      ),
+                                                    child: Row(
+                                                      children: [
+                                                        Container(
+                                                          width: 40,
+                                                          height: 40,
+                                                          decoration: BoxDecoration(
+                                                            color: const Color(0xFF6366F1).withOpacity(0.1),
+                                                            shape: BoxShape.circle,
+                                                          ),
+                                                          child: loadedCourseDetails.instructorImage != null &&
+                                                                loadedCourseDetails.instructorImage!.isNotEmpty
+                                                            ? ClipRRect(
+                                                                borderRadius: BorderRadius.circular(20),
+                                                                child: Image.network(
+                                                                  loadedCourseDetails.instructorImage!,
+                                                                  fit: BoxFit.cover,
+                                                                  errorBuilder: (context, error, stackTrace) {
+                                                                    return const Icon(
+                                                                      Icons.person,
+                                                                      color: Color(0xFF6366F1),
+                                                                      size: 24,
+                                                                    );
+                                                                  },
+                                                                ),
+                                                              )
+                                                            : const Icon(
+                                                                Icons.person,
+                                                                color: Color(0xFF6366F1),
+                                                                size: 24,
+                                                              ),
+                                                        ),
+                                                        const SizedBox(width: 12),
+                                                        Expanded(
+                                                          child: Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            children: [
+                                                              const Text(
+                                                                "Instructor",
+                                                                style: TextStyle(
+                                                                  fontSize: 12,
+                                                                  fontWeight: FontWeight.w500,
+                                                                  color: Color(0xFF6366F1),
+                                                                ),
+                                                              ),
+                                                              Text(
+                                                                loadedCourseDetails.instructor!,
+                                                                style: const TextStyle(
+                                                                  fontSize: 16,
+                                                                  fontWeight: FontWeight.w600,
+                                                                  color: Color(0xFF374151),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
-                                                  ],
-                                                ),
+                                                  ),
                                                 const SizedBox(height: 25),
                                                 
                                                 // What You Will Learn
