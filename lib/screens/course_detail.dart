@@ -463,6 +463,171 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
       );
     }
 
+    // Bottom navigation bar with course price and action buttons
+    Widget bottomPriceBar() {
+      return Consumer<Courses>(builder: (context, courses, child) {
+        final loadedCourseDetails = courses.getCourseDetail;
+        return Container(
+          height: 80,
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Price',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: kGreyLightColor,
+                      ),
+                    ),
+                    Text(
+                      loadedCourseDetails.price.toString(),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: kDefaultColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              loadedCourseDetails.isPurchased!
+                ? MaterialButton(
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 30),
+                    onPressed: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      final authToken = (prefs.getString('access_token') ?? '');
+                      if (authToken.isNotEmpty) {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                              builder: (context) => TabsScreen(
+                                    pageIndex: 1,
+                                  )),
+                        );
+                      } else {
+                        CommonFunctions.showWarningToast('Please login first');
+                      }
+                    },
+                    color: kGreenPurchaseColor,
+                    height: 50,
+                    minWidth: 180,
+                    textColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    child: const Text(
+                      'Purchased',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16,
+                      ),
+                    ),
+                  )
+                : loadedCourseDetails.isPaid == 1
+                  ? MaterialButton(
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                      onPressed: () async {
+                        final prefs = await SharedPreferences.getInstance();
+                        final authToken = (prefs.getString('access_token') ?? '');
+                        if (authToken.isNotEmpty) {
+                          if (loadedCourseDetails.isPaid == 1) {
+                            final prefs = await SharedPreferences.getInstance();
+                            final emailPre = prefs.getString('email');
+                            final passwordPre = prefs.getString('password');
+                            var email = emailPre;
+                            var password = passwordPre;
+                            DateTime currentDateTime = DateTime.now();
+                            int currentTimestamp = (currentDateTime.millisecondsSinceEpoch / 1000).floor();
+
+                            String authToken = 'Basic ${base64Encode(utf8.encode('$email:$password:$currentTimestamp'))}';
+                            final url = '$baseUrl/payment/web_redirect_to_pay_fee?auth=$authToken&unique_id=academylaravelbycreativeitem';
+                            
+                            // Use the PaymentWebView instead of launching external browser
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PaymentWebView(url: url),
+                              ),
+                            );
+                            
+                            CommonFunctions.showSuccessToast(msg1);
+                            if (!loadedCourseDetails.is_cart!) {
+                              Provider.of<Courses>(context, listen: false)
+                                  .toggleCart(loadedCourseDetails.courseId!, false);
+                            }
+                          }
+                        } else {
+                          CommonFunctions.showWarningToast('Please login first');
+                        }
+                      },
+                      color: kDefaultColor,
+                      height: 50,
+                      minWidth: 180,
+                      textColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      child: const Text(
+                        'Buy Now',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 16,
+                        ),
+                      ),
+                    )
+                  : MaterialButton(
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                      onPressed: () async {
+                        final prefs = await SharedPreferences.getInstance();
+                        final authToken = (prefs.getString('access_token') ?? '');
+                        if (authToken.isNotEmpty) {
+                          if (loadedCourseDetails.isPaid == 0) {
+                            await getEnroll(loadedCourseDetails.courseId.toString());
+                            CommonFunctions.showSuccessToast('Course Successfully Enrolled');
+                          }
+                        } else {
+                          CommonFunctions.showWarningToast('Please login first');
+                        }
+                      },
+                      color: kDefaultColor,
+                      height: 50,
+                      minWidth: 180,
+                      textColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      child: const Text(
+                        'Enroll Now',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+            ],
+          ),
+        );
+      });
+    }
+
     return Scaffold(
       appBar: const AppBarOne(logo: 'light_logo.png'),
       body: Container(
@@ -774,7 +939,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                                       ),
                                                     ),
                                                     const SizedBox(height: 10),
-                                                    ...loadedCourseDetails.courseOutcomes.map((item) => 
+                                                    ...(loadedCourseDetails.courseOutcomes ?? []).map((item) => 
                                                       Padding(
                                                         padding: const EdgeInsets.only(bottom: 8.0),
                                                         child: Row(
@@ -803,7 +968,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                                       ),
                                                     ),
                                                     const SizedBox(height: 10),
-                                                    ...loadedCourseDetails.courseIncludes.map((item) => 
+                                                    ...(loadedCourseDetails.courseIncludes ?? []).map((item) => 
                                                       Padding(
                                                         padding: const EdgeInsets.only(bottom: 8.0),
                                                         child: Row(
@@ -832,7 +997,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                                       ),
                                                     ),
                                                     const SizedBox(height: 10),
-                                                    ...loadedCourseDetails.courseRequirements.map((item) => 
+                                                    ...(loadedCourseDetails.courseRequirements ?? []).map((item) => 
                                                       Padding(
                                                         padding: const EdgeInsets.only(bottom: 8.0),
                                                         child: Row(
