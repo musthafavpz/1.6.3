@@ -12,6 +12,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:html_unescape/html_unescape.dart';
 import 'package:http/http.dart' as http;
+import 'package:pod_player/pod_player.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -49,6 +50,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
   var msg = 'Removed from cart';
   var msg2 = 'Added to cart';
   var msg1 = 'please tap again to Buy Now';
+  
+  // Video player controllers
+  PodPlayerController? _podController;
+  bool isVideoLoaded = false;
 
   getEnroll(String course_id) async {
     setState(() {
@@ -87,6 +92,28 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
     });
   }
 
+  void _initializeVideoPlayer(String videoUrl) {
+    // Clean up old controller if exists
+    _podController?.dispose();
+    
+    if (videoUrl.isNotEmpty) {
+      setState(() {
+        isVideoLoaded = false;
+      });
+      
+      // Initialize the new controller
+      _podController = PodPlayerController(
+        playVideoFrom: PlayVideoFrom.network(videoUrl),
+      )..initialise().then((_) {
+        if (mounted) {
+          setState(() {
+            isVideoLoaded = true;
+          });
+        }
+      });
+    }
+  }
+
   @override
   void initState() {
     _tabController = TabController(length: 2, vsync: this);
@@ -115,9 +142,30 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
       Provider.of<Courses>(context, listen: false)
           .fetchCourseDetailById(courseId)
           .then((_) {
-        Provider.of<Courses>(context, listen: false).getCourseDetail;
-
-        // Provider.of<Courses>(context, listen: false).findById(courseId);
+        final courseDetail = Provider.of<Courses>(context, listen: false).getCourseDetail;
+        
+        // Initialize video player if preview is available
+        if (courseDetail.preview != null && courseDetail.preview!.isNotEmpty) {
+          final previewUrl = courseDetail.preview!;
+          
+          // Handle different video types
+          if (previewUrl.contains("youtube.com") || previewUrl.contains("youtu.be")) {
+            // YouTube videos will be handled differently
+          } else if (previewUrl.contains("drive.google.com")) {
+            final RegExp regExp = RegExp(r'[-\w]{25,}');
+            final Match? match = regExp.firstMatch(previewUrl);
+            if (match != null) {
+              String url = 'https://drive.google.com/uc?export=download&id=${match.group(0)}';
+              _initializeVideoPlayer(url);
+            }
+          } else if (previewUrl.contains("vimeo.com")) {
+            // Vimeo videos will be handled differently
+          } else if (RegExp(r"\.mp4(\?|$)").hasMatch(previewUrl) || 
+                     RegExp(r"\.webm(\?|$)").hasMatch(previewUrl) || 
+                     RegExp(r"\.ogg(\?|$)").hasMatch(previewUrl)) {
+            _initializeVideoPlayer(previewUrl);
+          }
+        }
 
         setState(() {
           _isLoading = false;
@@ -129,516 +177,29 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
   }
 
   @override
+  void dispose() {
+    _tabController.dispose();
+    _podController?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // final courseId = ModalRoute.of(context)!.settings.arguments as int;
-    // final loadedCourse = Provider.of<Courses>(
-    //   context,
-    //   listen: false,
-    // ).findById(courseId);
-    // final loadedCourseDetail = Provider.of<Courses>(
-    //   context,
-    //   listen: false,
-    // ).getCourseDetail;
-
-    customNavBar() {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(color: kDefaultColor),
-              )
-            : Consumer<Courses>(builder: (context, courses, child) {
-                final loadedCourseDetails = courses.getCourseDetail;
-
-                return SizedBox(
-                  height: 65,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _isLoading
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                                  color: Colors.transparent),
-                            )
-                          : Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // Text(loadedCourseDetail.isPurchased.toString()),
-                                IconButton(
-                                    icon: SvgPicture.asset(
-                                      'assets/icons/account.svg',
-                                      colorFilter: const ColorFilter.mode(
-                                          kGreyLightColor, BlendMode.srcIn),
-                                    ),
-                                    onPressed: () {
-                                      // Handle account icon tap
-                                      // You can navigate to the account page or show a user menu here
-                                      Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const TabsScreen(
-                                                    pageIndex: 3,
-                                                  )));
-                                    },
-                                    visualDensity: const VisualDensity(
-                                        horizontal: -4, vertical: -4)),
-                                const Text(
-                                  'Account',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: kGreyLightColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 15.0, vertical: 15),
-                        child: VerticalDivider(
-                          thickness: 1.0, // Adjust the thickness of the divider
-                          color:
-                              kGreyLightColor, // Adjust the color of the divider
-                        ),
-                      ),
-                      loadedCourseDetails.isPurchased!
-                          ? SizedBox()
-                          : loadedCourseDetails.isPaid == 1
-                              ? Padding(
-                                  padding: const EdgeInsets.only(right: 10.0),
-                                  child: MaterialButton(
-                                    elevation: 0,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10),
-                                    onPressed: () async {
-                                      final prefs =
-                                          await SharedPreferences.getInstance();
-                                      final authToken =
-                                          (prefs.getString('access_token') ??
-                                              '');
-                                      if (authToken.isNotEmpty) {
-                                        if (loadedCourseDetails.isPaid == 1) {
-                                          // if (msg1 ==
-                                          //     'please tap again to Buy Now') {
-
-                                          final prefs = await SharedPreferences
-                                              .getInstance();
-                                          final emailPre =
-                                              prefs.getString('email');
-                                          final passwordPre =
-                                              prefs.getString('password');
-                                          var email = emailPre;
-                                          var password = passwordPre;
-                                          // print(email);
-                                          // print(password);
-                                          // var email = "student@example.com";
-                                          // var password = "12345678";
-                                          DateTime currentDateTime =
-                                              DateTime.now();
-                                          int currentTimestamp = (currentDateTime
-                                                      .millisecondsSinceEpoch /
-                                                  1000)
-                                              .floor();
-
-                                          String authToken =
-                                              'Basic ${base64Encode(utf8.encode('$email:$password:$currentTimestamp'))}';
-                                          // print(authToken);
-                                          final url =
-                                              '$baseUrl/payment/web_redirect_to_pay_fee?auth=$authToken&unique_id=academylaravelbycreativeitem';
-                                          // print(url);
-                                          // _launchURL(url);
-
-                                          if (await canLaunchUrl(
-                                              Uri.parse(url))) {
-                                            await launchUrl(
-                                              Uri.parse(url),
-                                              mode: LaunchMode
-                                                  .externalApplication,
-                                            );
-                                          } else {
-                                            throw 'Could not launch $url';
-                                          }
-                                          // } else if (msg1 == 'Added to cart') {
-                                          //   setState(() {
-                                          //     msg1 =
-                                          //         'please tap again to Buy Now';
-                                          //   });
-                                          // }
-                                          CommonFunctions.showSuccessToast(
-                                              msg1);
-                                              if (!loadedCourseDetails.is_cart!) {
-                                                Provider.of<Courses>(context,
-                                                listen: false)
-                                            .toggleCart(
-                                                loadedCourseDetails.courseId!,
-                                                false);
-                                              }
-                                          
-                                        }
-
-                                        // CommonFunctions.showSuccessToast('Failed to connect');
-                                      } else {
-                                        CommonFunctions.showWarningToast(
-                                            'Please login first');
-                                      }
-                                    },
-                                    color: kDefaultColor,
-                                    height: 45,
-                                    minWidth: 111,
-                                    textColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(13.0),
-                                      side: const BorderSide(
-                                          color: kDefaultColor),
-                                    ),
-                                    child: const Text(
-                                      'Buy Now',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              : SizedBox(
-                                  width: 111,
-                                ),
-                      loadedCourseDetails.isPurchased!
-                          ? Padding(
-                              padding: const EdgeInsets.only(right: 10.0),
-                              child: MaterialButton(
-                                elevation: 0,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 10),
-                                onPressed: () async {
-                                  // await getEnroll(loadedCourse.id.toString());
-                                  final prefs =
-                                      await SharedPreferences.getInstance();
-                                  final authToken =
-                                      (prefs.getString('access_token') ?? '');
-                                  if (authToken.isNotEmpty) {
-                                    Navigator.of(context).pushReplacement(
-                                      MaterialPageRoute(
-                                          builder: (context) => TabsScreen(
-                                                pageIndex: 1,
-                                              )),
-                                    );
-                                  } else {
-                                    CommonFunctions.showWarningToast(
-                                        'Please login first');
-                                  }
-                                },
-                                color: kGreenPurchaseColor,
-                                height: 45,
-                                minWidth: 111,
-                                textColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(13.0),
-                                  side: const BorderSide(
-                                      color: kGreenPurchaseColor),
-                                ),
-                                child: const Text(
-                                  'Purchased',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                            )
-                          : loadedCourseDetails.isPaid == 1
-                              ? MaterialButton(
-                                  elevation: 0,
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10),
-                                  onPressed: () async {
-                                    final prefs =
-                                        await SharedPreferences.getInstance();
-                                    final authToken =
-                                        (prefs.getString('access_token') ?? '');
-
-                                    if (authToken.isNotEmpty) {
-                                      if (loadedCourseDetails.isPaid == 1) {
-                                        // Call the provider method to toggle the cart state
-                                        Provider.of<Courses>(context,
-                                                listen: false)
-                                            .toggleCart(
-                                                loadedCourseDetails.courseId!,
-                                                false);
-
-                                        // Show toast based on current state
-                                        if (loadedCourseDetails.is_cart!) {
-                                          CommonFunctions.showSuccessToast(
-                                              "Removed from cart");
-                                        } else {
-                                          CommonFunctions.showSuccessToast(
-                                              "Added to cart");
-                                        }
-                                      } else {
-                                        CommonFunctions.showWarningToast(
-                                            "It's a free course! Click on Buy Now");
-                                      }
-                                    } else {
-                                      CommonFunctions.showSuccessToast(
-                                          'Please login first');
-                                    }
-                                  },
-                                  color: loadedCourseDetails.is_cart!
-                                      ? kDefaultColor
-                                      : kWhiteColor,
-                                  height: 45,
-                                  minWidth: 111,
-                                  textColor:
-                                      const Color.fromARGB(255, 102, 76, 76),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(13.0),
-                                    side:
-                                        const BorderSide(color: kDefaultColor),
-                                  ),
-                                  child: Text(
-                                    loadedCourseDetails.is_cart!
-                                        ? "Added to cart"
-                                        : 'Add to Cart',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 13,
-                                      color: loadedCourseDetails.is_cart!
-                                          ? kWhiteColor
-                                          : kDefaultColor,
-                                    ),
-                                  ),
-                                )
-                              : Padding(
-                                  padding: const EdgeInsets.only(right: 10.0),
-                                  child: MaterialButton(
-                                    elevation: 0,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10),
-                                    onPressed: () async {
-                                      // await getEnroll(loadedCourse.id.toString());
-                                      final prefs =
-                                          await SharedPreferences.getInstance();
-                                      final authToken =
-                                          (prefs.getString('access_token') ??
-                                              '');
-                                      if (authToken.isNotEmpty) {
-                                        if (loadedCourseDetails.isPaid == 0) {
-                                          await getEnroll(loadedCourseDetails
-                                              .courseId
-                                              .toString());
-                                          // print(loadedCourse.id.toString());
-                                          CommonFunctions.showSuccessToast(
-                                              'Course Succesfully Enrolled');
-                                        }
-                                        // CommonFunctions.showSuccessToast(
-                                        //     'Failed to connect');
-                                      } else {
-                                        CommonFunctions.showWarningToast(
-                                            'Please login first');
-                                      }
-                                    },
-                                    color: kDefaultColor,
-                                    height: 45,
-                                    minWidth: 111,
-                                    textColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(13.0),
-                                      side: const BorderSide(
-                                          color: kDefaultColor),
-                                    ),
-                                    child: Text(
-                                      'Enroll Now',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                    ],
-                  ),
-                );
-              }),
-      );
-    }
-
-    // Bottom navigation bar with course price and action buttons
-    Widget bottomPriceBar() {
-      return Consumer<Courses>(builder: (context, courses, child) {
-        final loadedCourseDetails = courses.getCourseDetail;
-        return Container(
-          height: 80,
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, -5),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Price',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: kGreyLightColor,
-                      ),
-                    ),
-                    Text(
-                      loadedCourseDetails.price.toString(),
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: kDefaultColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              loadedCourseDetails.isPurchased!
-                ? MaterialButton(
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 30),
-                    onPressed: () async {
-                      final prefs = await SharedPreferences.getInstance();
-                      final authToken = (prefs.getString('access_token') ?? '');
-                      if (authToken.isNotEmpty) {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                              builder: (context) => TabsScreen(
-                                    pageIndex: 1,
-                                  )),
-                        );
-                      } else {
-                        CommonFunctions.showWarningToast('Please login first');
-                      }
-                    },
-                    color: kGreenPurchaseColor,
-                    height: 50,
-                    minWidth: 180,
-                    textColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    child: const Text(
-                      'Purchased',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 16,
-                      ),
-                    ),
-                  )
-                : loadedCourseDetails.isPaid == 1
-                  ? MaterialButton(
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 30),
-                      onPressed: () async {
-                        final prefs = await SharedPreferences.getInstance();
-                        final authToken = (prefs.getString('access_token') ?? '');
-                        if (authToken.isNotEmpty) {
-                          if (loadedCourseDetails.isPaid == 1) {
-                            final prefs = await SharedPreferences.getInstance();
-                            final emailPre = prefs.getString('email');
-                            final passwordPre = prefs.getString('password');
-                            var email = emailPre;
-                            var password = passwordPre;
-                            DateTime currentDateTime = DateTime.now();
-                            int currentTimestamp = (currentDateTime.millisecondsSinceEpoch / 1000).floor();
-
-                            String authToken = 'Basic ${base64Encode(utf8.encode('$email:$password:$currentTimestamp'))}';
-                            final url = '$baseUrl/payment/web_redirect_to_pay_fee?auth=$authToken&unique_id=academylaravelbycreativeitem';
-                            
-                            // Use the PaymentWebView instead of launching external browser
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => PaymentWebView(url: url),
-                              ),
-                            );
-                            
-                            CommonFunctions.showSuccessToast(msg1);
-                            if (!loadedCourseDetails.is_cart!) {
-                              Provider.of<Courses>(context, listen: false)
-                                  .toggleCart(loadedCourseDetails.courseId!, false);
-                            }
-                          }
-                        } else {
-                          CommonFunctions.showWarningToast('Please login first');
-                        }
-                      },
-                      color: kDefaultColor,
-                      height: 50,
-                      minWidth: 180,
-                      textColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      child: const Text(
-                        'Buy Now',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                        ),
-                      ),
-                    )
-                  : MaterialButton(
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 30),
-                      onPressed: () async {
-                        final prefs = await SharedPreferences.getInstance();
-                        final authToken = (prefs.getString('access_token') ?? '');
-                        if (authToken.isNotEmpty) {
-                          if (loadedCourseDetails.isPaid == 0) {
-                            await getEnroll(loadedCourseDetails.courseId.toString());
-                            CommonFunctions.showSuccessToast('Course Successfully Enrolled');
-                          }
-                        } else {
-                          CommonFunctions.showWarningToast('Please login first');
-                        }
-                      },
-                      color: kDefaultColor,
-                      height: 50,
-                      minWidth: 180,
-                      textColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      child: const Text(
-                        'Enroll Now',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-            ],
-          ),
-        );
-      });
-    }
-
     return Scaffold(
       appBar: const AppBarOne(logo: 'light_logo.png'),
       body: Container(
         height: MediaQuery.of(context).size.height * 1,
-        color: kBackGroundColor,
+        color: const Color(0xFFF8F9FA),
         child: _isLoading
             ? const Center(
                 child: CircularProgressIndicator(color: kDefaultColor),
               )
             : Consumer<Courses>(builder: (context, courses, child) {
                 final loadedCourseDetails = courses.getCourseDetail;
+                
+                // Try to extract video URL for preview
+                String? previewUrl = loadedCourseDetails.preview;
+                
                 return Column(
                   children: [
                     Expanded(
@@ -646,14 +207,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Full width thumbnail without radius
+                            // YouTube-like thumbnail with embedded video player
                             Stack(
                               alignment: Alignment.center,
                               children: [
-                                // Full width image with no radius or opacity overlay
+                                // Course thumbnail with YouTube-like aspect ratio
                                 Container(
                                   width: double.infinity,
-                                  height: MediaQuery.of(context).size.height * .35,
+                                  height: 220, // Standard YouTube-like height
                                   decoration: BoxDecoration(
                                     image: DecorationImage(
                                       fit: BoxFit.cover,
@@ -661,21 +222,28 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                         loadedCourseDetails.thumbnail.toString(),
                                       ),
                                     ),
+                                    color: Colors.black,
                                   ),
                                 ),
-                                // Play button overlay
-                                GestureDetector(
-                                  onTap: () {
-                                    if (loadedCourseDetails.preview != null) {
-                                      final previewUrl = loadedCourseDetails.preview!;
-                                      final isYouTube = previewUrl.contains("youtube.com") || previewUrl.contains("youtu.be");
-                                      final isVimeo = previewUrl.contains("vimeo.com");
-                                      final isDrive = previewUrl.contains("drive.google.com");
-                                      final isMp4 = RegExp(r"\.mp4(\?|$)").hasMatch(previewUrl);
-                                      final isWebm = RegExp(r"\.webm(\?|$)").hasMatch(previewUrl);
-                                      final isOgg = RegExp(r"\.ogg(\?|$)").hasMatch(previewUrl);
-
-                                      if (isYouTube) {
+                                
+                                // Video player overlay or play button
+                                if (isVideoLoaded && _podController != null)
+                                  Container(
+                                    width: double.infinity,
+                                    height: 220,
+                                    child: PodVideoPlayer(
+                                      controller: _podController!,
+                                      podProgressBarConfig: const PodProgressBarConfig(
+                                        playingBarColor: Color(0xFF6366F1),
+                                        circleHandlerColor: Color(0xFF6366F1),
+                                        backgroundColor: Colors.grey,
+                                      ),
+                                    ),
+                                  )
+                                else if (previewUrl != null && previewUrl.isNotEmpty)
+                                  GestureDetector(
+                                    onTap: () {
+                                      if (previewUrl.contains("youtube.com") || previewUrl.contains("youtu.be")) {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
@@ -685,21 +253,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                             ),
                                           ),
                                         );
-                                      } else if (isDrive) {
+                                      } else if (previewUrl.contains("drive.google.com")) {
                                         final RegExp regExp = RegExp(r'[-\w]{25,}');
-                                        final Match? match = regExp.firstMatch(loadedCourseDetails.preview.toString());
+                                        final Match? match = regExp.firstMatch(previewUrl);
                                         String url = 'https://drive.google.com/uc?export=download&id=${match!.group(0)}';
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => PlayVideoFromNetwork(
-                                              courseId: loadedCourseDetails.courseId!,
-                                              videoUrl: url
-                                            ),
-                                          ),
-                                        );
-                                      } else if (isVimeo) {
-                                        String vimeoVideoId = loadedCourseDetails.preview!.split('/').last;
+                                        _initializeVideoPlayer(url);
+                                      } else if (previewUrl.contains("vimeo.com")) {
+                                        String vimeoVideoId = previewUrl.split('/').last;
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
@@ -709,16 +269,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                             ),
                                           )
                                         );
-                                      } else if (isMp4 || isOgg || isWebm) {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => PlayVideoFromNetwork(
-                                              courseId: loadedCourseDetails.courseId!,
-                                              videoUrl: previewUrl,
-                                            ),
-                                          ),
-                                        );
+                                      } else if (RegExp(r"\.mp4(\?|$)").hasMatch(previewUrl) || 
+                                                RegExp(r"\.webm(\?|$)").hasMatch(previewUrl) || 
+                                                RegExp(r"\.ogg(\?|$)").hasMatch(previewUrl)) {
+                                        _initializeVideoPlayer(previewUrl);
                                       } else {
                                         Navigator.push(
                                           context,
@@ -727,105 +281,30 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                           ),
                                         );
                                       }
-                                    } else {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => NoPreviewVideo(),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  child: Container(
-                                    width: 80,
-                                    height: 80,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.9),
-                                      borderRadius: BorderRadius.circular(40),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.2),
-                                          blurRadius: 10,
-                                          spreadRadius: 2,
-                                        ),
-                                      ],
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(20.0),
-                                      child: Image.asset(
-                                        'assets/images/play.png',
-                                        fit: BoxFit.contain,
+                                    },
+                                    child: Container(
+                                      width: 60,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.9),
+                                        borderRadius: BorderRadius.circular(30),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.2),
+                                            blurRadius: 8,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                  ),
-                                ),
-                                // Wishlist button
-                                Positioned(
-                                  top: 15,
-                                  right: 15,
-                                  child: SizedBox(
-                                    height: 45,
-                                    width: 45,
-                                    child: FittedBox(
-                                      child: FloatingActionButton(
-                                        onPressed: () {
-                                          if (_isAuth) {
-                                            var msg = loadedCourseDetails.isWishlisted;
-                                            showDialog(
-                                              context: context,
-                                              builder: (BuildContext context) => buildPopupDialogWishList(
-                                                context,
-                                                loadedCourseDetails.isWishlisted,
-                                                loadedCourseDetails.courseId,
-                                                msg
-                                              ),
-                                            );
-                                          } else {
-                                            CommonFunctions.showSuccessToast('Please login first');
-                                          }
-                                        },
-                                        tooltip: 'Wishlist',
-                                        backgroundColor: loadedCourseDetails.isWishlisted!
-                                            ? Colors.white
-                                            : kGreyLightColor.withOpacity(0.3),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(57)
-                                        ),
-                                        child: Icon(
-                                          loadedCourseDetails.isWishlisted! ? Icons.favorite : Icons.favorite,
-                                          size: 30,
-                                          color: loadedCourseDetails.isWishlisted! ? kDefaultColor : Colors.white,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(15.0),
+                                        child: Image.asset(
+                                          'assets/images/play.png',
+                                          fit: BoxFit.contain,
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                // Share button
-                                Positioned(
-                                  top: 15,
-                                  left: 15,
-                                  child: SizedBox(
-                                    height: 45,
-                                    width: 45,
-                                    child: FittedBox(
-                                      child: FloatingActionButton(
-                                        onPressed: () async {
-                                          await Share.share(loadedCourseDetails.shareableLink.toString());
-                                        },
-                                        tooltip: 'Share',
-                                        backgroundColor: kGreyLightColor.withOpacity(0.3),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(57)
-                                        ),
-                                        child: const Icon(
-                                          Icons.share,
-                                          size: 25,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
                               ],
                             ),
                             
@@ -834,349 +313,395 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                               padding: const EdgeInsets.all(16.0),
                               child: Column(
                                 children: [
-                                  DefaultTabController(
-                                    length: 2,
-                                    child: Column(
-                                      children: [
-                                        TabBar(
-                                          controller: _tabController,
-                                          indicatorSize: TabBarIndicatorSize.tab,
-                                          indicator: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(10),
-                                            color: kDefaultColor,
-                                          ),
-                                          unselectedLabelStyle: const TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 16,
-                                          ),
-                                          labelStyle: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 16,
-                                            color: kWhiteColor,
-                                          ),
-                                          padding: const EdgeInsets.symmetric(vertical: 10),
-                                          dividerHeight: 0,
-                                          tabs: const <Widget>[
-                                            Tab(
-                                              child: Text(
-                                                "About",
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                            ),
-                                            Tab(
-                                              child: Text(
-                                                "Lessons",
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                            ),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.05),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: TabBar(
+                                      controller: _tabController,
+                                      indicatorSize: TabBarIndicatorSize.tab,
+                                      indicator: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        gradient: const LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            Color(0xFF6366F1),
+                                            Color(0xFF8B5CF6),
                                           ],
                                         ),
-                                        Container(
-                                          constraints: BoxConstraints(
-                                            minHeight: 500,
-                                            maxHeight: MediaQuery.of(context).size.height * 0.7,
+                                      ),
+                                      unselectedLabelStyle: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 16,
+                                      ),
+                                      labelStyle: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                        color: kWhiteColor,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                      dividerHeight: 0,
+                                      tabs: const <Widget>[
+                                        Tab(
+                                          child: Text(
+                                            "About",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 16,
+                                            ),
                                           ),
-                                          padding: const EdgeInsets.only(top: 20),
-                                          child: TabBarView(
-                                            controller: _tabController,
-                                            children: [
-                                              // About Tab
-                                              SingleChildScrollView(
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                        ),
+                                        Tab(
+                                          child: Text(
+                                            "Lessons",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    constraints: BoxConstraints(
+                                      minHeight: 500,
+                                      maxHeight: MediaQuery.of(context).size.height * 0.6,
+                                    ),
+                                    padding: const EdgeInsets.only(top: 20),
+                                    child: TabBarView(
+                                      controller: _tabController,
+                                      children: [
+                                        // About Tab
+                                        SingleChildScrollView(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.circular(12),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withOpacity(0.05),
+                                                  blurRadius: 10,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            padding: const EdgeInsets.all(16),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                // Course Title
+                                                Text(
+                                                  loadedCourseDetails.title.toString(),
+                                                  style: const TextStyle(
+                                                    fontSize: 22,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 15),
+                                                
+                                                // Rating and Reviews
+                                                Row(
                                                   children: [
-                                                    // Course Title
+                                                    const Icon(
+                                                      Icons.star,
+                                                      color: kStarColor,
+                                                      size: 18,
+                                                    ),
+                                                    const SizedBox(width: 5),
                                                     Text(
-                                                      loadedCourseDetails.title.toString(),
+                                                      loadedCourseDetails.average_rating,
                                                       style: const TextStyle(
-                                                        fontSize: 24,
-                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 16,
+                                                        fontWeight: FontWeight.w400,
                                                       ),
                                                     ),
-                                                    const SizedBox(height: 15),
-                                                    
-                                                    // Rating and Reviews
-                                                    Row(
+                                                    const SizedBox(width: 5),
+                                                    Text(
+                                                      '(${loadedCourseDetails.total_reviews.toString()} Reviews)',
+                                                      style: const TextStyle(
+                                                        fontSize: 14,
+                                                        fontWeight: FontWeight.w400,
+                                                        color: kGreyLightColor,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 25),
+                                                
+                                                // What You Will Learn
+                                                const Text(
+                                                  'What You Will Learn',
+                                                  style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color(0xFF6366F1),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 10),
+                                                ...(loadedCourseDetails.courseOutcomes ?? []).map((item) => 
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(bottom: 8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
                                                       children: [
-                                                        const Icon(
-                                                          Icons.star,
-                                                          color: kStarColor,
-                                                          size: 18,
-                                                        ),
-                                                        const SizedBox(width: 5),
-                                                        Text(
-                                                          loadedCourseDetails.average_rating,
-                                                          style: const TextStyle(
-                                                            fontSize: 16,
-                                                            fontWeight: FontWeight.w400,
-                                                          ),
-                                                        ),
-                                                        const SizedBox(width: 5),
-                                                        Text(
-                                                          '(${loadedCourseDetails.total_reviews.toString()} Reviews)',
-                                                          style: const TextStyle(
-                                                            fontSize: 14,
-                                                            fontWeight: FontWeight.w400,
-                                                            color: kGreyLightColor,
+                                                        const Icon(Icons.check_circle, color: Color(0xFF6366F1), size: 18),
+                                                        const SizedBox(width: 8),
+                                                        Expanded(
+                                                          child: Text(
+                                                            item,
+                                                            style: const TextStyle(fontSize: 15),
                                                           ),
                                                         ),
                                                       ],
                                                     ),
-                                                    const SizedBox(height: 25),
-                                                    
-                                                    // What You Will Learn
-                                                    const Text(
-                                                      'What You Will Learn',
-                                                      style: TextStyle(
-                                                        fontSize: 18,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 10),
-                                                    ...(loadedCourseDetails.courseOutcomes ?? []).map((item) => 
-                                                      Padding(
-                                                        padding: const EdgeInsets.only(bottom: 8.0),
-                                                        child: Row(
-                                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                                          children: [
-                                                            const Icon(Icons.check_circle, color: kDefaultColor, size: 18),
-                                                            const SizedBox(width: 8),
-                                                            Expanded(
-                                                              child: Text(
-                                                                item,
-                                                                style: const TextStyle(fontSize: 15),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      )
-                                                    ).toList(),
-                                                    const SizedBox(height: 25),
-                                                    
-                                                    // What is Included
-                                                    const Text(
-                                                      'What is Included',
-                                                      style: TextStyle(
-                                                        fontSize: 18,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 10),
-                                                    ...(loadedCourseDetails.courseIncludes ?? []).map((item) => 
-                                                      Padding(
-                                                        padding: const EdgeInsets.only(bottom: 8.0),
-                                                        child: Row(
-                                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                                          children: [
-                                                            const Icon(Icons.check_circle, color: kDefaultColor, size: 18),
-                                                            const SizedBox(width: 8),
-                                                            Expanded(
-                                                              child: Text(
-                                                                item,
-                                                                style: const TextStyle(fontSize: 15),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      )
-                                                    ).toList(),
-                                                    const SizedBox(height: 25),
-                                                    
-                                                    // Course Requirements
-                                                    const Text(
-                                                      'Course Requirements',
-                                                      style: TextStyle(
-                                                        fontSize: 18,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 10),
-                                                    ...(loadedCourseDetails.courseRequirements ?? []).map((item) => 
-                                                      Padding(
-                                                        padding: const EdgeInsets.only(bottom: 8.0),
-                                                        child: Row(
-                                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                                          children: [
-                                                            const Icon(Icons.arrow_right, color: kDefaultColor, size: 22),
-                                                            const SizedBox(width: 8),
-                                                            Expanded(
-                                                              child: Text(
-                                                                item,
-                                                                style: const TextStyle(fontSize: 15),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      )
-                                                    ).toList(),
-                                                    const SizedBox(height: 50),
-                                                  ],
+                                                  )
+                                                ).toList(),
+                                                const SizedBox(height: 25),
+                                                
+                                                // What is Included
+                                                const Text(
+                                                  'What is Included',
+                                                  style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color(0xFF6366F1),
+                                                  ),
                                                 ),
-                                              ),
-                                              
-                                              // Lessons Tab
-                                              SingleChildScrollView(
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    const Text(
-                                                      'Course Curriculum',
-                                                      style: TextStyle(
-                                                          fontSize: 20,
-                                                          fontWeight: FontWeight.bold),
+                                                const SizedBox(height: 10),
+                                                ...(loadedCourseDetails.courseIncludes ?? []).map((item) => 
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(bottom: 8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        const Icon(Icons.check_circle, color: Color(0xFF6366F1), size: 18),
+                                                        const SizedBox(width: 8),
+                                                        Expanded(
+                                                          child: Text(
+                                                            item,
+                                                            style: const TextStyle(fontSize: 15),
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
-                                                    const SizedBox(height: 15),
-                                                    
-                                                    // Course sections and lessons
-                                                    ListView.builder(
-                                                      key: Key('builder ${selected.toString()}'),
-                                                      shrinkWrap: true,
-                                                      physics: const NeverScrollableScrollPhysics(),
-                                                      itemCount: loadedCourseDetails.mSection!.length,
-                                                      itemBuilder: (ctx, index) {
-                                                        final section = loadedCourseDetails.mSection![index];
-                                                        return Padding(
-                                                          padding: const EdgeInsets.only(bottom: 10.0),
-                                                          child: Container(
-                                                            decoration: BoxDecoration(
-                                                              boxShadow: [
-                                                                BoxShadow(
-                                                                  color: kBackButtonBorderColor.withOpacity(0.05),
-                                                                  blurRadius: 10,
-                                                                  offset: const Offset(0, 2),
-                                                                ),
-                                                              ],
+                                                  )
+                                                ).toList(),
+                                                const SizedBox(height: 25),
+                                                
+                                                // Course Requirements
+                                                const Text(
+                                                  'Course Requirements',
+                                                  style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color(0xFF6366F1),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 10),
+                                                ...(loadedCourseDetails.courseRequirements ?? []).map((item) => 
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(bottom: 8.0),
+                                                    child: Row(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        const Icon(Icons.arrow_right, color: Color(0xFF6366F1), size: 22),
+                                                        const SizedBox(width: 8),
+                                                        Expanded(
+                                                          child: Text(
+                                                            item,
+                                                            style: const TextStyle(fontSize: 15),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  )
+                                                ).toList(),
+                                                const SizedBox(height: 30),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        
+                                        // Lessons Tab
+                                        SingleChildScrollView(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.circular(12),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withOpacity(0.05),
+                                                  blurRadius: 10,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            padding: const EdgeInsets.all(16),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  'Course Curriculum',
+                                                  style: TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color(0xFF6366F1),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 15),
+                                                
+                                                // Course sections and lessons
+                                                ListView.builder(
+                                                  key: Key('builder ${selected.toString()}'),
+                                                  shrinkWrap: true,
+                                                  physics: const NeverScrollableScrollPhysics(),
+                                                  itemCount: loadedCourseDetails.mSection!.length,
+                                                  itemBuilder: (ctx, index) {
+                                                    final section = loadedCourseDetails.mSection![index];
+                                                    return Padding(
+                                                      padding: const EdgeInsets.only(bottom: 10.0),
+                                                      child: Container(
+                                                        decoration: BoxDecoration(
+                                                          boxShadow: [
+                                                            BoxShadow(
+                                                              color: kBackButtonBorderColor.withOpacity(0.05),
+                                                              blurRadius: 10,
+                                                              offset: const Offset(0, 2),
+                                                            ),
+                                                          ],
+                                                          borderRadius: BorderRadius.circular(10),
+                                                        ),
+                                                        child: Card(
+                                                          elevation: 0.5,
+                                                          shape: RoundedRectangleBorder(
+                                                            borderRadius: BorderRadius.circular(10),
+                                                          ),
+                                                          child: ExpansionTile(
+                                                            key: Key(index.toString()),
+                                                            initiallyExpanded: index == selected,
+                                                            onExpansionChanged: ((newState) {
+                                                              if (newState) {
+                                                                setState(() {
+                                                                  selected = index;
+                                                                });
+                                                              } else {
+                                                                setState(() {
+                                                                  selected = -1;
+                                                                });
+                                                              }
+                                                            }),
+                                                            iconColor: kDefaultColor,
+                                                            collapsedIconColor: kSelectItemColor,
+                                                            trailing: Icon(
+                                                              selected == index
+                                                                  ? Icons.keyboard_arrow_up_rounded
+                                                                  : Icons.keyboard_arrow_down_rounded,
+                                                              size: 30,
+                                                            ),
+                                                            shape: RoundedRectangleBorder(
                                                               borderRadius: BorderRadius.circular(10),
                                                             ),
-                                                            child: Card(
-                                                              elevation: 0.5,
-                                                              shape: RoundedRectangleBorder(
-                                                                borderRadius: BorderRadius.circular(10),
-                                                              ),
-                                                              child: ExpansionTile(
-                                                                key: Key(index.toString()),
-                                                                initiallyExpanded: index == selected,
-                                                                onExpansionChanged: ((newState) {
-                                                                  if (newState) {
-                                                                    setState(() {
-                                                                      selected = index;
-                                                                    });
-                                                                  } else {
-                                                                    setState(() {
-                                                                      selected = -1;
-                                                                    });
-                                                                  }
-                                                                }),
-                                                                iconColor: kDefaultColor,
-                                                                collapsedIconColor: kSelectItemColor,
-                                                                trailing: Icon(
-                                                                  selected == index
-                                                                      ? Icons.keyboard_arrow_up_rounded
-                                                                      : Icons.keyboard_arrow_down_rounded,
-                                                                  size: 30,
-                                                                ),
-                                                                shape: RoundedRectangleBorder(
-                                                                  borderRadius: BorderRadius.circular(10),
-                                                                ),
-                                                                title: Padding(
-                                                                  padding: const EdgeInsets.symmetric(vertical: 5.0),
-                                                                  child: Column(
-                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                            title: Padding(
+                                                              padding: const EdgeInsets.symmetric(vertical: 5.0),
+                                                              child: Column(
+                                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                                children: [
+                                                                  Text(
+                                                                    '${index + 1}. ${HtmlUnescape().convert(section.title.toString())}',
+                                                                    style: const TextStyle(
+                                                                      fontSize: 16,
+                                                                      fontWeight: FontWeight.w500,
+                                                                    ),
+                                                                  ),
+                                                                  const SizedBox(height: 8),
+                                                                  Row(
                                                                     children: [
-                                                                      Text(
-                                                                        '${index + 1}. ${HtmlUnescape().convert(section.title.toString())}',
-                                                                        style: const TextStyle(
-                                                                          fontSize: 16,
-                                                                          fontWeight: FontWeight.w500,
+                                                                      Container(
+                                                                        padding: const EdgeInsets.symmetric(
+                                                                          horizontal: 10,
+                                                                          vertical: 5,
+                                                                        ),
+                                                                        decoration: BoxDecoration(
+                                                                          color: kTimeBackColor.withOpacity(0.12),
+                                                                          borderRadius: BorderRadius.circular(5),
+                                                                        ),
+                                                                        child: Text(
+                                                                          section.totalDuration.toString(),
+                                                                          style: const TextStyle(
+                                                                            fontSize: 12,
+                                                                            fontWeight: FontWeight.w400,
+                                                                            color: kTimeColor,
+                                                                          ),
                                                                         ),
                                                                       ),
-                                                                      const SizedBox(height: 8),
-                                                                      Row(
-                                                                        children: [
-                                                                          Container(
-                                                                            padding: const EdgeInsets.symmetric(
-                                                                              horizontal: 10,
-                                                                              vertical: 5,
-                                                                            ),
-                                                                            decoration: BoxDecoration(
-                                                                              color: kTimeBackColor.withOpacity(0.12),
-                                                                              borderRadius: BorderRadius.circular(5),
-                                                                            ),
-                                                                            child: Text(
-                                                                              section.totalDuration.toString(),
-                                                                              style: const TextStyle(
-                                                                                fontSize: 12,
-                                                                                fontWeight: FontWeight.w400,
-                                                                                color: kTimeColor,
-                                                                              ),
-                                                                            ),
+                                                                      const SizedBox(width: 10),
+                                                                      Container(
+                                                                        padding: const EdgeInsets.symmetric(
+                                                                          horizontal: 10,
+                                                                          vertical: 5,
+                                                                        ),
+                                                                        decoration: BoxDecoration(
+                                                                          color: kLessonBackColor.withOpacity(0.12),
+                                                                          borderRadius: BorderRadius.circular(5),
+                                                                        ),
+                                                                        child: Text(
+                                                                          '${section.mLesson!.length} Lessons',
+                                                                          style: const TextStyle(
+                                                                            fontSize: 12,
+                                                                            fontWeight: FontWeight.w400,
+                                                                            color: kLessonColor,
                                                                           ),
-                                                                          const SizedBox(width: 10),
-                                                                          Container(
-                                                                            padding: const EdgeInsets.symmetric(
-                                                                              horizontal: 10,
-                                                                              vertical: 5,
-                                                                            ),
-                                                                            decoration: BoxDecoration(
-                                                                              color: kLessonBackColor.withOpacity(0.12),
-                                                                              borderRadius: BorderRadius.circular(5),
-                                                                            ),
-                                                                            child: Text(
-                                                                              '${section.mLesson!.length} Lessons',
-                                                                              style: const TextStyle(
-                                                                                fontSize: 12,
-                                                                                fontWeight: FontWeight.w400,
-                                                                                color: kLessonColor,
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                        ],
+                                                                        ),
                                                                       ),
                                                                     ],
-                                                                  ),
-                                                                ),
-                                                                children: [
-                                                                  ListView.builder(
-                                                                    shrinkWrap: true,
-                                                                    physics: const NeverScrollableScrollPhysics(),
-                                                                    itemCount: section.mLesson!.length,
-                                                                    itemBuilder: (ctx, index) {
-                                                                      return Padding(
-                                                                        padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                                                                        child: Column(
-                                                                          children: [
-                                                                            LessonListItem(
-                                                                              lesson: section.mLesson![index],
-                                                                              courseId: loadedCourseDetails.courseId!,
-                                                                            ),
-                                                                            if ((section.mLesson!.length - 1) != index)
-                                                                              Divider(
-                                                                                color: kGreyLightColor.withOpacity(0.3),
-                                                                              ),
-                                                                            if ((section.mLesson!.length - 1) == index)
-                                                                              const SizedBox(height: 10),
-                                                                          ],
-                                                                        ),
-                                                                      );
-                                                                    },
                                                                   ),
                                                                 ],
                                                               ),
                                                             ),
+                                                            children: [
+                                                              ListView.builder(
+                                                                shrinkWrap: true,
+                                                                physics: const NeverScrollableScrollPhysics(),
+                                                                itemCount: section.mLesson!.length,
+                                                                itemBuilder: (ctx, index) {
+                                                                  return Padding(
+                                                                    padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                                                                    child: Column(
+                                                                      children: [
+                                                                        LessonListItem(
+                                                                          lesson: section.mLesson![index],
+                                                                          courseId: loadedCourseDetails.courseId!,
+                                                                        ),
+                                                                        if ((section.mLesson!.length - 1) != index)
+                                                                          Divider(
+                                                                            color: kGreyLightColor.withOpacity(0.3),
+                                                                          ),
+                                                                        if ((section.mLesson!.length - 1) == index)
+                                                                          const SizedBox(height: 10),
+                                                                      ],
+                                                                    ),
+                                                                  );
+                                                                },
+                                                              ),
+                                                            ],
                                                           ),
-                                                        );
-                                                      },
-                                                    ),
-                                                  ],
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -1189,36 +714,200 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                         ),
                       ),
                     ),
-                    // Bottom price bar with action buttons
-                    bottomPriceBar(),
                   ],
                 );
               }),
       ),
-      floatingActionButton: Container(
-        margin: const EdgeInsets.only(bottom: 15.0),
-        padding: const EdgeInsets.only(right: 10.0, bottom: 18),
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const FilterScreen(),
-                ));
-          },
-          backgroundColor: kWhiteColor,
-          shape: RoundedRectangleBorder(
-              side: const BorderSide(width: 1, color: kDefaultColor),
-              borderRadius: BorderRadius.circular(100)),
-          child: SvgPicture.asset(
-            'assets/icons/filter.svg',
-            colorFilter: const ColorFilter.mode(
-              kBlackColor,
-              BlendMode.srcIn,
-            ),
+      bottomNavigationBar: Consumer<Courses>(builder: (context, courses, child) {
+        final loadedCourseDetails = courses.getCourseDetail;
+        return Container(
+          height: 80,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
+            ],
           ),
-        ),
-      ),
+          child: Row(
+            children: [
+              // Price display
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Price',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF6B7280),
+                      ),
+                    ),
+                    Text(
+                      loadedCourseDetails.price.toString(),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF6366F1),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Buttons
+              if (!loadedCourseDetails.isPurchased!)
+                loadedCourseDetails.isPaid == 1 ? Expanded(
+                  flex: 3,
+                  child: GestureDetector(
+                    onTap: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      final authToken = (prefs.getString('access_token') ?? '');
+                      if (authToken.isNotEmpty) {
+                        // Call the provider method to toggle the cart state
+                        Provider.of<Courses>(context, listen: false)
+                            .toggleCart(loadedCourseDetails.courseId!, false);
+                        // Show toast based on current state
+                        if (loadedCourseDetails.is_cart!) {
+                          CommonFunctions.showSuccessToast("Removed from cart");
+                        } else {
+                          CommonFunctions.showSuccessToast("Added to cart");
+                        }
+                      } else {
+                        CommonFunctions.showWarningToast('Please login first');
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: loadedCourseDetails.is_cart! 
+                            ? const Color(0xFF6366F1).withOpacity(0.1)
+                            : Colors.grey.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: loadedCourseDetails.is_cart!
+                              ? const Color(0xFF6366F1)
+                              : Colors.grey.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          loadedCourseDetails.is_cart! ? 'In Cart' : 'Add to Cart',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: loadedCourseDetails.is_cart!
+                                ? const Color(0xFF6366F1)
+                                : Colors.grey[700],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ) : const SizedBox(),
+              
+              const SizedBox(width: 10),
+              
+              // Buy Now or Enroll button
+              Expanded(
+                flex: 4,
+                child: GestureDetector(
+                  onTap: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    final authToken = (prefs.getString('access_token') ?? '');
+                    if (authToken.isNotEmpty) {
+                      if (loadedCourseDetails.isPurchased!) {
+                        // Already purchased, go to my courses
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (context) => TabsScreen(pageIndex: 1)
+                          ),
+                        );
+                      } else if (loadedCourseDetails.isPaid == 1) {
+                        // Paid course, go to payment
+                        final emailPre = prefs.getString('email');
+                        final passwordPre = prefs.getString('password');
+                        var email = emailPre;
+                        var password = passwordPre;
+                        DateTime currentDateTime = DateTime.now();
+                        int currentTimestamp = (currentDateTime.millisecondsSinceEpoch / 1000).floor();
+                        
+                        String authToken = 'Basic ${base64Encode(utf8.encode('$email:$password:$currentTimestamp'))}';
+                        final url = '$baseUrl/payment/web_redirect_to_pay_fee?auth=$authToken&unique_id=academylaravelbycreativeitem';
+                        
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PaymentWebView(url: url),
+                          ),
+                        );
+                        
+                        CommonFunctions.showSuccessToast('Processing payment...');
+                        if (!loadedCourseDetails.is_cart!) {
+                          Provider.of<Courses>(context, listen: false)
+                              .toggleCart(loadedCourseDetails.courseId!, false);
+                        }
+                      } else {
+                        // Free course, enroll
+                        await getEnroll(loadedCourseDetails.courseId.toString());
+                        CommonFunctions.showSuccessToast('Course Successfully Enrolled');
+                      }
+                    } else {
+                      CommonFunctions.showWarningToast('Please login first');
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      gradient: loadedCourseDetails.isPurchased!
+                          ? null
+                          : const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Color(0xFF6366F1),
+                                Color(0xFF8B5CF6),
+                              ],
+                            ),
+                      color: loadedCourseDetails.isPurchased! ? const Color(0xFF10B981) : null,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (loadedCourseDetails.isPurchased! 
+                              ? const Color(0xFF10B981) 
+                              : const Color(0xFF6366F1)).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        loadedCourseDetails.isPurchased!
+                            ? 'Go to Course'
+                            : loadedCourseDetails.isPaid == 1
+                                ? 'Buy Now'
+                                : 'Enroll Now',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
     );
   }
 }
