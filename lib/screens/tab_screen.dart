@@ -28,8 +28,11 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
   // Controllers for animations
   late AnimationController _fabAnimationController;
   late AnimationController _pageTransitionController;
+  late AnimationController _tabAnimationController;
   late Animation<double> _fabAnimation;
   late Animation<double> _pageTransition;
+  late Animation<double> _tabScaleAnimation;
+  late Animation<double> _tabFadeAnimation;
   
   // Page controllers
   final PageController _pageController = PageController();
@@ -51,6 +54,11 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 400),
     );
     
+    _tabAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    
     _fabAnimation = CurvedAnimation(
       parent: _fabAnimationController,
       curve: Curves.easeInOut,
@@ -61,13 +69,29 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
       curve: Curves.easeInOut,
     );
     
+    _tabScaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
+      CurvedAnimation(
+        parent: _tabAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    
+    _tabFadeAnimation = Tween<double>(begin: 0.7, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _tabAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    
     _fabAnimationController.forward();
+    _tabAnimationController.forward();
   }
 
   @override
   void dispose() {
     _fabAnimationController.dispose();
     _pageTransitionController.dispose();
+    _tabAnimationController.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -94,6 +118,9 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
     _pageTransitionController.reset();
     _pageTransitionController.forward();
     
+    _tabAnimationController.reset();
+    _tabAnimationController.forward();
+    
     _fabAnimationController.reset();
     if (index != 3) { // Changed from 2 to 3 because cart is now at index 3
       _fabAnimationController.forward();
@@ -115,13 +142,41 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
     
     return Scaffold(
       extendBody: true, // This ensures content goes behind the bottom nav bar
-      appBar: const AppBarOne(logo: 'light_logo.png'),
+      appBar: AppBar(
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF6366F1),
+                Color(0xFF8B5CF6),
+              ],
+            ),
+          ),
+        ),
+        title: Image.asset(
+          'assets/images/light_logo.png',
+          height: 30,
+        ),
+        centerTitle: true,
+      ),
       body: _isInit
-          ? const Center(child: CircularProgressIndicator())
-          : PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: _pages(),
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
+          : FadeTransition(
+              opacity: _pageTransition,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.1),
+                  end: Offset.zero,
+                ).animate(_pageTransition),
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: _pages(),
+                ),
+              ),
             ),
       floatingActionButton: _selectedPageIndex != 3 // Changed from 2 to 3 because cart is now at index 3
           ? ScaleTransition(
@@ -146,23 +201,22 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
                     ),
                   );
                 },
-                backgroundColor: kWhiteColor,
+                backgroundColor: const Color(0xFF6366F1),
                 elevation: 4,
                 shape: RoundedRectangleBorder(
-                  side: const BorderSide(width: 1.5, color: kDefaultColor),
                   borderRadius: BorderRadius.circular(30),
                 ),
                 label: const Text(
                   'Filter',
                   style: TextStyle(
-                    color: kBlackColor,
+                    color: Colors.white,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 icon: SvgPicture.asset(
                   'assets/icons/filter.svg',
                   colorFilter: const ColorFilter.mode(
-                    kBlackColor,
+                    Colors.white,
                     BlendMode.srcIn,
                   ),
                   height: 20,
@@ -185,22 +239,34 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
             topLeft: Radius.circular(25.0),
             topRight: Radius.circular(25.0),
           ),
-          child: BottomNavigationBar(
-            backgroundColor: kWhiteColor,
-            selectedItemColor: kDefaultColor,
-            unselectedItemColor: kGreyLightColor,
-            showUnselectedLabels: true,
-            type: BottomNavigationBarType.fixed,
-            currentIndex: _selectedPageIndex,
-            onTap: _selectPage,
-            elevation: 0,
-            items: [
-              _buildNavItem('Home', 'assets/icons/home.svg'),
-              _buildNavItem('Explore', 'assets/icons/explore.svg'),
-              _buildNavItem('My Courses', 'assets/icons/my_courses.svg'),
-              _buildNavItem('My Cart', 'assets/icons/shopping_bag.svg'),
-              _buildNavItem('Account', 'assets/icons/account.svg'),
-            ],
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF6366F1),
+                  Color(0xFF8B5CF6),
+                ],
+              ),
+            ),
+            child: BottomNavigationBar(
+              backgroundColor: Colors.transparent,
+              selectedItemColor: Colors.white,
+              unselectedItemColor: Colors.white.withOpacity(0.6),
+              showUnselectedLabels: true,
+              type: BottomNavigationBarType.fixed,
+              currentIndex: _selectedPageIndex,
+              onTap: _selectPage,
+              elevation: 0,
+              items: [
+                _buildNavItem('Home', 'assets/icons/home.svg'),
+                _buildNavItem('Explore', 'assets/icons/explore.svg'),
+                _buildNavItem('My Courses', 'assets/icons/my_courses.svg'),
+                _buildNavItem('My Cart', 'assets/icons/shopping_bag.svg'),
+                _buildNavItem('Account', 'assets/icons/account.svg'),
+              ],
+            ),
           ),
         ),
       ),
@@ -208,7 +274,13 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
   }
   
   BottomNavigationBarItem _buildNavItem(String label, String iconPath) {
-    bool isSelected = _pages()[_selectedPageIndex].runtimeType.toString().contains(label.replaceAll(' ', ''));
+    bool isSelected = _selectedPageIndex == [
+      'Home', 
+      'Explore', 
+      'My Courses', 
+      'My Cart', 
+      'Account'
+    ].indexOf(label);
     
     return BottomNavigationBarItem(
       icon: AnimatedContainer(
@@ -216,21 +288,35 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
         height: 40,
         width: isSelected ? 80 : 40,
         decoration: BoxDecoration(
-          color: isSelected ? kDefaultColor.withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SvgPicture.asset(
-            iconPath,
-            colorFilter: ColorFilter.mode(
-              isSelected ? kDefaultColor : kGreyLightColor,
-              BlendMode.srcIn,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: null, // Handled by bottom navigation bar
+            child: ScaleTransition(
+              scale: isSelected ? _tabScaleAnimation : const AlwaysStoppedAnimation(1.0),
+              child: FadeTransition(
+                opacity: isSelected ? _tabFadeAnimation : const AlwaysStoppedAnimation(1.0),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SvgPicture.asset(
+                    iconPath,
+                    colorFilter: ColorFilter.mode(
+                      isSelected ? Colors.white : Colors.white.withOpacity(0.6),
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
       ),
       label: label,
+      backgroundColor: Colors.transparent,
     );
   }
 }
