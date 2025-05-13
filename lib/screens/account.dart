@@ -13,7 +13,6 @@ import '../widgets/custom_text.dart';
 import 'account_remove_screen.dart';
 import 'certificates_screen.dart';
 import 'edit_profile.dart';
-import 'my_wishlist.dart';
 import 'update_password.dart';
 
 class AccountScreen extends StatefulWidget {
@@ -23,16 +22,33 @@ class AccountScreen extends StatefulWidget {
   State<AccountScreen> createState() => _AccountScreenState();
 }
 
-class _AccountScreenState extends State<AccountScreen> {
+class _AccountScreenState extends State<AccountScreen> with SingleTickerProviderStateMixin {
   bool _isLoading = false;
   bool _dataUpdated = false;
   SharedPreferences? sharedPreferences;
   Map<String, dynamic>? user;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
     getData();
+    _animationController.forward();
+  }
+  
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> getData() async {
@@ -66,188 +82,107 @@ class _AccountScreenState extends State<AccountScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF8F9FA),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: kDefaultColor),
+              child: CircularProgressIndicator(color: Color(0xFF6366F1)),
             )
           : user == null
               ? const Center(child: Text('No user data available'))
-              : SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    children: [
-                      // Profile header with gradient background
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Colors.purple,
-                              Colors.blue,
+              : FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      children: [
+                        // Profile header with gradient background
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Color(0xFF6366F1),
+                                Color(0xFF8B5CF6),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF6366F1).withOpacity(0.2),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.purple.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            // Profile Image
-                            Container(
-                              padding: const EdgeInsets.all(2),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
-                              ),
-                              child: CircleAvatar(
-                                radius: 30,
-                                backgroundImage: user?['photo'] != null
-                                    ? NetworkImage(user!['photo'])
-                                    : null,
-                                backgroundColor: Colors.white,
-                                child: user?['photo'] == null
-                                    ? SvgPicture.asset(
-                                        'assets/icons/profile_vector.svg',
-                                        height: 36,
-                                        width: 36,
-                                        colorFilter: const ColorFilter.mode(
-                                          Colors.grey,
-                                          BlendMode.srcIn,
-                                        ),
-                                      )
-                                    : null,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            // User Info
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    user?['name'] ?? 'No Name',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    user?['phone'] ?? "No phone number",
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white.withOpacity(0.9),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Edit Profile Button
-                            IconButton(
-                              icon: const Icon(
-                                Icons.edit,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                              onPressed: () async {
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const EditPrfileScreen(),
-                                  ),
-                                );
-                                if (result == true) {
-                                  setState(() {
-                                    _dataUpdated = true;
-                                  });
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      // Quick Action Buttons
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: _buildQuickActionButton(
-                                title: "Certificates",
-                                icon: Icons.verified_user_outlined,
-                                color: Colors.indigo.shade50,
-                                iconColor: Colors.indigo,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const CertificatesScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildQuickActionButton(
-                                title: "Wishlist",
-                                icon: Icons.favorite_border,
-                                color: Colors.pink.shade50,
-                                iconColor: Colors.pink,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const MyWishlistScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildQuickActionButton(
-                                title: "Notifications",
-                                icon: Icons.notifications_outlined,
-                                color: Colors.amber.shade50,
-                                iconColor: Colors.amber,
-                                onTap: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("Notifications feature coming soon")),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      // Account Settings Section
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Card(
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
+                          child: Row(
                             children: [
-                              _buildProfileOption(
-                                title: 'Edit Profile',
-                                icon: Icons.person_outline,
+                              // Profile Image
+                              Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 2),
+                                ),
+                                child: CircleAvatar(
+                                  radius: 36,
+                                  backgroundImage: user?['photo'] != null
+                                      ? NetworkImage(user!['photo'])
+                                      : null,
+                                  backgroundColor: Colors.white,
+                                  child: user?['photo'] == null
+                                      ? SvgPicture.asset(
+                                          'assets/icons/profile_vector.svg',
+                                          height: 40,
+                                          width: 40,
+                                          colorFilter: const ColorFilter.mode(
+                                            Colors.grey,
+                                            BlendMode.srcIn,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              // User Info
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      user?['name'] ?? 'No Name',
+                                      style: const TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      user?['phone'] ?? "No phone number",
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.white.withOpacity(0.9),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      user?['email'] ?? "No email available",
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.white.withOpacity(0.8),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Edit Profile Button
+                              GestureDetector(
                                 onTap: () async {
                                   final result = await Navigator.push(
                                     context,
@@ -261,99 +196,213 @@ class _AccountScreenState extends State<AccountScreen> {
                                     });
                                   }
                                 },
-                                iconColor: Colors.blue,
-                              ),
-                              _divider(),
-                              _buildProfileOption(
-                                title: 'Change Password',
-                                icon: Icons.lock_outline,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const UpdatePassword(),
-                                    ),
-                                  );
-                                },
-                                iconColor: Colors.amber,
+                                child: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.edit,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ),
-                      
-                      // App Settings Section
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Card(
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
+                        
+                        // Quick Action Buttons
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          child: Row(
                             children: [
-                              _buildProfileOption(
-                                title: 'About App',
-                                icon: Icons.info_outline,
-                                onTap: () {},
-                                iconColor: Colors.grey,
-                                showSubtitle: true,
-                                subtitle: "Version 1.3.0",
+                              Expanded(
+                                child: _buildQuickActionButton(
+                                  title: "Certificates",
+                                  icon: Icons.verified_user_outlined,
+                                  color: const Color(0xFF6366F1).withOpacity(0.1),
+                                  iconColor: const Color(0xFF6366F1),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const CertificatesScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
-                              _divider(),
-                              _buildProfileOption(
-                                title: 'Privacy Policy',
-                                icon: Icons.privacy_tip_outlined,
-                                onTap: () {},
-                                iconColor: Colors.blueGrey,
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: _buildQuickActionButton(
+                                  title: "Notifications",
+                                  icon: Icons.notifications_outlined,
+                                  color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                                  iconColor: const Color(0xFF8B5CF6),
+                                  onTap: () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text("Notifications feature coming soon")),
+                                    );
+                                  },
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ),
+                        
+                        // Account Settings Section
+                        _buildSectionHeader("Account Settings"),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Card(
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            color: Colors.white,
+                            child: Column(
+                              children: [
+                                _buildProfileOption(
+                                  title: 'Edit Profile',
+                                  icon: Icons.person_outline,
+                                  onTap: () async {
+                                    final result = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const EditPrfileScreen(),
+                                      ),
+                                    );
+                                    if (result == true) {
+                                      setState(() {
+                                        _dataUpdated = true;
+                                      });
+                                    }
+                                  },
+                                  iconColor: const Color(0xFF6366F1),
+                                ),
+                                _divider(),
+                                _buildProfileOption(
+                                  title: 'Change Password',
+                                  icon: Icons.lock_outline,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const UpdatePassword(),
+                                      ),
+                                    );
+                                  },
+                                  iconColor: const Color(0xFF8B5CF6),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        
+                        // App Settings Section
+                        _buildSectionHeader("App Information"),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Card(
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            color: Colors.white,
+                            child: Column(
+                              children: [
+                                _buildProfileOption(
+                                  title: 'About App',
+                                  icon: Icons.info_outline,
+                                  onTap: () {},
+                                  iconColor: const Color(0xFF6366F1),
+                                  showSubtitle: true,
+                                  subtitle: "Version 1.3.0",
+                                ),
+                                _divider(),
+                                _buildProfileOption(
+                                  title: 'Privacy Policy',
+                                  icon: Icons.privacy_tip_outlined,
+                                  onTap: () {},
+                                  iconColor: const Color(0xFF8B5CF6),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
  
-                      // Account Management Section
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Card(
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            children: [
-                              _buildProfileOption(
-                                title: 'Delete Account',
-                                icon: Icons.delete_outline,
-                                onTap: () {
-                                  Navigator.of(context).pushNamed(AccountRemoveScreen.routeName);
-                                },
-                                iconColor: Colors.grey,
-                                textColor: Colors.red,
-                              ),
-                              _divider(),
-                              _buildProfileOption(
-                                title: 'Log Out',
-                                icon: Icons.logout_rounded,
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) => _buildLogoutDialog(context),
-                                  );
-                                },
-                                iconColor: Colors.red,
-                                textColor: Colors.red,
-                              ),
-                            ],
+                        // Account Management Section
+                        _buildSectionHeader("Account Management"),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Card(
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            color: Colors.white,
+                            child: Column(
+                              children: [
+                                _buildProfileOption(
+                                  title: 'Delete Account',
+                                  icon: Icons.delete_outline,
+                                  onTap: () {
+                                    Navigator.of(context).pushNamed(AccountRemoveScreen.routeName);
+                                  },
+                                  iconColor: Colors.grey,
+                                  textColor: Colors.red,
+                                ),
+                                _divider(),
+                                _buildProfileOption(
+                                  title: 'Log Out',
+                                  icon: Icons.logout_rounded,
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) => _buildLogoutDialog(context),
+                                    );
+                                  },
+                                  iconColor: Colors.red,
+                                  textColor: Colors.red,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      
-                      // Add bottom padding to avoid overlap with navigation bar
-                      const SizedBox(height: 80),
-                    ],
+                        
+                        // Add bottom padding to avoid overlap with navigation bar
+                        const SizedBox(height: 80),
+                      ],
+                    ),
                   ),
                 ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF6366F1),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Divider(
+              thickness: 0.5,
+              color: Colors.grey.withOpacity(0.3),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -366,28 +415,42 @@ class _AccountScreenState extends State<AccountScreen> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(12),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 24,
-              color: iconColor,
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 28,
+                color: iconColor,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               title,
-              style: TextStyle(
-                fontSize: 12,
+              style: const TextStyle(
+                fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: Colors.black87,
+                color: Color(0xFF374151),
               ),
             ),
           ],
@@ -400,8 +463,8 @@ class _AccountScreenState extends State<AccountScreen> {
     required String title,
     required IconData icon,
     required VoidCallback onTap,
-    Color iconColor = kDefaultColor,
-    Color textColor = Colors.black87,
+    Color iconColor = Colors.blue,
+    Color textColor = const Color(0xFF374151),
     bool showSubtitle = false,
     String subtitle = "",
   }) {
@@ -409,18 +472,18 @@ class _AccountScreenState extends State<AccountScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: iconColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
-                size: 20,
+                size: 22,
                 color: iconColor,
               ),
             ),
@@ -432,7 +495,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: textColor,
                     ),
@@ -443,7 +506,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       child: Text(
                         subtitle,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
                           color: Colors.grey.shade600,
                         ),
                       ),
@@ -468,7 +531,7 @@ class _AccountScreenState extends State<AccountScreen> {
       child: Divider(
         thickness: 0.5,
         height: 0.5,
-        color: Colors.grey.withOpacity(0.1),
+        color: Colors.grey.withOpacity(0.2),
       ),
     );
   }
@@ -476,40 +539,55 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget _buildLogoutDialog(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(20.0),
       ),
       elevation: 0,
       backgroundColor: Colors.transparent,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  Icon(
-                    Icons.logout_rounded,
-                    color: Colors.red,
-                    size: 48,
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.logout_rounded,
+                      color: Colors.red,
+                      size: 40,
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   const Text(
                     "Log Out?",
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 22,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Text(
                     "Are you sure you want to logout?",
+                    textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 15,
                       color: Colors.grey.shade600,
                     ),
                   ),
@@ -517,7 +595,7 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: Row(
                 children: [
                   Expanded(
@@ -526,14 +604,16 @@ class _AccountScreenState extends State<AccountScreen> {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         side: BorderSide(color: Colors.grey.shade300),
                       ),
                       child: const Text(
                         "Cancel",
                         style: TextStyle(
-                          color: Colors.black87,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF374151),
                         ),
                       ),
                     ),
@@ -550,12 +630,15 @@ class _AccountScreenState extends State<AccountScreen> {
                         backgroundColor: Colors.red,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        elevation: 0,
                       ),
                       child: const Text(
                         'Log Out',
                         style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
                           color: Colors.white,
                         ),
                       ),

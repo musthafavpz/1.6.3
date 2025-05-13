@@ -26,10 +26,8 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
   bool _isInit = true;
   
   // Controllers for animations
-  late AnimationController _fabAnimationController;
   late AnimationController _pageTransitionController;
   late AnimationController _tabAnimationController;
-  late Animation<double> _fabAnimation;
   late Animation<double> _pageTransition;
   late Animation<double> _tabScaleAnimation;
   late Animation<double> _tabFadeAnimation;
@@ -44,11 +42,6 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
     _checkAuthStatus();
     
     // Setup animation controllers
-    _fabAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    
     _pageTransitionController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -57,11 +50,6 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
     _tabAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 200),
-    );
-    
-    _fabAnimation = CurvedAnimation(
-      parent: _fabAnimationController,
-      curve: Curves.easeInOut,
     );
     
     _pageTransition = CurvedAnimation(
@@ -83,13 +71,11 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
       ),
     );
     
-    _fabAnimationController.forward();
     _tabAnimationController.forward();
   }
 
   @override
   void dispose() {
-    _fabAnimationController.dispose();
     _pageTransitionController.dispose();
     _tabAnimationController.dispose();
     _pageController.dispose();
@@ -121,11 +107,6 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
     _tabAnimationController.reset();
     _tabAnimationController.forward();
     
-    _fabAnimationController.reset();
-    if (index != 3) { // Changed from 2 to 3 because cart is now at index 3
-      _fabAnimationController.forward();
-    }
-    
     setState(() {
       _selectedPageIndex = index;
       _pageController.animateToPage(
@@ -142,26 +123,7 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
     
     return Scaffold(
       extendBody: true, // This ensures content goes behind the bottom nav bar
-      appBar: AppBar(
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF6366F1),
-                Color(0xFF8B5CF6),
-              ],
-            ),
-          ),
-        ),
-        title: Image.asset(
-          'assets/images/light_logo.png',
-          height: 30,
-        ),
-        centerTitle: true,
-      ),
+      appBar: const AppBarOne(logo: 'light_logo.png'),
       body: _isInit
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
           : FadeTransition(
@@ -178,54 +140,9 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
                 ),
               ),
             ),
-      floatingActionButton: _selectedPageIndex != 3 // Changed from 2 to 3 because cart is now at index 3
-          ? ScaleTransition(
-              scale: _fabAnimation,
-              child: FloatingActionButton.extended(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) => 
-                        const FilterScreen(),
-                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                        var begin = const Offset(0.0, 1.0);
-                        var end = Offset.zero;
-                        var curve = Curves.easeInOut;
-                        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                        return SlideTransition(
-                          position: animation.drive(tween),
-                          child: child,
-                        );
-                      },
-                    ),
-                  );
-                },
-                backgroundColor: const Color(0xFF6366F1),
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                label: const Text(
-                  'Filter',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                icon: SvgPicture.asset(
-                  'assets/icons/filter.svg',
-                  colorFilter: const ColorFilter.mode(
-                    Colors.white,
-                    BlendMode.srcIn,
-                  ),
-                  height: 20,
-                ),
-              ),
-            )
-          : null,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
+          color: Colors.white,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
@@ -241,19 +158,12 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
           ),
           child: Container(
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF6366F1),
-                  Color(0xFF8B5CF6),
-                ],
-              ),
+              color: Colors.white,
             ),
             child: BottomNavigationBar(
               backgroundColor: Colors.transparent,
-              selectedItemColor: Colors.white,
-              unselectedItemColor: Colors.white.withOpacity(0.6),
+              selectedItemColor: const Color(0xFF6366F1),
+              unselectedItemColor: Colors.grey.shade600,
               showUnselectedLabels: true,
               type: BottomNavigationBarType.fixed,
               currentIndex: _selectedPageIndex,
@@ -288,8 +198,27 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
         height: 40,
         width: isSelected ? 80 : 40,
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
+          gradient: isSelected 
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF6366F1),
+                  Color(0xFF8B5CF6),
+                ],
+              )
+            : null,
+          color: isSelected ? null : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
+          boxShadow: isSelected 
+            ? [
+                BoxShadow(
+                  color: const Color(0xFF6366F1).withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ] 
+            : null,
         ),
         child: Material(
           color: Colors.transparent,
@@ -305,7 +234,7 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
                   child: SvgPicture.asset(
                     iconPath,
                     colorFilter: ColorFilter.mode(
-                      isSelected ? Colors.white : Colors.white.withOpacity(0.6),
+                      isSelected ? Colors.white : Colors.grey.shade600,
                       BlendMode.srcIn,
                     ),
                   ),

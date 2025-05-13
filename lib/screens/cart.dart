@@ -187,13 +187,13 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: kDefaultColor.withOpacity(0.1),
+                    color: const Color(0xFF6366F1).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.delete_outline_rounded,
                     size: 40,
-                    color: kDefaultColor,
+                    color: Color(0xFF6366F1),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -239,7 +239,7 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
                     ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: kDefaultColor,
+                        backgroundColor: const Color(0xFF6366F1),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                         shape: RoundedRectangleBorder(
@@ -291,25 +291,14 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          'My Cart',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF333333),
-          ),
-        ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: kDefaultColor),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        automaticallyImplyLeading: false,
+        title: null,
       ),
       body: isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: kDefaultColor),
+              child: CircularProgressIndicator(color: Color(0xFF6366F1)),
             )
           : FadeTransition(
               opacity: _fadeAnimation,
@@ -339,13 +328,13 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: kDefaultColor.withOpacity(0.1),
+              color: const Color(0xFF6366F1).withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.shopping_cart_outlined,
               size: 72,
-              color: kDefaultColor,
+              color: Color(0xFF6366F1),
             ),
           ),
           const SizedBox(height: 24),
@@ -381,7 +370,7 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
             icon: const Icon(Icons.explore),
             label: const Text('Explore Courses'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: kDefaultColor,
+              backgroundColor: const Color(0xFF6366F1),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
@@ -482,7 +471,7 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: kDefaultColor,
+                          color: Color(0xFF6366F1),
                         ),
                       ),
                     ],
@@ -608,7 +597,7 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: kDefaultColor,
+                    color: Color(0xFF6366F1),
                   ),
                 ),
               ],
@@ -619,7 +608,7 @@ class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateM
             ElevatedButton(
               onPressed: isLoading ? null : () => handleCheckout(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: kDefaultColor,
+                backgroundColor: const Color(0xFF6366F1),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),

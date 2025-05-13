@@ -37,7 +37,6 @@ class MyCourseDetailScreen extends StatefulWidget {
 
 class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
     with SingleTickerProviderStateMixin {
-  late TabController _tabController;
   late ScrollController _scrollController;
 
   int? selected;
@@ -50,23 +49,15 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_scrollListener);
-    _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(_smoothScrollToTop);
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
   _scrollListener() {}
-
-  _smoothScrollToTop() {
-    _scrollController.animateTo(0,
-        duration: const Duration(milliseconds: 300), curve: Curves.ease);
-  }
 
   @override
   void didChangeDependencies() {
@@ -182,55 +173,17 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
         );
       } else if (lesson.lessonType == 'vimeo-url') {
         String vimeoVideoId = lesson.videoUrl!.split('/').last;
-
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              backgroundColor: kBackgroundColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              titlePadding: EdgeInsets.zero,
-              title: const Padding(
-                padding: EdgeInsets.only(left: 15.0, right: 15, top: 20),
-                child: Center(
-                  child: Text('Choose Video player',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-                ),
-              ),
-              actions: <Widget>[
-                const SizedBox(height: 20),
-                _buildPlayerButton(
-                  title: 'Vimeo Iframe',
-                  onPressed: () {
-                    String vimUrl = 'https://player.vimeo.com/video/$vimeoVideoId';
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => VimeoIframe(url: vimUrl)),
-                    );
-                  },
-                ),
-                const SizedBox(height: 10),
-                _buildPlayerButton(
-                  title: 'Vimeo',
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FromVimeoPlayer(
-                          courseId: widget.courseId,
-                          lessonId: lesson.id!,
-                          vimeoVideoId: vimeoVideoId,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 10),
-              ],
-            );
-          },
+        
+        // Directly use Vimeo player instead of showing dialog
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => FromVimeoPlayer(
+              courseId: widget.courseId,
+              lessonId: lesson.id!,
+              vimeoVideoId: vimeoVideoId,
+            ),
+          ),
         );
       } else {
         Navigator.push(
@@ -247,68 +200,11 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
     }
   }
 
-  Widget _buildPlayerButton({required String title, required VoidCallback onPressed}) {
-    return MaterialButton(
-      elevation: 0,
-      color: kPrimaryColor,
-      onPressed: onPressed,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadiusDirectional.circular(10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _launchURL(lessonUrl) async {
     if (await canLaunch(lessonUrl)) {
       await launch(lessonUrl);
     } else {
       throw 'Could not launch $lessonUrl';
-    }
-  }
-
-  Widget getLessonIcon(String lessonType) {
-    if (lessonType == 'video-url' ||
-        lessonType == 'vimeo-url' ||
-        lessonType == 'google_drive' ||
-        lessonType == 'system-video') {
-      return SvgPicture.asset(
-        'assets/icons/video.svg',
-        colorFilter: const ColorFilter.mode(kGreyLightColor, BlendMode.srcIn),
-      );
-    } else if (lessonType == 'quiz') {
-      return SvgPicture.asset(
-        'assets/icons/book.svg',
-        colorFilter: const ColorFilter.mode(kGreyLightColor, BlendMode.srcIn),
-      );
-    } else if (lessonType == 'text') {
-      return SvgPicture.asset(
-        'assets/icons/text.svg',
-        colorFilter: const ColorFilter.mode(kGreyLightColor, BlendMode.srcIn),
-      );
-    } else if (lessonType == 'document_type') {
-      return SvgPicture.asset(
-        'assets/icons/document.svg',
-        colorFilter: const ColorFilter.mode(kGreyLightColor, BlendMode.srcIn),
-      );
-    } else {
-      return SvgPicture.asset(
-        'assets/icons/iframe.svg',
-        colorFilter: const ColorFilter.mode(kGreyLightColor, BlendMode.srcIn),
-      );
     }
   }
 
@@ -322,7 +218,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: kWhiteColor,
+        backgroundColor: Colors.white,
         title: Image.asset(
           'assets/images/light_logo.png',
           height: 32,
@@ -335,7 +231,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.grey.shade300),
             ),
-            child: const Icon(Icons.arrow_back_ios_new, size: 18, color: kDefaultColor),
+            child: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFF6366F1)),
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -347,7 +243,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.grey.shade300),
               ),
-              child: const Icon(Icons.share_outlined, size: 18, color: kDefaultColor),
+              child: const Icon(Icons.share_outlined, size: 18, color: Color(0xFF6366F1)),
             ),
             onPressed: () async {
               await Share.share(myLoadedCourse.shareableLink.toString());
@@ -358,66 +254,17 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
       ),
       body: Container(
         height: MediaQuery.of(context).size.height,
-        color: kBackGroundColor,
+        color: const Color(0xFFF8F9FA),
         child: _isLoading
             ? const Center(
-                child: CircularProgressIndicator(color: kDefaultColor),
+                child: CircularProgressIndicator(color: Color(0xFF6366F1)),
               )
-            : NestedScrollView(
+            : SingleChildScrollView(
                 controller: _scrollController,
-                headerSliverBuilder: (context, value) {
-                  return [
-                    // Course Header with Image and Progress
-                    SliverToBoxAdapter(
-                      child: _buildCourseHeader(myLoadedCourse),
-                    ),
-                    // Tab Bar
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20.0, vertical: 15),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: TabBar(
-                            controller: _tabController,
-                            isScrollable: false,
-                            dividerHeight: 0,
-                            indicatorSize: TabBarIndicatorSize.tab,
-                            indicator: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              color: kDefaultColor,
-                            ),
-                            labelColor: kWhiteColor,
-                            unselectedLabelColor: Colors.grey.shade700,
-                            labelStyle: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                            labelPadding: const EdgeInsets.symmetric(vertical: 12),
-                            tabs: const [
-                              Tab(
-                                icon: Icon(Icons.play_lesson, size: 20),
-                                text: 'Lessons',
-                              ),
-                              Tab(
-                                icon: Icon(Icons.video_call_outlined, size: 20),
-                                text: 'Live Class',
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    )
-                  ];
-                },
-                body: TabBarView(
-                  controller: _tabController,
+                child: Column(
                   children: [
-                    _buildLessonsTabContent(sections, myLoadedCourse),
-                    LiveClassTabWidget(courseId: widget.courseId),
+                    _buildCourseHeader(myLoadedCourse),
+                    _buildLessonsContent(sections, myLoadedCourse),
                   ],
                 ),
               ),
@@ -426,120 +273,351 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
   }
 
   Widget _buildCourseHeader(dynamic myLoadedCourse) {
+    // Calculate progress percentage
+    double progressPercent = myLoadedCourse.courseCompletion != null
+        ? myLoadedCourse.courseCompletion / 100
+        : 0.0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Course Image Banner
+        // Course Image Banner with Video Play Option and floating back button
         Container(
-          height: 200,
+          height: 250, // Increased height for better visual impact
           width: double.infinity,
           margin: const EdgeInsets.only(bottom: 20),
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Course image
-              FadeInImage.assetNetwork(
-                placeholder: 'assets/images/loading_animated.gif',
-                image: myLoadedCourse.thumbnail.toString(),
-                fit: BoxFit.cover,
+              // Course image with shimmer loading effect
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(25),
+                  bottomRight: Radius.circular(25),
+                ),
+                child: FadeInImage.assetNetwork(
+                  placeholder: 'assets/images/loading_animated.gif',
+                  image: myLoadedCourse.thumbnail.toString(),
+                  fit: BoxFit.cover,
+                  imageErrorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: const Color(0xFF6366F1).withOpacity(0.1),
+                      child: const Center(
+                        child: Icon(
+                          Icons.image_not_supported_outlined,
+                          color: Color(0xFF6366F1),
+                          size: 50,
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
               // Gradient overlay
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.7),
-                    ],
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(25),
+                  bottomRight: Radius.circular(25),
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withOpacity(0.2),
+                        Colors.black.withOpacity(0.8),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              // Course title at bottom
+              // Play button with ripple effect
+              Center(
+                child: InkWell(
+                  onTap: () {
+                    // Find first video lesson to use as a preview
+                    final sections = Provider.of<MyCourses>(context, listen: false).sectionItems;
+                    Lesson? videoLesson;
+                    
+                    // Search for a video lesson
+                    for (var section in sections) {
+                      if (section.mLesson != null && section.mLesson!.isNotEmpty) {
+                        for (var lesson in section.mLesson!) {
+                          if (lesson.lessonType == 'video' || 
+                              lesson.lessonType == 'system-video' ||
+                              lesson.lessonType == 'vimeo-url' ||
+                              lesson.lessonType == 'youtube' ||
+                              lesson.lessonType == 'google_drive') {
+                            videoLesson = lesson;
+                            break;
+                          }
+                        }
+                      }
+                      if (videoLesson != null) break;
+                    }
+                    
+                    if (videoLesson != null) {
+                      lessonAction(videoLesson);
+                    } else {
+                      // No video found, show a toast message
+                      Fluttertoast.showToast(
+                        msg: "No preview video available for this course",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.BOTTOM,
+                      );
+                    }
+                  },
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(40),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 10,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.play_arrow_rounded,
+                        color: Color(0xFF6366F1),
+                        size: 50,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Course Title at bottom with additional info
               Positioned(
                 bottom: 15,
                 left: 20,
                 right: 20,
-                child: Text(
-                  myLoadedCourse.title.toString(),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        offset: Offset(0, 1),
-                        blurRadius: 3,
-                        color: Colors.black54,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      myLoadedCourse.title.toString(),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                            offset: Offset(0, 1),
+                            blurRadius: 3,
+                            color: Colors.black54,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        // Rating display
+                        if (myLoadedCourse.average_rating != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  myLoadedCourse.average_rating.toString(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        const SizedBox(width: 10),
+                        // Lessons count
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.video_library_outlined,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${myLoadedCourse.totalNumberOfLessons ?? 0} lessons',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
         
-        // Progress card
+        // Progress and status card - floating above sections
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 20),
-          padding: const EdgeInsets.all(15),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF6366F1),
+                Color(0xFF8B5CF6),
+              ],
+            ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: const Color(0xFF6366F1).withOpacity(0.3),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              const Text(
-                "Your Progress",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+              // Progress circle
+              SizedBox(
+                width: 70,
+                height: 70,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularPercentIndicator(
+                      radius: 35.0,
+                      lineWidth: 5.0,
+                      percent: progressPercent,
+                      center: Text(
+                        '${myLoadedCourse.courseCompletion ?? 0}%',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                      progressColor: Colors.white,
+                      backgroundColor: Colors.white.withOpacity(0.3),
+                      animation: true,
+                      animationDuration: 1000,
+                      circularStrokeCap: CircularStrokeCap.round,
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 15),
-              LinearPercentIndicator(
-                animation: true,
-                animationDuration: 1000,
-                lineHeight: 10.0,
-                percent: myLoadedCourse.courseCompletion! / 100,
-                backgroundColor: Colors.grey.shade200,
-                progressColor: kDefaultColor,
-                barRadius: const Radius.circular(10),
-                padding: EdgeInsets.zero,
+              const SizedBox(width: 16),
+              // Status info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Your Progress',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.check_circle,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${myLoadedCourse.totalNumberOfCompletedLessons ?? 0}/${myLoadedCourse.totalNumberOfLessons ?? 0} lessons completed',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+        
+        // Title for course content section
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    '${myLoadedCourse.courseCompletion}% Completed',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                      color: myLoadedCourse.courseCompletion! > 0 
-                          ? kDefaultColor 
-                          : Colors.grey.shade600,
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.menu_book_rounded,
+                      color: Color(0xFF6366F1),
+                      size: 20,
                     ),
                   ),
-                  Text(
-                    '${myLoadedCourse.totalNumberOfCompletedLessons}/${myLoadedCourse.totalNumberOfLessons} lessons',
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Course Content',
                     style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF333333),
                     ),
                   ),
                 ],
+              ),
+              // Total lessons count
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Text(
+                  '${myLoadedCourse.totalNumberOfLessons ?? 0} lessons',
+                  style: const TextStyle(
+                    color: Color(0xFF6366F1),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
               ),
             ],
           ),
@@ -548,311 +626,334 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
     );
   }
 
-  Widget _buildLessonsTabContent(List sections, dynamic myLoadedCourse) {
-    return sections.isEmpty
-        ? const Center(child: Text('No lessons available'))
-        : SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+  Widget _buildLessonsContent(List sections, dynamic myLoadedCourse) {
+    return Container(
+      color: const Color(0xFFF8F9FA),
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        physics: const NeverScrollableScrollPhysics(),
+        shrinkWrap: true,
+        itemCount: sections.length,
+        itemBuilder: (ctx, index) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 15),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
             child: Column(
               children: [
-                ListView.builder(
-                  key: Key('builder ${selected.toString()}'),
-                  shrinkWrap: true,
+                // Section header
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF6366F1),
+                        Color(0xFF8B5CF6),
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${index + 1}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          sections[index].title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.play_lesson,
+                              color: Colors.white,
+                              size: 12,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${sections[index].mLesson!.length} lessons',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Just show all lessons at once, no accordion
+                ListView.separated(
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: sections.length,
-                  itemBuilder: (ctx, index) {
-                    final section = sections[index];
-                    return _buildSectionCard(
-                      section: section, 
-                      index: index, 
-                      myLoadedCourse: myLoadedCourse
+                  shrinkWrap: true,
+                  itemCount: sections[index].mLesson!.length,
+                  separatorBuilder: (context, index) => Divider(
+                    height: 1,
+                    color: Colors.grey.shade200,
+                  ),
+                  itemBuilder: (ctx, i) {
+                    final lesson = sections[index].mLesson![i];
+                    final isActive = _activeLesson != null && 
+                                    _activeLesson!.id == lesson.id;
+                    final bool isCompleted = lesson.isCompleted == '1';
+                    
+                    return InkWell(
+                      onTap: () {
+                        setState(() {
+                          _activeLesson = lesson;
+                        });
+                        lessonAction(lesson);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isActive 
+                            ? const Color(0xFF6366F1).withOpacity(0.05) 
+                            : Colors.white,
+                        ),
+                        child: Row(
+                          children: [
+                            // Checkbox to mark lesson as completed
+                            Checkbox(
+                              value: isCompleted,
+                              activeColor: const Color(0xFF10B981),
+                              checkColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              side: BorderSide(
+                                color: isCompleted 
+                                    ? const Color(0xFF10B981)
+                                    : Colors.grey.shade400,
+                                width: 2,
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  lesson.isCompleted = value! ? '1' : '0';
+                                  
+                                  if (value) {
+                                    if (myLoadedCourse.totalNumberOfCompletedLessons != null) {
+                                      myLoadedCourse.totalNumberOfCompletedLessons = 
+                                          myLoadedCourse.totalNumberOfCompletedLessons! + 1;
+                                    } else {
+                                      myLoadedCourse.totalNumberOfCompletedLessons = 1;
+                                    }
+                                  } else {
+                                    if (myLoadedCourse.totalNumberOfCompletedLessons != null &&
+                                        myLoadedCourse.totalNumberOfCompletedLessons! > 0) {
+                                      myLoadedCourse.totalNumberOfCompletedLessons = 
+                                          myLoadedCourse.totalNumberOfCompletedLessons! - 1;
+                                    }
+                                  }
+                                  
+                                  var completePerc = myLoadedCourse.totalNumberOfLessons! > 0
+                                      ? (myLoadedCourse.totalNumberOfCompletedLessons! / 
+                                      myLoadedCourse.totalNumberOfLessons!) * 100
+                                      : 0;
+                                  myLoadedCourse.courseCompletion = completePerc.round();
+                                  
+                                  Provider.of<MyCourses>(context, listen: false)
+                                      .toggleLessonCompleted(
+                                          lesson.id!,
+                                          value ? 1 : 0)
+                                      .then((_) => CommonFunctions.showSuccessToast(
+                                          'Course Progress Updated'));
+                                });
+                              },
+                            ),
+                            const SizedBox(width: 6),
+                            
+                            // Lesson type icon
+                            Container(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                color: isActive 
+                                    ? const Color(0xFF6366F1).withOpacity(0.1)
+                                    : Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Center(
+                                child: SvgPicture.asset(
+                                  'assets/icons/video.svg',
+                                  colorFilter: ColorFilter.mode(
+                                    isActive 
+                                        ? const Color(0xFF6366F1) 
+                                        : Colors.grey.shade600,
+                                    BlendMode.srcIn,
+                                  ),
+                                  width: 22,
+                                  height: 22,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            
+                            // Lesson title and summary
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          lesson.title!,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                                            fontSize: 16,
+                                            color: isActive 
+                                              ? const Color(0xFF6366F1)
+                                              : isCompleted
+                                                  ? const Color(0xFF10B981)
+                                                  : const Color(0xFF333333),
+                                          ),
+                                        ),
+                                      ),
+                                      if (lesson.duration != null && lesson.duration!.isNotEmpty)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade100,
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.access_time,
+                                                size: 12,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                lesson.duration!,
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: Colors.grey.shade700,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  if (lesson.summary != null && lesson.summary!.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Text(
+                                        lesson.summary!.length > 60
+                                            ? "${lesson.summary!.substring(0, 60)}..."
+                                            : lesson.summary!,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            
+                            // Play button
+                            Container(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Color(0xFF6366F1),
+                                    Color(0xFF8B5CF6),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(21),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF6366F1).withOpacity(0.2),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(21),
+                                  onTap: () {
+                                    setState(() {
+                                      _activeLesson = lesson;
+                                    });
+                                    lessonAction(lesson);
+                                  },
+                                  child: const Icon(
+                                    Icons.play_arrow,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     );
                   },
                 ),
               ],
             ),
           );
-  }
-
-  Widget _buildSectionCard({required dynamic section, required int index, required dynamic myLoadedCourse}) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ExpansionTile(
-        key: Key(index.toString()),
-        initiallyExpanded: index == selected,
-        onExpansionChanged: ((newState) {
-          setState(() {
-            selected = newState ? index : -1;
-          });
-        }),
-        tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        collapsedShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        iconColor: kDefaultColor,
-        collapsedIconColor: Colors.grey.shade700,
-        childrenPadding: const EdgeInsets.symmetric(horizontal: 20),
-        trailing: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: selected == index 
-                ? kDefaultColor.withOpacity(0.1) 
-                : Colors.grey.shade100,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            selected == index
-                ? Icons.keyboard_arrow_up_rounded
-                : Icons.keyboard_arrow_down_rounded,
-            size: 24,
-            color: selected == index ? kDefaultColor : Colors.grey.shade700,
-          ),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: kDefaultColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '${index + 1}',
-                    style: const TextStyle(
-                      color: kDefaultColor,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    HtmlUnescape().convert(section.title.toString()),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                // Duration
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.access_time,
-                        size: 14,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        section.totalDuration.toString(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade700,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                // Lesson count
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.play_lesson,
-                        size: 14,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${section.mLesson!.length} Lessons',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade700,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        children: [
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: section.mLesson!.length,
-            separatorBuilder: (context, index) => Divider(
-              color: Colors.grey.shade200,
-              height: 1,
-            ),
-            itemBuilder: (ctx, indexLess) {
-              final lesson = section.mLesson![indexLess];
-              final bool isCompleted = lesson.isCompleted == '1';
-              
-              return InkWell(
-                onTap: () {
-                  setState(() {
-                    _activeLesson = lesson;
-                  });
-                  lessonAction(_activeLesson!);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Row(
-                    children: [
-                      // Completion checkbox
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: isCompleted 
-                              ? kDefaultColor 
-                              : Colors.grey.shade200,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Checkbox(
-                          activeColor: Colors.transparent,
-                          checkColor: Colors.white,
-                          value: isCompleted,
-                          shape: const CircleBorder(),
-                          side: BorderSide.none,
-                          onChanged: (bool? value) {
-                            setState(() {
-                              lesson.isCompleted = value! ? '1' : '0';
-                              if (value) {
-                                myLoadedCourse.totalNumberOfCompletedLessons =
-                                    myLoadedCourse.totalNumberOfCompletedLessons! + 1;
-                              } else {
-                                myLoadedCourse.totalNumberOfCompletedLessons =
-                                    myLoadedCourse.totalNumberOfCompletedLessons! - 1;
-                              }
-                              var completePerc = 
-                                  (myLoadedCourse.totalNumberOfCompletedLessons! / 
-                                  myLoadedCourse.totalNumberOfLessons!) * 100;
-                              myLoadedCourse.courseCompletion = completePerc.round();
-                            });
-                            
-                            Provider.of<MyCourses>(context, listen: false)
-                                .toggleLessonCompleted(
-                                    lesson.id!.toInt(),
-                                    value! ? 1 : 0)
-                                .then((_) => CommonFunctions.showSuccessToast(
-                                    'Course Progress Updated'));
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 15),
-                      
-                      // Lesson icon
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: getLessonIcon(lesson.lessonType.toString()),
-                      ),
-                      
-                      const SizedBox(width: 15),
-                      
-                      // Lesson title
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              lesson.title.toString(),
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: isCompleted 
-                                    ? FontWeight.w500 
-                                    : FontWeight.w400,
-                                color: isCompleted 
-                                    ? Colors.black87 
-                                    : Colors.grey.shade700,
-                              ),
-                            ),
-                            if (lesson.duration != null && lesson.duration!.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Text(
-                                  lesson.duration!,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      
-                      // Play button
-                      IconButton(
-                        icon: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: kDefaultColor.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.play_arrow,
-                            size: 16,
-                            color: kDefaultColor,
-                          ),
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _activeLesson = lesson;
-                          });
-                          lessonAction(_activeLesson!);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 15),
-        ],
+        },
       ),
     );
   }

@@ -18,6 +18,7 @@ class Courses with ChangeNotifier {
   List<Course> _topItems = [];
   List<CourseDetail> _courseDetailsitems = [];
   List<CourseDetails> _courseDetails = [];
+  List<Map<String, dynamic>> _topInstructors = [];
   CartTools? _cartTools;
 
   Courses(
@@ -38,10 +39,16 @@ class Courses with ChangeNotifier {
   }
 
   CourseDetail get getCourseDetail {
+    if (_courseDetailsitems.isEmpty) {
+      throw Exception('Course details not loaded yet');
+    }
     return _courseDetailsitems.first;
   }
 
   CourseDetails get courseDetails {
+    if (_courseDetails.isEmpty) {
+      throw Exception('Course details not loaded yet');
+    }
     return _courseDetails.first;
   }
 
@@ -571,5 +578,65 @@ Future<void> toggleCart(int courseId, bool removeItem) async {
     }
     // print(loadedLessons.first.title);
     return loadedLessons;
+  }
+
+  List<Map<String, dynamic>> get topInstructors {
+    return [..._topInstructors];
+  }
+
+  Future<void> fetchTopInstructors() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = (prefs.getString('access_token') ?? '');
+    var url = '$baseUrl/api/top_courses';
+    try {
+      final response = await http.get(Uri.parse(url), headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      });
+      final extractedData = json.decode(response.body) as List;
+      
+      // Create a map to accumulate instructor data
+      final Map<String, Map<String, dynamic>> instructorsMap = {};
+      
+      // Process all courses to gather instructor data
+      for (var courseData in extractedData) {
+        final instructorName = courseData['instructor_name'];
+        final instructorImage = courseData['instructor_image'];
+        
+        if (instructorName != null && instructorName.isNotEmpty) {
+          // If instructor already exists in map, update counts
+          if (instructorsMap.containsKey(instructorName)) {
+            instructorsMap[instructorName]!['courseCount'] = instructorsMap[instructorName]!['courseCount'] + 1;
+            instructorsMap[instructorName]!['totalEnrollment'] = (instructorsMap[instructorName]!['totalEnrollment'] ?? 0) + 
+                                                              (courseData['total_enrollment'] ?? 0);
+          } else {
+            // Add new instructor
+            instructorsMap[instructorName] = {
+              'name': instructorName,
+              'image': instructorImage,
+              'courseCount': 1,
+              'totalEnrollment': courseData['total_enrollment'] ?? 0,
+              'rating': courseData['average_rating'] ?? 0.0
+            };
+          }
+        }
+      }
+      
+      // Convert map to list
+      final instructorsList = instructorsMap.values.toList();
+      
+      // Sort by total enrollment (descending)
+      instructorsList.sort((a, b) => 
+        (b['totalEnrollment'] as int).compareTo(a['totalEnrollment'] as int));
+      
+      // Save to our provider
+      _topInstructors = instructorsList;
+      
+      notifyListeners();
+    } catch (error) {
+      print('Error fetching top instructors: $error');
+      rethrow;
+    }
   }
 }
