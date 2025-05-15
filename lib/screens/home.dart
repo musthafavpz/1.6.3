@@ -55,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       _animationController!.forward();
     }
     
-    // Automatically refresh data when screen first loads
+    // Immediately refresh data when screen first loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         refreshList();
@@ -1148,6 +1148,189 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
+  // Build course card with free/paid badge
+  Widget _buildCourseCardWithBadge(dynamic course, bool isFreeCourse) {
+    // Calculate star rating
+    final rating = course.average_rating is String 
+        ? double.tryParse(course.average_rating) ?? 0.0
+        : (course.average_rating ?? 0.0).toDouble();
+    
+    // Build star rating
+    List<Widget> buildRatingStars() {
+      List<Widget> stars = [];
+      for (int i = 1; i <= 5; i++) {
+        stars.add(
+          Icon(
+            i <= rating ? Icons.star : Icons.star_border,
+            color: const Color(0xFFFFA000),
+            size: 14,
+          ),
+        );
+      }
+      return stars;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 15.0),
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).pushNamed(
+            CourseDetailScreen.routeName,
+            arguments: course.id,
+          );
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: MediaQuery.of(context).size.width * .65,
+          height: 280,
+          decoration: BoxDecoration(
+            color: kWhiteColor,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 15,
+                spreadRadius: 1,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                children: [
+                  // Course thumbnail image
+                  Hero(
+                    tag: 'course_${course.id}',
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
+                      ),
+                      child: FadeInImage.assetNetwork(
+                        placeholder: 'assets/images/loading_animated.gif',
+                        image: course.thumbnail.toString(),
+                        height: 140,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        imageErrorBuilder: (context, error, stackTrace) => Container(
+                          height: 140,
+                          color: const Color(0xFF6366F1).withOpacity(0.1),
+                          child: const Icon(
+                            Icons.image_not_supported_outlined,
+                            color: Color(0xFF6366F1),
+                            size: 40,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  // Free/Paid badge
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: isFreeCourse
+                              ? [const Color(0xFF10B981), const Color(0xFF059669)]
+                              : [const Color(0xFF6366F1), const Color(0xFF8B5CF6)],
+                        ),
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isFreeCourse
+                                ? const Color(0xFF10B981).withOpacity(0.3)
+                                : const Color(0xFF6366F1).withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        isFreeCourse ? 'FREE' : 'PREMIUM',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Course Title
+                      Text(
+                        course.title.toString(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF333333),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      
+                      // Instructor Name
+                      Text(
+                        course.instructor ?? '',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFF666666),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      
+                      // Star Rating and Enrollment Count
+                      Row(
+                        children: [
+                          ...buildRatingStars(),
+                          const SizedBox(width: 5),
+                          Text(
+                            '(${_parseEnrollmentCount(course)})',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF666666),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      
+                      // Price
+                      Text(
+                        course.price.toString(),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: isFreeCourse ? const Color(0xFF10B981) : const Color(0xFF6366F1),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height -
@@ -1185,6 +1368,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                     );
                   } else {
+                    // Filter courses by free/paid status
+                    final freeCourses = topCourses.where((course) => course.isPaid == 0).toList();
+                    final paidCourses = topCourses.where((course) => course.isPaid == 1).toList();
+                    
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1233,15 +1420,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           height: 280,
                           margin: const EdgeInsets.only(bottom: 15),
                           child: topCourses.isEmpty
-                              ? const Center(child: Text('No trending courses available'))
-                              : ListView.builder(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: topCourses.length,
-                                  itemBuilder: (ctx, index) {
-                                    return _buildTrendingCourseCard(topCourses[index]);
-                                  },
-                                ),
+                            ? const Center(child: Text('No trending courses available'))
+                            : ListView.builder(
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                scrollDirection: Axis.horizontal,
+                                itemCount: topCourses.length,
+                                itemBuilder: (ctx, index) {
+                                  return _buildTrendingCourseCard(topCourses[index]);
+                                },
+                              ),
                         ),
                         
                         // Trending Instructors Section
@@ -1266,6 +1453,40 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             },
                           ),
                         ),
+                        
+                        // Free Courses Section
+                        if (freeCourses.isNotEmpty) ...[
+                          _buildSectionTitle('Free Courses'),
+                          Container(
+                            height: 280,
+                            margin: const EdgeInsets.only(bottom: 20),
+                            child: ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              scrollDirection: Axis.horizontal,
+                              itemCount: freeCourses.length,
+                              itemBuilder: (ctx, index) {
+                                return _buildCourseCardWithBadge(freeCourses[index], true);
+                              },
+                            ),
+                          ),
+                        ],
+                        
+                        // Paid Courses Section
+                        if (paidCourses.isNotEmpty) ...[
+                          _buildSectionTitle('Premium Courses'),
+                          Container(
+                            height: 280,
+                            margin: const EdgeInsets.only(bottom: 20),
+                            child: ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              scrollDirection: Axis.horizontal,
+                              itemCount: paidCourses.length,
+                              itemBuilder: (ctx, index) {
+                                return _buildCourseCardWithBadge(paidCourses[index], false);
+                              },
+                            ),
+                          ),
+                        ],
                         
                         // Add proper bottom padding for menu tabs
                         const SizedBox(height: 80),

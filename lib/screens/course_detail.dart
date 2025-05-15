@@ -231,7 +231,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
         const SizedBox(height: 8),
                     Text(
           title,
-          style: TextStyle(
+                                  style: TextStyle(
             fontSize: 18,
                         fontWeight: FontWeight.bold,
             color: color,
@@ -239,8 +239,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
         ),
         Text(
           subtitle,
-                      style: TextStyle(
-            fontSize: 13,
+                                    style: TextStyle(
+                                      fontSize: 13,
             color: Colors.grey.shade600,
                       ),
                     ),
@@ -267,33 +267,33 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                 } catch (e) {
                   // If there's an error, show an error message
                   return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
                         Icon(
                           Icons.error_outline,
                           color: Colors.red,
                           size: 60,
                         ),
                         SizedBox(height: 16),
-                        Text(
+                    Text(
                           'Failed to load course details',
                           style: TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.bold,
                           ),
                         ),
                         SizedBox(height: 8),
                         Text(
                           'Please try again later',
-                          style: TextStyle(
-                            fontSize: 16,
+                      style: TextStyle(
+                        fontSize: 16,
                             color: Colors.grey,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  );
+            ],
+          ),
+        );
                 }
                 
                 // Try to extract video URL for preview

@@ -11,6 +11,7 @@ import '../constants.dart';
 import '../providers/auth.dart';
 import '../widgets/custom_text.dart';
 import 'account_remove_screen.dart';
+import 'ai_assistant.dart';
 import 'certificates_screen.dart';
 import 'edit_profile.dart';
 import 'update_password.dart';
@@ -92,84 +93,84 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
               : FadeTransition(
                   opacity: _fadeAnimation,
                   child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: Column(
-                      children: [
-                        // Profile header with gradient background
-                        Container(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    children: [
+                      // Profile header with gradient background
+                      Container(
                           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                           padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
                                 Color(0xFF6366F1),
                                 Color(0xFF8B5CF6),
-                              ],
-                            ),
+                            ],
+                          ),
                             borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
+                          boxShadow: [
+                            BoxShadow(
                                 color: const Color(0xFF6366F1).withOpacity(0.2),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              // Profile Image
-                              Container(
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            // Profile Image
+                            Container(
                                 padding: const EdgeInsets.all(3),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 2),
-                                ),
-                                child: CircleAvatar(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                              ),
+                              child: CircleAvatar(
                                   radius: 36,
-                                  backgroundImage: user?['photo'] != null
-                                      ? NetworkImage(user!['photo'])
-                                      : null,
-                                  backgroundColor: Colors.white,
-                                  child: user?['photo'] == null
-                                      ? SvgPicture.asset(
-                                          'assets/icons/profile_vector.svg',
+                                backgroundImage: user?['photo'] != null
+                                    ? NetworkImage(user!['photo'])
+                                    : null,
+                                backgroundColor: Colors.white,
+                                child: user?['photo'] == null
+                                    ? SvgPicture.asset(
+                                        'assets/icons/profile_vector.svg',
                                           height: 40,
                                           width: 40,
-                                          colorFilter: const ColorFilter.mode(
-                                            Colors.grey,
-                                            BlendMode.srcIn,
-                                          ),
-                                        )
-                                      : null,
-                                ),
+                                        colorFilter: const ColorFilter.mode(
+                                          Colors.grey,
+                                          BlendMode.srcIn,
+                                        ),
+                                      )
+                                    : null,
                               ),
+                            ),
                               const SizedBox(width: 20),
-                              // User Info
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      user?['name'] ?? 'No Name',
-                                      style: const TextStyle(
+                            // User Info
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    user?['name'] ?? 'No Name',
+                                    style: const TextStyle(
                                         fontSize: 22,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
                                     ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                     const SizedBox(height: 6),
-                                    Text(
-                                      user?['phone'] ?? "No phone number",
-                                      style: TextStyle(
+                                  Text(
+                                    user?['phone'] ?? "No phone number",
+                                    style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w500,
-                                        color: Colors.white.withOpacity(0.9),
-                                      ),
+                                      color: Colors.white.withOpacity(0.9),
                                     ),
+                                  ),
                                     const SizedBox(height: 4),
                                     Text(
                                       user?['email'] ?? "No email available",
@@ -178,11 +179,180 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                                         color: Colors.white.withOpacity(0.8),
                                       ),
                                     ),
+                                ],
+                              ),
+                            ),
+                            // Edit Profile Button
+                              GestureDetector(
+                                onTap: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const EditPrfileScreen(),
+                                  ),
+                                );
+                                if (result == true) {
+                                  setState(() {
+                                    _dataUpdated = true;
+                                  });
+                                }
+                              },
+                                child: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.edit,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Quick Action Buttons
+                      Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _buildQuickActionButton(
+                                title: "Certificates",
+                                icon: Icons.verified_user_outlined,
+                                  color: const Color(0xFF6366F1).withOpacity(0.1),
+                                  iconColor: const Color(0xFF6366F1),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const CertificatesScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                              const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildQuickActionButton(
+                                title: "Notifications",
+                                icon: Icons.notifications_outlined,
+                                  color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                                  iconColor: const Color(0xFF8B5CF6),
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("Notifications feature coming soon")),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                        
+                        // AI Assistant Card
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(20),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const AIAssistantScreen(),
+                                  ),
+                                );
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [kDarkPurple, kLightPurple],
+                                        ),
+                                        borderRadius: BorderRadius.circular(15),
+                                      ),
+                                      child: SvgPicture.asset(
+                                        'assets/icons/smart_toy.svg',
+                                        height: 24,
+                                        width: 24,
+                                        colorFilter: const ColorFilter.mode(
+                                          Colors.white,
+                                          BlendMode.srcIn,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 20),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'AI Learning Assistant',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Get personalized help with your courses',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: kDarkPurple,
+                                      size: 18,
+                                    ),
                                   ],
                                 ),
                               ),
-                              // Edit Profile Button
-                              GestureDetector(
+                            ),
+                          ),
+                        ),
+                      
+                      // Account Settings Section
+                        _buildSectionHeader("Account Settings"),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Card(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                          ),
+                            color: Colors.white,
+                          child: Column(
+                            children: [
+                              _buildProfileOption(
+                                title: 'Edit Profile',
+                                icon: Icons.person_outline,
                                 onTap: () async {
                                   final result = await Navigator.push(
                                     context,
@@ -196,186 +366,102 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                                     });
                                   }
                                 },
-                                child: Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.edit,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
+                                  iconColor: const Color(0xFF6366F1),
+                              ),
+                              _divider(),
+                              _buildProfileOption(
+                                title: 'Change Password',
+                                icon: Icons.lock_outline,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const UpdatePassword(),
+                                    ),
+                                  );
+                                },
+                                  iconColor: const Color(0xFF8B5CF6),
                               ),
                             ],
                           ),
                         ),
-                        
-                        // Quick Action Buttons
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: _buildQuickActionButton(
-                                  title: "Certificates",
-                                  icon: Icons.verified_user_outlined,
-                                  color: const Color(0xFF6366F1).withOpacity(0.1),
-                                  iconColor: const Color(0xFF6366F1),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const CertificatesScreen(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: _buildQuickActionButton(
-                                  title: "Notifications",
-                                  icon: Icons.notifications_outlined,
-                                  color: const Color(0xFF8B5CF6).withOpacity(0.1),
-                                  iconColor: const Color(0xFF8B5CF6),
-                                  onTap: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text("Notifications feature coming soon")),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        
-                        // Account Settings Section
-                        _buildSectionHeader("Account Settings"),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: Card(
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            color: Colors.white,
-                            child: Column(
-                              children: [
-                                _buildProfileOption(
-                                  title: 'Edit Profile',
-                                  icon: Icons.person_outline,
-                                  onTap: () async {
-                                    final result = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const EditPrfileScreen(),
-                                      ),
-                                    );
-                                    if (result == true) {
-                                      setState(() {
-                                        _dataUpdated = true;
-                                      });
-                                    }
-                                  },
-                                  iconColor: const Color(0xFF6366F1),
-                                ),
-                                _divider(),
-                                _buildProfileOption(
-                                  title: 'Change Password',
-                                  icon: Icons.lock_outline,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const UpdatePassword(),
-                                      ),
-                                    );
-                                  },
-                                  iconColor: const Color(0xFF8B5CF6),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        
-                        // App Settings Section
+                      ),
+                      
+                      // App Settings Section
                         _buildSectionHeader("App Information"),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: Card(
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Card(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
-                            ),
+                          ),
                             color: Colors.white,
-                            child: Column(
-                              children: [
-                                _buildProfileOption(
-                                  title: 'About App',
-                                  icon: Icons.info_outline,
-                                  onTap: () {},
+                          child: Column(
+                            children: [
+                              _buildProfileOption(
+                                title: 'About App',
+                                icon: Icons.info_outline,
+                                onTap: () {},
                                   iconColor: const Color(0xFF6366F1),
-                                  showSubtitle: true,
-                                  subtitle: "Version 1.3.0",
-                                ),
-                                _divider(),
-                                _buildProfileOption(
-                                  title: 'Privacy Policy',
-                                  icon: Icons.privacy_tip_outlined,
-                                  onTap: () {},
+                                showSubtitle: true,
+                                subtitle: "Version 1.3.0",
+                              ),
+                              _divider(),
+                              _buildProfileOption(
+                                title: 'Privacy Policy',
+                                icon: Icons.privacy_tip_outlined,
+                                onTap: () {},
                                   iconColor: const Color(0xFF8B5CF6),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
+                      ),
  
-                        // Account Management Section
+                      // Account Management Section
                         _buildSectionHeader("Account Management"),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: Card(
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Card(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
-                            ),
+                          ),
                             color: Colors.white,
-                            child: Column(
-                              children: [
-                                _buildProfileOption(
-                                  title: 'Delete Account',
-                                  icon: Icons.delete_outline,
-                                  onTap: () {
-                                    Navigator.of(context).pushNamed(AccountRemoveScreen.routeName);
-                                  },
-                                  iconColor: Colors.grey,
-                                  textColor: Colors.red,
-                                ),
-                                _divider(),
-                                _buildProfileOption(
-                                  title: 'Log Out',
-                                  icon: Icons.logout_rounded,
-                                  onTap: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) => _buildLogoutDialog(context),
-                                    );
-                                  },
-                                  iconColor: Colors.red,
-                                  textColor: Colors.red,
-                                ),
-                              ],
-                            ),
+                          child: Column(
+                            children: [
+                              _buildProfileOption(
+                                title: 'Delete Account',
+                                icon: Icons.delete_outline,
+                                onTap: () {
+                                  Navigator.of(context).pushNamed(AccountRemoveScreen.routeName);
+                                },
+                                iconColor: Colors.grey,
+                                textColor: Colors.red,
+                              ),
+                              _divider(),
+                              _buildProfileOption(
+                                title: 'Log Out',
+                                icon: Icons.logout_rounded,
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) => _buildLogoutDialog(context),
+                                  );
+                                },
+                                iconColor: Colors.red,
+                                textColor: Colors.red,
+                              ),
+                            ],
                           ),
                         ),
-                        
-                        // Add bottom padding to avoid overlap with navigation bar
-                        const SizedBox(height: 80),
-                      ],
-                    ),
+                      ),
+                      
+                      // Add bottom padding to avoid overlap with navigation bar
+                      const SizedBox(height: 80),
+                    ],
+                  ),
                   ),
                 ),
     );
@@ -402,7 +488,7 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
             ),
           ),
         ],
-      ),
+                ),
     );
   }
 
@@ -439,9 +525,9 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                icon,
+              icon,
                 size: 28,
-                color: iconColor,
+              color: iconColor,
               ),
             ),
             const SizedBox(height: 12),
@@ -569,8 +655,8 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.logout_rounded,
-                      color: Colors.red,
+                    Icons.logout_rounded,
+                    color: Colors.red,
                       size: 40,
                     ),
                   ),

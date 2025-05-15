@@ -256,30 +256,30 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
+        margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: const Color(0xFF6366F1),
-            width: 1.5,
+            width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Row(
           children: <Widget>[
             Container(
-              height: 80,
-              width: 80,
-              margin: const EdgeInsets.all(12),
+              height: 50,
+              width: 50,
+              margin: const EdgeInsets.all(8),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
                 child: FadeInImage.assetNetwork(
                   placeholder: 'assets/images/loading_animated.gif',
                   image: category.thumbnail.toString(),
@@ -289,26 +289,27 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     Text(
                       category.title.toString(),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color: Color(0xFF333333),
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 2),
                     Text(
                       '${category.numberOfSubCategories} sub-categories',
                       style: const TextStyle(
                         color: kGreyLightColor,
-                        fontSize: 13,
+                        fontSize: 11,
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -317,27 +318,27 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
               ),
             ),
             Container(
-              margin: const EdgeInsets.all(12),
-              padding: const EdgeInsets.all(8),
+              margin: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(5),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(6),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF6366F1).withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    color: const Color(0xFF6366F1).withOpacity(0.15),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
                   ),
                 ],
               ),
               child: const Icon(
                 Icons.arrow_forward_rounded,
                 color: Colors.white,
-                size: 18,
+                size: 14,
               ),
             ),
           ],
@@ -362,60 +363,60 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
           onRefresh: refreshList,
           child: FadeTransition(
             opacity: _fadeAnimation,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                   // Add top padding to replace the removed search bar
-                  const SizedBox(height: 20),
-                  
-                  // All Categories
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      'All Categories',
-                      style: TextStyle(
+                  const SizedBox(height: 30),
+                
+                // All Categories
+                Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'All Categories',
+                    style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w500,
                         color: const Color(0xFF6366F1),
-                      ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  
-                  // List of all categories
-                  Consumer<Categories>(
-                    builder: (context, categoriesData, child) {
-                      if (categoriesData.items.isEmpty) {
-                        return SizedBox(
-                          height: height * 0.5,
-                          child: const Center(
+                ),
+                  const SizedBox(height: 12),
+                
+                // List of all categories
+                Consumer<Categories>(
+                  builder: (context, categoriesData, child) {
+                    if (categoriesData.items.isEmpty) {
+                      return SizedBox(
+                        height: height * 0.5,
+                        child: const Center(
                             child: CupertinoActivityIndicator(
                               color: Color(0xFF6366F1),
                             ),
-                          ),
-                        );
-                      } else {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: categoriesData.items.length,
-                            padding: EdgeInsets.zero,
-                            itemBuilder: (ctx, index) {
-                              return _buildCategoryItem(categoriesData.items[index]);
-                            },
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                  
-                  // Add bottom spacing to avoid conflict with navigation menu
-                  const SizedBox(height: 80),
-                ],
+                        ),
+                      );
+                    } else {
+                      return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: categoriesData.items.length,
+                          padding: EdgeInsets.zero,
+                          itemBuilder: (ctx, index) {
+                            return _buildCategoryItem(categoriesData.items[index]);
+                          },
+                        ),
+                      );
+                    }
+                  },
+                ),
+                
+                // Add bottom spacing to avoid conflict with navigation menu
+                const SizedBox(height: 80),
+              ],
               ),
             ),
           ),

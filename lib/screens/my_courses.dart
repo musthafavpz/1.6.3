@@ -51,19 +51,19 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
           },
           child: FadeTransition(
             opacity: _fadeAnimation,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Padding(
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                     const SizedBox(height: 16),
-                    _buildCoursesStatus(),
-                    const SizedBox(height: 20),
-                    courseView(),
-                    const SizedBox(height: 20),
-                  ],
+                  _buildCoursesStatus(),
+                  const SizedBox(height: 20),
+                  courseView(),
+                  const SizedBox(height: 20),
+                ],
                 ),
               ),
             ),
@@ -115,24 +115,24 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
             children: [
               // Header
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${myCourseData.items.length} Courses',
-                        style: const TextStyle(
+                  Text(
+                    '${myCourseData.items.length} Courses',
+                    style: const TextStyle(
                           fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.bold,
                           color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      const Text(
-                        'Continue your learning journey',
-                        style: TextStyle(
-                          fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    'Continue your learning journey',
+                    style: TextStyle(
+                      fontSize: 14,
                           fontWeight: FontWeight.w500,
                           color: Colors.white70,
                         ),
@@ -181,7 +181,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                  color: Colors.white,
                       ),
                     ),
                   ],
@@ -404,17 +404,17 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                     ),
                     const SizedBox(height: 12),
                     AlignedGridView.count(
-                      shrinkWrap: true,
-                      crossAxisCount: 2,
+                  shrinkWrap: true,
+                  crossAxisCount: 2,
                       mainAxisSpacing: 16,
                       crossAxisSpacing: 16,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: myCourseData.items.length,
-                      itemBuilder: (ctx, index) {
-                        return MyCourseGrid(
-                          myCourse: myCourseData.items[index],
-                        );
-                      },
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: myCourseData.items.length,
+                  itemBuilder: (ctx, index) {
+                    return MyCourseGrid(
+                      myCourse: myCourseData.items[index],
+                    );
+                  },
                     ),
                   ],
                 );

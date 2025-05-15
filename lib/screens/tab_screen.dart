@@ -1,5 +1,6 @@
 import 'package:academy_lms_app/constants.dart';
 import 'package:academy_lms_app/screens/account.dart';
+import 'package:academy_lms_app/screens/ai_assistant.dart';
 import 'package:academy_lms_app/screens/cart.dart';
 import 'package:academy_lms_app/screens/explore.dart';
 import 'package:academy_lms_app/screens/filter_screen.dart';
@@ -94,7 +95,7 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
 
   List<Widget> _pages() {
     return isLoggedIn
-        ? [HomeScreen(), ExploreScreen(), MyCoursesScreen(), CartScreen(), AccountScreen()]
+        ? [HomeScreen(), ExploreScreen(), MyCoursesScreen(), AIAssistantScreen(), AccountScreen()]
         : [HomeScreen(), ExploreScreen(), LoginScreen(), LoginScreen(), LoginScreen()];
   }
 
@@ -134,10 +135,10 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
                   end: Offset.zero,
                 ).animate(_pageTransition),
                 child: PageView(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: _pages(),
-                ),
+              controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(),
+              children: _pages(),
+            ),
               ),
             ),
       bottomNavigationBar: Container(
@@ -159,23 +160,23 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
           child: Container(
             decoration: const BoxDecoration(
               color: Colors.white,
-            ),
-            child: BottomNavigationBar(
+          ),
+          child: BottomNavigationBar(
               backgroundColor: Colors.transparent,
               selectedItemColor: const Color(0xFF6366F1),
               unselectedItemColor: Colors.grey.shade600,
-              showUnselectedLabels: true,
-              type: BottomNavigationBarType.fixed,
-              currentIndex: _selectedPageIndex,
-              onTap: _selectPage,
-              elevation: 0,
-              items: [
-                _buildNavItem('Home', 'assets/icons/home.svg'),
-                _buildNavItem('Explore', 'assets/icons/explore.svg'),
-                _buildNavItem('My Courses', 'assets/icons/my_courses.svg'),
-                _buildNavItem('My Cart', 'assets/icons/shopping_bag.svg'),
-                _buildNavItem('Account', 'assets/icons/account.svg'),
-              ],
+            showUnselectedLabels: true,
+            type: BottomNavigationBarType.fixed,
+            currentIndex: _selectedPageIndex,
+            onTap: _selectPage,
+            elevation: 0,
+            items: [
+              _buildNavItem('Home', 'assets/icons/home.svg'),
+              _buildNavItem('Explore', 'assets/icons/explore.svg'),
+              _buildNavItem('My Courses', 'assets/icons/my_courses.svg'),
+                _buildNavItem('AI Assistant', 'assets/icons/smart_toy.svg'),
+              _buildNavItem('Account', 'assets/icons/account.svg'),
+            ],
             ),
           ),
         ),
@@ -188,7 +189,7 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
       'Home', 
       'Explore', 
       'My Courses', 
-      'My Cart', 
+      'AI Assistant',
       'Account'
     ].indexOf(label);
     
@@ -229,13 +230,13 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
               scale: isSelected ? _tabScaleAnimation : const AlwaysStoppedAnimation(1.0),
               child: FadeTransition(
                 opacity: isSelected ? _tabFadeAnimation : const AlwaysStoppedAnimation(1.0),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: SvgPicture.asset(
-                    iconPath,
-                    colorFilter: ColorFilter.mode(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: SvgPicture.asset(
+            iconPath,
+            colorFilter: ColorFilter.mode(
                       isSelected ? Colors.white : Colors.grey.shade600,
-                      BlendMode.srcIn,
+              BlendMode.srcIn,
                     ),
                   ),
                 ),
