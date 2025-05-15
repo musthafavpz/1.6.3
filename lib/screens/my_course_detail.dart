@@ -343,15 +343,15 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                   },
                 ),
               ),
-              // Gradient overlay
+              // Gradient overlay - removed the black shade
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.2),
-                      Colors.black.withOpacity(0.8),
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.5),
                     ],
                   ),
                 ),
@@ -365,19 +365,19 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                  myLoadedCourse.title.toString(),
+                      myLoadedCourse.title.toString(),
                       style: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.bold,
-                        fontSize: 22,
-                    color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18, // Reduced from 22
+                        color: Colors.white,
                         shadows: const [
-                      Shadow(
-                        offset: Offset(0, 1),
-                        blurRadius: 3,
-                        color: Colors.black54,
+                          Shadow(
+                            offset: Offset(0, 1),
+                            blurRadius: 3,
+                            color: Colors.black54,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -445,10 +445,10 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
           ),
         ),
         
-        // Progress and status card - floating above sections
+        // Progress and status card - floating above sections - REDUCED SIZE
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 20),
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(15), // Reduced padding
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
@@ -469,26 +469,26 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
           ),
           child: Row(
             children: [
-              // Progress circle
+              // Progress circle - smaller size
               SizedBox(
-                width: 70,
-                height: 70,
+                width: 60, // Reduced from 70
+                height: 60, // Reduced from 70
                 child: TweenAnimationBuilder(
                   tween: Tween<double>(begin: 0, end: progressPercent),
                   duration: const Duration(milliseconds: 1500),
                   builder: (context, value, child) {
                     return CircularPercentIndicator(
-                      radius: 35.0,
-                      lineWidth: 6.0,
+                      radius: 30.0, // Reduced from 35.0
+                      lineWidth: 5.0, // Reduced from 6.0
                       percent: value,
                       center: Text(
                         '${myLoadedCourse.courseCompletion ?? 0}%',
                         style: GoogleFonts.montserrat(
                           fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                          fontSize: 14, // Reduced from 16
                           color: Colors.white,
-                ),
-              ),
+                        ),
+                      ),
                       progressColor: Colors.white,
                       backgroundColor: Colors.white.withOpacity(0.3),
                       circularStrokeCap: CircularStrokeCap.round,
@@ -496,55 +496,55 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                   },
                 ),
               ),
-              const SizedBox(width: 20),
+              const SizedBox(width: 15), // Reduced from 20
               // Status info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
+                  children: [
+                    Text(
                       'Your Progress',
                       style: GoogleFonts.montserrat(
-                        fontSize: 18,
+                        fontSize: 16, // Reduced from 18
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 6), // Reduced from 10
                     Row(
                       children: [
                         const Icon(
                           Icons.check_circle,
                           color: Colors.white,
-                          size: 16,
-                    ),
-                        const SizedBox(width: 8),
-                  Text(
+                          size: 14, // Reduced from 16
+                        ),
+                        const SizedBox(width: 5), // Reduced from 8
+                        Text(
                           '${myLoadedCourse.totalNumberOfCompletedLessons ?? 0}/${myLoadedCourse.totalNumberOfLessons ?? 0} lessons completed',
                           style: GoogleFonts.montserrat(
-                      fontSize: 14,
+                            fontSize: 12, // Reduced from 14
                             color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
         ),
-      ],
-          ),
-        ),
         
-        // Title for course content section
+        // Title for course content section - REDUCED SIZE
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 30, 20, 15),
+          padding: const EdgeInsets.fromLTRB(20, 25, 20, 15), // Reduced top padding from 30
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
+            children: [
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(8), // Reduced from 10
                     decoration: BoxDecoration(
                       color: const Color(0xFF6366F1).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -552,23 +552,23 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                     child: const Icon(
                       Icons.menu_book_rounded,
                       color: Color(0xFF6366F1),
-                      size: 20,
+                      size: 18, // Reduced from 20
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8), // Reduced from 10
                   Text(
                     'Course Content',
                     style: GoogleFonts.montserrat(
-                      fontSize: 20,
+                      fontSize: 18, // Reduced from 20
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF333333),
                     ),
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
               // Total lessons count
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5), // Reduced padding
                 decoration: BoxDecoration(
                   color: const Color(0xFF6366F1).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(30),
@@ -578,7 +578,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                   style: GoogleFonts.montserrat(
                     color: const Color(0xFF6366F1),
                     fontWeight: FontWeight.bold,
-                    fontSize: 13,
+                    fontSize: 12, // Reduced from 13
                   ),
                 ),
               ),
@@ -622,18 +622,18 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                 verticalOffset: 50.0,
                 child: FadeInAnimation(
                   child: Container(
-                    margin: const EdgeInsets.only(bottom: 15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+                    margin: const EdgeInsets.only(bottom: 18), // Increased from 15
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
                           blurRadius: 12,
                           offset: const Offset(0, 3),
-          ),
-        ],
-      ),
+                        ),
+                      ],
+                    ),
                     child: Column(
                       children: [
                         // Section header (clickable to expand/collapse)
@@ -646,8 +646,8 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                               )
                             : BorderRadius.circular(16),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
-          decoration: BoxDecoration(
+                            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 16), // Increased from 14
+                            decoration: BoxDecoration(
                               gradient: allLessonsCompleted 
                                 ? const LinearGradient(
                                     begin: Alignment.topLeft,
@@ -667,16 +667,16 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                 : BorderRadius.circular(16),
                             ),
                             child: Row(
-              children: [
-                Container(
-                                  width: 32,
-                                  height: 32,
-                  decoration: BoxDecoration(
+                              children: [
+                                Container(
+                                  width: 36, // Increased from 32
+                                  height: 36, // Increased from 32
+                                  decoration: BoxDecoration(
                                     color: allLessonsCompleted 
                                       ? Colors.white.withOpacity(0.2) 
                                       : const Color(0xFF6366F1).withOpacity(0.1), // Light purple for incomplete
                                     shape: BoxShape.circle,
-                  ),
+                                  ),
                                   child: Center(
                                     child: allLessonsCompleted
                                         ? const Icon(
@@ -685,25 +685,27 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                             size: 18,
                                           )
                                         : Text(
-                    '${index + 1}',
-                                            style: GoogleFonts.montserrat(
+                                            '${index + 1}',
+                                            style: TextStyle(
+                                              fontFamily: 'Arial',
                                               color: const Color(0xFF6366F1), // Purple number for incomplete
-                      fontWeight: FontWeight.bold,
+                                              fontWeight: FontWeight.bold,
                                               fontSize: 15,
                                             ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
+                                          ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+                                    children: [
                                       Text(
                                         sections[index].title,
-                                        style: GoogleFonts.montserrat(
+                                        style: TextStyle(
+                                          fontFamily: 'Arial',
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 14,
+                                          fontSize: 15, // Increased from 14
                                           color: allLessonsCompleted 
                                             ? Colors.white // White text for completed sections
                                             : const Color(0xFF333333), // Dark text for incomplete sections
@@ -712,8 +714,8 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                       if (!allLessonsCompleted && sectionCompletionPercentage > 0)
                                         Padding(
                                           padding: const EdgeInsets.only(top: 4),
-                  child: Row(
-                    children: [
+                                          child: Row(
+                                            children: [
                                               Expanded(
                                                 child: ClipRRect(
                                                   borderRadius: BorderRadius.circular(10),
@@ -724,53 +726,55 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                     minHeight: 4,
                                                   ),
                                                 ),
-                      ),
+                                              ),
                                               const SizedBox(width: 8),
-                      Text(
+                                              Text(
                                                 "${(sectionCompletionPercentage * 100).round()}%",
-                                                style: GoogleFonts.montserrat(
+                                                style: TextStyle(
+                                                  fontFamily: 'Arial',
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.bold,
                                                   color: const Color(0xFF6366F1), // Purple text
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                     ],
                                   ),
                                 ),
-                Container(
+                                Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
+                                  decoration: BoxDecoration(
                                     color: allLessonsCompleted 
                                       ? Colors.white.withOpacity(0.2) 
                                       : const Color(0xFF6366F1).withOpacity(0.1), // Light purple for incomplete
                                     borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.play_lesson,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.play_lesson,
                                         color: allLessonsCompleted 
                                           ? Colors.white 
                                           : const Color(0xFF6366F1), // Purple icon for incomplete
                                         size: 10,
-                      ),
+                                      ),
                                       const SizedBox(width: 3),
-                      Text(
+                                      Text(
                                         '${sections[index].mLesson!.length} lessons',
-                                        style: GoogleFonts.montserrat(
+                                        style: TextStyle(
+                                          fontFamily: 'Arial',
                                           color: allLessonsCompleted 
                                             ? Colors.white 
                                             : const Color(0xFF6366F1), // Purple text for incomplete
                                           fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                                 const SizedBox(width: 8),
                                 Icon(
                                   isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
@@ -778,9 +782,9 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                     ? Colors.white 
                                     : const Color(0xFF6366F1), // Purple icon for incomplete
                                   size: 20,
-            ),
-          ],
-        ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         
@@ -788,30 +792,30 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                         AnimatedCrossFade(
                           firstChild: const SizedBox(height: 0),
                           secondChild: ListView.separated(
-            physics: const NeverScrollableScrollPhysics(),
+                            physics: const NeverScrollableScrollPhysics(),
                             shrinkWrap: true,
                             itemCount: sections[index].mLesson!.length,
-            separatorBuilder: (context, index) => Divider(
-              height: 1,
+                            separatorBuilder: (context, index) => Divider(
+                              height: 1,
                               color: Colors.grey.shade200,
-            ),
+                            ),
                             itemBuilder: (ctx, i) {
                               final lesson = sections[index].mLesson![i];
                               final isActive = _activeLesson != null && 
                                               _activeLesson!.id == lesson.id;
-              final bool isCompleted = lesson.isCompleted == '1';
-              
+                              final bool isCompleted = lesson.isCompleted == '1';
+                              
                               return Material(
                                 color: Colors.transparent,
                                 child: InkWell(
                                   highlightColor: const Color(0xFF6366F1).withOpacity(0.05),
                                   splashColor: const Color(0xFF6366F1).withOpacity(0.1),
-                onTap: () {
-                  setState(() {
-                    _activeLesson = lesson;
-                  });
+                                  onTap: () {
+                                    setState(() {
+                                      _activeLesson = lesson;
+                                    });
                                     lessonAction(lesson);
-                },
+                                  },
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                     decoration: BoxDecoration(
@@ -819,8 +823,8 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                         ? const Color(0xFF6366F1).withOpacity(0.05) 
                                         : Colors.white,
                                     ),
-                  child: Row(
-                    children: [
+                                    child: Row(
+                                      children: [
                                         // Checkbox to mark lesson as completed
                                         Theme(
                                           data: ThemeData(
@@ -829,11 +833,11 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                 borderRadius: BorderRadius.circular(6),
                                               ),
                                             ),
-                        ),
+                                          ),
                                           child: Transform.scale(
                                             scale: 0.9,
-                        child: Checkbox(
-                          value: isCompleted,
+                                            child: Checkbox(
+                                              value: isCompleted,
                                               activeColor: const Color(0xFF10B981),
                                               checkColor: Colors.white,
                                               side: BorderSide(
@@ -843,64 +847,65 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                 width: 2,
                                               ),
                                               onChanged: (value) {
-                            setState(() {
-                              lesson.isCompleted = value! ? '1' : '0';
+                                                setState(() {
+                                                  lesson.isCompleted = value! ? '1' : '0';
                                                   
-                              if (value) {
+                                                  if (value) {
                                                     if (myLoadedCourse.totalNumberOfCompletedLessons != null) {
-                                myLoadedCourse.totalNumberOfCompletedLessons =
-                                    myLoadedCourse.totalNumberOfCompletedLessons! + 1;
-                              } else {
+                                                      myLoadedCourse.totalNumberOfCompletedLessons =
+                                                          myLoadedCourse.totalNumberOfCompletedLessons! + 1;
+                                                    } else {
                                                       myLoadedCourse.totalNumberOfCompletedLessons = 1;
                                                     }
                                                   } else {
                                                     if (myLoadedCourse.totalNumberOfCompletedLessons != null &&
                                                         myLoadedCourse.totalNumberOfCompletedLessons! > 0) {
-                                myLoadedCourse.totalNumberOfCompletedLessons =
-                                    myLoadedCourse.totalNumberOfCompletedLessons! - 1;
-                              }
+                                                      myLoadedCourse.totalNumberOfCompletedLessons =
+                                                          myLoadedCourse.totalNumberOfCompletedLessons! - 1;
+                                                    }
                                                   }
                                                   
                                                   var completePerc = myLoadedCourse.totalNumberOfLessons! > 0
                                                       ? (myLoadedCourse.totalNumberOfCompletedLessons! / 
                                                       myLoadedCourse.totalNumberOfLessons!) * 100
                                                       : 0;
-                              myLoadedCourse.courseCompletion = completePerc.round();
-                            
-                            Provider.of<MyCourses>(context, listen: false)
-                                .toggleLessonCompleted(
+                                                  myLoadedCourse.courseCompletion = completePerc.round();
+                                                
+                                                Provider.of<MyCourses>(context, listen: false)
+                                                    .toggleLessonCompleted(
                                                           lesson.id!,
                                                           value ? 1 : 0)
-                                .then((_) => CommonFunctions.showSuccessToast(
-                                    'Course Progress Updated'));
-                                                });
-                          },
-                        ),
-                      ),
+                                                    .then((_) => CommonFunctions.showSuccessToast(
+                                                        'Course Progress Updated'));
+                                              });
+                                              },
+                                            ),
+                                          ),
                                         ),
                                         const SizedBox(width: 8),
-                      
+                                        
                                         // Lesson title, time duration and summary
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
                                             mainAxisSize: MainAxisSize.min,
-                          children: [
+                                            children: [
                                               // Title and duration in separate rows for better readability
-                            Text(
+                                              Text(
                                                 lesson.title!,
-                                                style: GoogleFonts.montserrat(
+                                                style: TextStyle(
+                                                  fontFamily: 'Arial',
                                                   fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                                                  fontSize: 13,
+                                                  fontSize: 14, // Increased from 13
                                                   color: isActive 
                                                     ? const Color(0xFF6366F1)
                                                     : isCompleted
                                                         ? const Color(0xFF10B981)
                                                         : const Color(0xFF333333),
-                              ),
-                            ),
-                            if (lesson.duration != null && lesson.duration!.isNotEmpty)
-                              Padding(
+                                                ),
+                                              ),
+                                              if (lesson.duration != null && lesson.duration!.isNotEmpty)
+                                                Padding(
                                                   padding: const EdgeInsets.only(top: 2),
                                                   child: Row(
                                                     children: [
@@ -911,9 +916,10 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                       ),
                                                       const SizedBox(width: 3),
                                                       Text(
-                                  lesson.duration!,
-                                                        style: GoogleFonts.montserrat(
-                                                          fontSize: 10,
+                                                        lesson.duration!,
+                                                        style: TextStyle(
+                                                          fontFamily: 'Arial',
+                                                          fontSize: 11, // Increased from 10
                                                           fontWeight: FontWeight.w500,
                                                           color: Colors.grey.shade700,
                                                         ),
@@ -930,36 +936,37 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                         : lesson.summary!,
                                                     maxLines: 1,
                                                     overflow: TextOverflow.ellipsis,
-                                                    style: GoogleFonts.montserrat(
-                                                      fontSize: 11,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      
+                                                    style: TextStyle(
+                                                      fontFamily: 'Arial',
+                                                      fontSize: 12, // Increased from 11
+                                                      color: Colors.grey.shade600,
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                        
                                         // Play button with updated style
                                         Container(
                                           width: 32,
                                           height: 32,
-                          decoration: BoxDecoration(
+                                          decoration: BoxDecoration(
                                             color: isActive 
                                               ? const Color(0xFF6366F1).withOpacity(0.1)
                                               : Colors.grey.shade100,
                                             borderRadius: BorderRadius.circular(10),
-                          ),
+                                          ),
                                           child: Material(
                                             color: Colors.transparent,
                                             child: InkWell(
                                               borderRadius: BorderRadius.circular(10),
                                               onTap: () {
-                          setState(() {
-                            _activeLesson = lesson;
-                          });
+                                                setState(() {
+                                                  _activeLesson = lesson;
+                                                });
                                                 lessonAction(lesson);
-                        },
+                                              },
                                               child: Center(
                                                 child: SvgPicture.asset(
                                                   'assets/icons/video.svg',
@@ -975,18 +982,18 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                               ),
                                             ),
                                           ),
-                      ),
-                    ],
+                                        ),
+                                      ],
                                     ),
-                  ),
-                ),
-              );
-            },
-          ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                           crossFadeState: isExpanded 
                               ? CrossFadeState.showSecond 
                               : CrossFadeState.showFirst,
-                          duration: const Duration(milliseconds: 300),
+                          duration: const Duration(milliseconds: 0), // Removed animation by setting duration to 0
                         ),
                         
                         // Last lesson divider (only shown when expanded and has lessons)

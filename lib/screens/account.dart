@@ -11,9 +11,13 @@ import '../constants.dart';
 import '../providers/auth.dart';
 import '../widgets/custom_text.dart';
 import 'account_remove_screen.dart';
-import 'ai_assistant.dart';
 import 'certificates_screen.dart';
 import 'edit_profile.dart';
+import 'notifications_screen.dart';
+import 'privacy_policy_screen.dart';
+import 'refund_policy_screen.dart';
+import 'support_screen.dart';
+import 'about_us_screen.dart';
 import 'update_password.dart';
 
 class AccountScreen extends StatefulWidget {
@@ -243,8 +247,11 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                                   color: const Color(0xFF8B5CF6).withOpacity(0.1),
                                   iconColor: const Color(0xFF8B5CF6),
                                 onTap: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("Notifications feature coming soon")),
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const NotificationsScreen(),
+                                    ),
                                   );
                                 },
                               ),
@@ -252,94 +259,9 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                           ],
                         ),
                       ),
-                        
-                        // AI Assistant Card
-                        Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(20),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const AIAssistantScreen(),
-                                  ),
-                                );
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.all(20),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [kDarkPurple, kLightPurple],
-                                        ),
-                                        borderRadius: BorderRadius.circular(15),
-                                      ),
-                                      child: SvgPicture.asset(
-                                        'assets/icons/smart_toy.svg',
-                                        height: 24,
-                                        width: 24,
-                                        colorFilter: const ColorFilter.mode(
-                                          Colors.white,
-                                          BlendMode.srcIn,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 20),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            'AI Learning Assistant',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            'Get personalized help with your courses',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.grey.shade600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const Icon(
-                                      Icons.arrow_forward_ios,
-                                      color: kDarkPurple,
-                                      size: 18,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
                       
                       // Account Settings Section
-                        _buildSectionHeader("Account Settings"),
+                        _buildSectionHeader("ACCOUNT SETTINGS"),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: Card(
@@ -387,8 +309,52 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                         ),
                       ),
                       
+                      // Support Section
+                      _buildSectionHeader("SUPPORT"),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Card(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          color: Colors.white,
+                          child: Column(
+                            children: [
+                              _buildProfileOption(
+                                title: 'Help & Support',
+                                icon: Icons.support_agent_outlined,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const SupportScreen(),
+                                    ),
+                                  );
+                                },
+                                iconColor: const Color(0xFF6366F1),
+                              ),
+                              _divider(),
+                              _buildProfileOption(
+                                title: 'Refund Policy',
+                                icon: Icons.monetization_on_outlined,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const RefundPolicyScreen(),
+                                    ),
+                                  );
+                                },
+                                iconColor: const Color(0xFF8B5CF6),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      
                       // App Settings Section
-                        _buildSectionHeader("App Information"),
+                        _buildSectionHeader("ABOUT US"),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: Card(
@@ -400,10 +366,17 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                           child: Column(
                             children: [
                               _buildProfileOption(
-                                title: 'About App',
+                                title: 'About Us',
                                 icon: Icons.info_outline,
-                                onTap: () {},
-                                  iconColor: const Color(0xFF6366F1),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const AboutUsScreen(),
+                                    ),
+                                  );
+                                },
+                                iconColor: const Color(0xFF6366F1),
                                 showSubtitle: true,
                                 subtitle: "Version 1.3.0",
                               ),
@@ -411,8 +384,15 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                               _buildProfileOption(
                                 title: 'Privacy Policy',
                                 icon: Icons.privacy_tip_outlined,
-                                onTap: () {},
-                                  iconColor: const Color(0xFF8B5CF6),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const PrivacyPolicyScreen(),
+                                    ),
+                                  );
+                                },
+                                iconColor: const Color(0xFF8B5CF6),
                               ),
                             ],
                           ),
@@ -420,7 +400,7 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                       ),
  
                       // Account Management Section
-                        _buildSectionHeader("Account Management"),
+                        _buildSectionHeader("ACCOUNT MANAGEMENT"),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: Card(
@@ -475,9 +455,10 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
           Text(
             title,
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF6366F1),
+              color: Color(0xFF333333),
+              letterSpacing: 0.5,
             ),
           ),
           const SizedBox(width: 8),
