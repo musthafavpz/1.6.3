@@ -1,5 +1,17 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously, avoid_print
 
+import 'dart:convert'; // For jsonDecode
+import 'dart:io'; // For File
+import 'dart:typed_data'; // For Uint8List
+import 'package:path_provider/path_provider.dart'; // For file system paths
+// import 'package:open_file/open_file.dart'; // To open files
+import 'package:pdf/pdf.dart'; // For PDF generation
+import 'package:pdf/widgets.dart' as pw; // For PDF widgets
+import 'package:printing/printing.dart'; // For printing/sharing PDF
+import 'package:intl/intl.dart'; // For date formatting
+import 'package:shared_preferences/shared_preferences.dart'; // For user name
+import 'package:flutter/services.dart' show rootBundle;
+
 import 'package:academy_lms_app/screens/course_detail.dart';
 import 'package:academy_lms_app/screens/image_viewer_Screen.dart';
 import 'package:academy_lms_app/widgets/appbar_one.dart';
@@ -54,9 +66,6 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_scrollListener);
-    
-    // By default, expand the first section
-    _expandedSections.add(0);
   }
 
   @override
@@ -298,118 +307,52 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
         ? myLoadedCourse.courseCompletion / 100
         : 0.0;
 
+    // Determine aspect ratio for thumbnail (e.g., 16:9)
+    final screenWidth = MediaQuery.of(context).size.width;
+    final thumbnailHeight = screenWidth / (16 / 9);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Course Image Banner with Video Play Option and floating back button
+        // Course Image Banner
         Container(
-          height: 250, // Increased height for better visual impact
+          height: thumbnailHeight, // Adjusted height for 16:9 aspect ratio
           width: double.infinity,
           margin: const EdgeInsets.only(bottom: 20),
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Course image with shimmer loading effect
+              // Course image
               Hero(
                 tag: 'course_${myLoadedCourse.id}',
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(25),
-                    bottomRight: Radius.circular(25),
-                  ),
-                  child: FadeInImage.assetNetwork(
-                placeholder: 'assets/images/loading_animated.gif',
-                image: myLoadedCourse.thumbnail.toString(),
-                fit: BoxFit.cover,
-                    imageErrorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: const Color(0xFF6366F1).withOpacity(0.1),
-                        child: const Center(
-                          child: Icon(
-                            Icons.image_not_supported_outlined,
-                            color: Color(0xFF6366F1),
-                            size: 50,
-                          ),
+                child: FadeInImage.assetNetwork(
+                  placeholder: 'assets/images/loading_animated.gif',
+                  image: myLoadedCourse.thumbnail.toString(),
+                  fit: BoxFit.cover,
+                  imageErrorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: const Color(0xFF6366F1).withOpacity(0.1),
+                      child: const Center(
+                        child: Icon(
+                          Icons.image_not_supported_outlined,
+                          color: Color(0xFF6366F1),
+                          size: 50,
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ),
               // Gradient overlay
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(25),
-                  bottomRight: Radius.circular(25),
-                ),
-                child: Container(
+              Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                        Colors.black.withOpacity(0.2),
-                        Colors.black.withOpacity(0.8),
+                      Colors.black.withOpacity(0.2),
+                      Colors.black.withOpacity(0.8),
                     ],
-                  ),
-                ),
-              ),
-              ),
-              // Play button with ripple effect
-              Center(
-                child: InkWell(
-                  onTap: () {
-                    // Find first video lesson to use as a preview
-                    final sections = Provider.of<MyCourses>(context, listen: false).sectionItems;
-                    Lesson? videoLesson;
-                    
-                    // Search for a video lesson
-                    for (var section in sections) {
-                      if (section.mLesson != null && section.mLesson!.isNotEmpty) {
-                        for (var lesson in section.mLesson!) {
-                          if (lesson.lessonType == 'video' || 
-                              lesson.lessonType == 'system-video' ||
-                              lesson.lessonType == 'vimeo-url' ||
-                              lesson.lessonType == 'youtube' ||
-                              lesson.lessonType == 'google_drive') {
-                            videoLesson = lesson;
-                            break;
-                          }
-                        }
-                      }
-                      if (videoLesson != null) break;
-                    }
-                    
-                    if (videoLesson != null) {
-                      lessonAction(videoLesson);
-                    } else {
-                      // No video found, show a toast message
-                      Fluttertoast.showToast(
-                        msg: "No preview video available for this course",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                      );
-                    }
-                  },
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(40),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 10,
-                          spreadRadius: 1,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.play_arrow_rounded,
-                      color: Color(0xFF6366F1),
-                      size: 50,
-                    ),
                   ),
                 ),
               ),
@@ -714,14 +657,8 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                       Color(0xFF34D399),
                                     ],
                                   )
-                                : const LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      Color(0xFF6366F1),
-                                      Color(0xFF8B5CF6),
-                                    ],
-                                  ),
+                                : null, // No gradient for incomplete sections
+                              color: allLessonsCompleted ? null : Colors.white, // White background for incomplete sections
                               borderRadius: isExpanded
                                 ? const BorderRadius.only(
                                     topLeft: Radius.circular(16),
@@ -735,7 +672,9 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                   width: 32,
                                   height: 32,
                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: allLessonsCompleted 
+                                      ? Colors.white.withOpacity(0.2) 
+                                      : const Color(0xFF6366F1).withOpacity(0.1), // Light purple for incomplete
                                     shape: BoxShape.circle,
                   ),
                                   child: Center(
@@ -748,7 +687,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                         : Text(
                     '${index + 1}',
                                             style: GoogleFonts.montserrat(
-                                              color: Colors.white,
+                                              color: const Color(0xFF6366F1), // Purple number for incomplete
                       fontWeight: FontWeight.bold,
                                               fontSize: 15,
                                             ),
@@ -765,7 +704,9 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                         style: GoogleFonts.montserrat(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 14,
-                                          color: Colors.white,
+                                          color: allLessonsCompleted 
+                                            ? Colors.white // White text for completed sections
+                                            : const Color(0xFF333333), // Dark text for incomplete sections
                                         ),
                                       ),
                                       if (!allLessonsCompleted && sectionCompletionPercentage > 0)
@@ -778,8 +719,8 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                   borderRadius: BorderRadius.circular(10),
                                                   child: LinearProgressIndicator(
                                                     value: sectionCompletionPercentage,
-                                                    backgroundColor: Colors.white.withOpacity(0.2),
-                                                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                                    backgroundColor: const Color(0xFFE0E0E0), // Light gray background
+                                                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)), // Purple progress
                                                     minHeight: 4,
                                                   ),
                                                 ),
@@ -790,7 +731,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                 style: GoogleFonts.montserrat(
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.bold,
-                                                  color: Colors.white,
+                                                  color: const Color(0xFF6366F1), // Purple text
                         ),
                       ),
                     ],
@@ -802,21 +743,27 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: allLessonsCompleted 
+                                      ? Colors.white.withOpacity(0.2) 
+                                      : const Color(0xFF6366F1).withOpacity(0.1), // Light purple for incomplete
                                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.play_lesson,
-                                        color: Colors.white,
+                                        color: allLessonsCompleted 
+                                          ? Colors.white 
+                                          : const Color(0xFF6366F1), // Purple icon for incomplete
                                         size: 10,
                       ),
                                       const SizedBox(width: 3),
                       Text(
                                         '${sections[index].mLesson!.length} lessons',
                                         style: GoogleFonts.montserrat(
-                                          color: Colors.white,
+                                          color: allLessonsCompleted 
+                                            ? Colors.white 
+                                            : const Color(0xFF6366F1), // Purple text for incomplete
                                           fontSize: 10,
                           fontWeight: FontWeight.w500,
                         ),
@@ -827,7 +774,9 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                 const SizedBox(width: 8),
                                 Icon(
                                   isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                                  color: Colors.white,
+                                  color: allLessonsCompleted 
+                                    ? Colors.white 
+                                    : const Color(0xFF6366F1), // Purple icon for incomplete
                                   size: 20,
             ),
           ],
@@ -1058,6 +1007,460 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
     );
   }
 
+  // Placeholder for actual instructor name retrieval
+  String _getInstructorName(dynamic myLoadedCourse) {
+    // TODO: Replace this with actual logic to get instructor name
+    // e.g., return myLoadedCourse.instructorName ?? 'The Academy Team';
+    if (myLoadedCourse.instructor != null && myLoadedCourse.instructor['name'] != null) {
+      return myLoadedCourse.instructor['name'];
+    }
+    return 'The Academy Team';
+  }
+
+  Future<void> _generateCertificatePdf(BuildContext context, dynamic myLoadedCourse, {bool shouldShare = false}) async {
+    try {
+      // Show loading indicator
+      Fluttertoast.showToast(
+        msg: shouldShare ? "Preparing certificate to share..." : "Generating certificate...",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
+      
+      print("Starting certificate generation...");
+      
+      // Get user details - with error handling
+      String candidateName = 'Valued Student';
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final userDataString = prefs.getString('user');
+        if (userDataString != null && userDataString.isNotEmpty) {
+          final userData = jsonDecode(userDataString);
+          if (userData != null && userData['name'] != null) {
+            candidateName = userData['name'];
+            print("Retrieved candidate name: $candidateName");
+          }
+        }
+      } catch (userError) {
+        print("Error getting user data: $userError");
+        // Continue with default name
+      }
+
+      // Get course details - with error handling
+      String courseName = "Course";
+      String instructorName = "Instructor";
+      try {
+        courseName = myLoadedCourse.title?.toString() ?? "Course";
+        instructorName = _getInstructorName(myLoadedCourse);
+        print("Course name: $courseName, Instructor: $instructorName");
+      } catch (courseError) {
+        print("Error getting course data: $courseError");
+        // Continue with defaults
+      }
+      
+      final completionDate = DateFormat('MMMM dd, yyyy').format(DateTime.now());
+      print("Date formatted: $completionDate");
+
+      // Load logo image
+      print("Loading logo image...");
+      Uint8List? logoImageData;
+      try {
+        final ByteData logoData = await rootBundle.load('assets/images/light_logo.png');
+        logoImageData = logoData.buffer.asUint8List();
+        print("Logo loaded successfully");
+      } catch (imageError) {
+        print("Error loading logo: $imageError");
+        // Continue without logo
+      }
+
+      // Create an elegant PDF certificate
+      print("Creating PDF document...");
+      final pdf = pw.Document();
+      
+      // Set page theme with a nice font
+      const pageTheme = pw.PageTheme(
+        pageFormat: PdfPageFormat.a4,
+        margin: pw.EdgeInsets.all(32),
+      );
+      
+      pdf.addPage(
+        pw.Page(
+          pageTheme: pageTheme,
+          build: (pw.Context context) {
+            return pw.Container(
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(
+                  color: PdfColors.indigo200,
+                  width: 3,
+                ),
+                borderRadius: pw.BorderRadius.circular(8),
+              ),
+              child: pw.Padding(
+                padding: const pw.EdgeInsets.all(20),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.center,
+                  children: [
+                    // Certificate header with logo and decorative element
+                    pw.Container(
+                      padding: const pw.EdgeInsets.only(top: 20, bottom: 24),
+                      decoration: pw.BoxDecoration(
+                        border: pw.Border(
+                          bottom: pw.BorderSide(
+                            color: PdfColors.indigo100,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      child: pw.Column(
+                        children: [
+                          // Logo image at the top
+                          if (logoImageData != null)
+                            pw.Container(
+                              height: 50,
+                              margin: const pw.EdgeInsets.only(bottom: 20),
+                              child: pw.Image(
+                                pw.MemoryImage(logoImageData),
+                                fit: pw.BoxFit.contain,
+                              ),
+                            ),
+                            
+                          // Decorative seal element
+                          pw.Container(
+                            width: 70,
+                            height: 70,
+                            decoration: pw.BoxDecoration(
+                              color: PdfColors.indigo100,
+                              shape: pw.BoxShape.circle,
+                            ),
+                            child: pw.Center(
+                              child: pw.Text(
+                                'E',
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColors.indigo700,
+                                  fontSize: 24,
+                                ),
+                              ),
+                            ),
+                          ),
+                          pw.SizedBox(height: 16),
+                          
+                          // Title
+                          pw.Text(
+                            'CERTIFICATE OF COMPLETION',
+                            style: pw.TextStyle(
+                              fontSize: 24,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.indigo900,
+                              letterSpacing: 1.5,
+                            ),
+                            textAlign: pw.TextAlign.center,
+                          ),
+                          
+                          pw.SizedBox(height: 8),
+                          
+                          // Subtitle
+                          pw.Text(
+                            'ONLINE COURSE',
+                            style: pw.TextStyle(
+                              fontSize: 14,
+                              color: PdfColors.indigo700,
+                              letterSpacing: 2.0,
+                            ),
+                            textAlign: pw.TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // Main certificate content
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.symmetric(
+                        vertical: 30,
+                        horizontal: 20,
+                      ),
+                      child: pw.Column(
+                        children: [
+                          pw.Text(
+                            'This is to certify that',
+                            style: pw.TextStyle(
+                              fontSize: 14,
+                              color: PdfColors.grey700,
+                              fontStyle: pw.FontStyle.italic,
+                            ),
+                          ),
+                          
+                          pw.SizedBox(height: 12),
+                          
+                          // Certificate recipient name
+                          pw.Text(
+                            candidateName.toUpperCase(),
+                            style: pw.TextStyle(
+                              fontSize: 24,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.indigo900,
+                              letterSpacing: 1.0,
+                            ),
+                            textAlign: pw.TextAlign.center,
+                          ),
+                          
+                          pw.SizedBox(height: 12),
+                          
+                          pw.Text(
+                            'has successfully completed the online course',
+                            style: pw.TextStyle(
+                              fontSize: 14,
+                              color: PdfColors.grey700,
+                            ),
+                          ),
+                          
+                          pw.SizedBox(height: 16),
+                          
+                          // Course name
+                          pw.Container(
+                            padding: const pw.EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 16,
+                            ),
+                            decoration: pw.BoxDecoration(
+                              color: PdfColors.indigo50,
+                              borderRadius: pw.BorderRadius.circular(4),
+                              border: pw.Border.all(
+                                color: PdfColors.indigo200,
+                                width: 1,
+                              ),
+                            ),
+                            child: pw.Text(
+                              courseName,
+                              style: pw.TextStyle(
+                                fontSize: 20,
+                                fontWeight: pw.FontWeight.bold,
+                                color: PdfColors.indigo800,
+                              ),
+                              textAlign: pw.TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // Footer section for date and signatures
+                    pw.Container(
+                      padding: const pw.EdgeInsets.only(
+                        top: 30,
+                        left: 20,
+                        right: 20,
+                        bottom: 20,
+                      ),
+                      child: pw.Column(
+                        children: [
+                          // Signature row
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Date section
+                              pw.Column(
+                                crossAxisAlignment: pw.CrossAxisAlignment.center,
+                                children: [
+                                  pw.Container(
+                                    width: 140,
+                                    padding: const pw.EdgeInsets.symmetric(vertical: 4),
+                                    decoration: const pw.BoxDecoration(
+                                      border: pw.Border(
+                                        bottom: pw.BorderSide(
+                                          color: PdfColors.indigo200,
+                                        ),
+                                      ),
+                                    ),
+                                    child: pw.Text(
+                                      completionDate,
+                                      style: pw.TextStyle(
+                                        fontWeight: pw.FontWeight.bold,
+                                      ),
+                                      textAlign: pw.TextAlign.center,
+                                    ),
+                                  ),
+                                  pw.SizedBox(height: 8),
+                                  pw.Text(
+                                    'Date',
+                                    style: pw.TextStyle(
+                                      fontSize: 12,
+                                      color: PdfColors.grey600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              
+                              // Instructor signature
+                              pw.Column(
+                                crossAxisAlignment: pw.CrossAxisAlignment.center,
+                                children: [
+                                  pw.Container(
+                                    width: 140,
+                                    padding: const pw.EdgeInsets.symmetric(vertical: 4),
+                                    decoration: const pw.BoxDecoration(
+                                      border: pw.Border(
+                                        bottom: pw.BorderSide(
+                                          color: PdfColors.indigo200,
+                                        ),
+                                      ),
+                                    ),
+                                    child: pw.Text(
+                                      instructorName,
+                                      style: pw.TextStyle(
+                                        fontWeight: pw.FontWeight.bold,
+                                      ),
+                                      textAlign: pw.TextAlign.center,
+                                    ),
+                                  ),
+                                  pw.SizedBox(height: 8),
+                                  pw.Text(
+                                    'Instructor',
+                                    style: pw.TextStyle(
+                                      fontSize: 12,
+                                      color: PdfColors.grey600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          
+                          pw.SizedBox(height: 30),
+                          
+                          // Academy seal and verification
+                          pw.Container(
+                            padding: const pw.EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 12,
+                            ),
+                            decoration: pw.BoxDecoration(
+                              color: PdfColors.indigo50,
+                              borderRadius: pw.BorderRadius.circular(4),
+                            ),
+                            child: pw.Row(
+                              mainAxisSize: pw.MainAxisSize.min,
+                              children: [
+                                pw.Container(
+                                  width: 20,
+                                  height: 20,
+                                  decoration: pw.BoxDecoration(
+                                    color: PdfColors.indigo700,
+                                    shape: pw.BoxShape.circle,
+                                  ),
+                                ),
+                                pw.SizedBox(width: 8),
+                                pw.Text(
+                                  'Elegance - Official Certificate',
+                                  style: pw.TextStyle(
+                                    fontSize: 12,
+                                    color: PdfColors.indigo900,
+                                    fontWeight: pw.FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      );
+
+      print("PDF created, saving to bytes...");
+      final Uint8List pdfBytes = await pdf.save();
+      print("PDF saved to bytes, length: ${pdfBytes.length}");
+      
+      // Generate file name based on course title and date
+      final String sanitizedCourseName = courseName
+          .replaceAll(' ', '_')
+          .replaceAll(RegExp(r'[^\w\s]+'), '')
+          .toLowerCase();
+      final String fileName = 'certificate_${sanitizedCourseName}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      
+      if (shouldShare) {
+        // Use printing package to share PDF
+        print("Sharing PDF...");
+        final result = await Printing.sharePdf(
+          bytes: pdfBytes, 
+          filename: fileName,
+        );
+        
+        print("Share result: $result");
+        
+        Fluttertoast.showToast(
+          msg: "Certificate ready to share",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: const Color(0xFF10B981),
+        );
+      } else {
+        // Save PDF to Downloads directory
+        try {
+          // Get the downloads directory
+          Directory? downloadsDir;
+          
+          if (Platform.isAndroid) {
+            // For Android, use the Downloads directory
+            downloadsDir = Directory('/storage/emulated/0/Download');
+            if (!await downloadsDir.exists()) {
+              // Fallback to app documents directory
+              downloadsDir = await getApplicationDocumentsDirectory();
+            }
+          } else {
+            // For iOS, use the Documents directory
+            downloadsDir = await getApplicationDocumentsDirectory();
+          }
+          
+          // Create the file path
+          final String filePath = '${downloadsDir.path}/$fileName';
+          final File file = File(filePath);
+          
+          // Write the PDF bytes to the file
+          await file.writeAsBytes(pdfBytes);
+          
+          print("PDF saved to: $filePath");
+          
+          Fluttertoast.showToast(
+            msg: "Certificate saved to Downloads folder",
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: const Color(0xFF10B981),
+          );
+        } catch (saveError) {
+          print("Error saving file: $saveError");
+          Fluttertoast.showToast(
+            msg: "Error saving certificate: $saveError",
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.red,
+          );
+        }
+      }
+      
+    } catch (e, stackTrace) {
+      // Detailed error reporting
+      print("ERROR GENERATING PDF: $e");
+      print("Stack trace: $stackTrace");
+      
+      Fluttertoast.showToast(
+        msg: "Error: ${e.toString().substring(0, min(e.toString().length, 100))}",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+      );
+    }
+  }
+
+  // Add this utility function to get the minimum of two integers
+  int min(int a, int b) {
+    return a < b ? a : b;
+  }
+
   Widget _buildCertificateSection(dynamic myLoadedCourse) {
     return Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, bottom: 30),
@@ -1164,70 +1567,111 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                     ),
                   ),
                   
-                  // Download/unlock button
-                  Container(
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: (myLoadedCourse.courseCompletion != null && myLoadedCourse.courseCompletion! >= 100)
-                          ? Colors.white
-                          : Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
+                  // Download button
+                  if (myLoadedCourse.courseCompletion != null && myLoadedCourse.courseCompletion! >= 100)
+                    Row(
+                      children: [
+                        // Download button
+                        Container(
+                          height: 40,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () {
+                                _generateCertificatePdf(context, myLoadedCourse, shouldShare: false);
+                              },
+                              child: const Center(
+                                child: Icon(
+                                  Icons.download,
+                                  size: 20,
+                                  color: Color(0xFF6366F1),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        
+                        const SizedBox(width: 10),
+                        
+                        // Share button
+                        Container(
+                          height: 40,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () {
+                                _generateCertificatePdf(context, myLoadedCourse, shouldShare: true);
+                              },
+                              child: const Center(
+                                child: Icon(
+                                  Icons.share,
+                                  size: 20,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    // Lock button when certificate is not unlocked
+                    Container(
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
-                        onTap: () {
-                          if (myLoadedCourse.courseCompletion != null && myLoadedCourse.courseCompletion! >= 100) {
-                            // Handle certificate download logic
-                            Fluttertoast.showToast(
-                              msg: "Downloading certificate...",
-                              toastLength: Toast.LENGTH_SHORT,
-                              gravity: ToastGravity.BOTTOM,
-                            );
-                          } else {
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () {
                             Fluttertoast.showToast(
                               msg: "Complete the course to unlock certificate",
                               toastLength: Toast.LENGTH_SHORT,
                               gravity: ToastGravity.BOTTOM,
                             );
-                          }
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Center(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  (myLoadedCourse.courseCompletion != null && myLoadedCourse.courseCompletion! >= 100)
-                                      ? Icons.download
-                                      : Icons.lock,
-                                  size: 16,
-                                  color: (myLoadedCourse.courseCompletion != null && myLoadedCourse.courseCompletion! >= 100)
-                                      ? const Color(0xFF6366F1)
-                                      : Colors.white,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  (myLoadedCourse.courseCompletion != null && myLoadedCourse.courseCompletion! >= 100)
-                                      ? "Download"
-                                      : "Locked",
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: (myLoadedCourse.courseCompletion != null && myLoadedCourse.courseCompletion! >= 100)
-                                        ? const Color(0xFF6366F1)
-                                        : Colors.white,
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Center(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.lock,
+                                    size: 16,
+                                    color: Colors.white,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "Locked",
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

@@ -1,6 +1,5 @@
 import 'package:academy_lms_app/constants.dart';
 import 'package:academy_lms_app/screens/account.dart';
-import 'package:academy_lms_app/screens/ai_assistant.dart';
 import 'package:academy_lms_app/screens/cart.dart';
 import 'package:academy_lms_app/screens/explore.dart';
 import 'package:academy_lms_app/screens/filter_screen.dart';
@@ -27,9 +26,7 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
   bool _isInit = true;
   
   // Controllers for animations
-  late AnimationController _pageTransitionController;
   late AnimationController _tabAnimationController;
-  late Animation<double> _pageTransition;
   late Animation<double> _tabScaleAnimation;
   late Animation<double> _tabFadeAnimation;
   
@@ -43,19 +40,9 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
     _checkAuthStatus();
     
     // Setup animation controllers
-    _pageTransitionController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
-    
     _tabAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 200),
-    );
-    
-    _pageTransition = CurvedAnimation(
-      parent: _pageTransitionController,
-      curve: Curves.easeInOut,
     );
     
     _tabScaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
@@ -77,7 +64,6 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _pageTransitionController.dispose();
     _tabAnimationController.dispose();
     _pageController.dispose();
     super.dispose();
@@ -95,26 +81,19 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
 
   List<Widget> _pages() {
     return isLoggedIn
-        ? [HomeScreen(), ExploreScreen(), MyCoursesScreen(), AIAssistantScreen(), AccountScreen()]
+        ? [HomeScreen(), ExploreScreen(), MyCoursesScreen(), AccountScreen()]
         : [HomeScreen(), ExploreScreen(), LoginScreen(), LoginScreen(), LoginScreen()];
   }
 
   void _selectPage(int index) {
     if (_selectedPageIndex == index) return;
     
-    _pageTransitionController.reset();
-    _pageTransitionController.forward();
-    
     _tabAnimationController.reset();
     _tabAnimationController.forward();
     
     setState(() {
       _selectedPageIndex = index;
-      _pageController.animateToPage(
-        index,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      _pageController.jumpToPage(index);
     });
   }
 
@@ -127,19 +106,10 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
       appBar: const AppBarOne(logo: 'light_logo.png'),
       body: _isInit
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
-          : FadeTransition(
-              opacity: _pageTransition,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 0.1),
-                  end: Offset.zero,
-                ).animate(_pageTransition),
-                child: PageView(
+          : PageView(
               controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(), // Keep this to prevent swipe gestures
               children: _pages(),
-            ),
-              ),
             ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -174,7 +144,6 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
               _buildNavItem('Home', 'assets/icons/home.svg'),
               _buildNavItem('Explore', 'assets/icons/explore.svg'),
               _buildNavItem('My Courses', 'assets/icons/my_courses.svg'),
-                _buildNavItem('AI Assistant', 'assets/icons/smart_toy.svg'),
               _buildNavItem('Account', 'assets/icons/account.svg'),
             ],
             ),
@@ -189,7 +158,6 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
       'Home', 
       'Explore', 
       'My Courses', 
-      'AI Assistant',
       'Account'
     ].indexOf(label);
     
