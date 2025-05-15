@@ -544,8 +544,8 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                           fontWeight: FontWeight.bold,
                   fontSize: 16,
                           color: Colors.white,
-                        ),
-                      ),
+                ),
+              ),
                       progressColor: Colors.white,
                       backgroundColor: Colors.white.withOpacity(0.3),
                       circularStrokeCap: CircularStrokeCap.round,
@@ -574,7 +574,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                           Icons.check_circle,
                           color: Colors.white,
                           size: 16,
-                        ),
+                    ),
                         const SizedBox(width: 8),
                   Text(
                           '${myLoadedCourse.totalNumberOfCompletedLessons ?? 0}/${myLoadedCourse.totalNumberOfLessons ?? 0} lessons completed',
@@ -737,7 +737,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.2),
                                     shape: BoxShape.circle,
-                                  ),
+                  ),
                                   child: Center(
                                     child: allLessonsCompleted
                                         ? const Icon(
@@ -783,7 +783,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                     minHeight: 4,
                                                   ),
                                                 ),
-                                              ),
+                      ),
                                               const SizedBox(width: 8),
                       Text(
                                                 "${(sectionCompletionPercentage * 100).round()}%",
@@ -845,7 +845,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
             separatorBuilder: (context, index) => Divider(
               height: 1,
                               color: Colors.grey.shade200,
-                            ),
+            ),
                             itemBuilder: (ctx, i) {
                               final lesson = sections[index].mLesson![i];
                               final isActive = _activeLesson != null && 
@@ -862,7 +862,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                     _activeLesson = lesson;
                   });
                                     lessonAction(lesson);
-                                  },
+                },
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                     decoration: BoxDecoration(
@@ -880,7 +880,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                 borderRadius: BorderRadius.circular(6),
                                               ),
                                             ),
-                                          ),
+                        ),
                                           child: Transform.scale(
                                             scale: 0.9,
                         child: Checkbox(
@@ -930,7 +930,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                       ),
                                         ),
                                         const SizedBox(width: 8),
-                                        
+                      
                                         // Lesson title, time duration and summary
                       Expanded(
                         child: Column(
@@ -1000,7 +1000,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                               ? const Color(0xFF6366F1).withOpacity(0.1)
                                               : Colors.grey.shade100,
                                             borderRadius: BorderRadius.circular(10),
-                                          ),
+                          ),
                                           child: Material(
                                             color: Colors.transparent,
                                             child: InkWell(
@@ -1010,7 +1010,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                             _activeLesson = lesson;
                           });
                                                 lessonAction(lesson);
-                                              },
+                        },
                                               child: Center(
                                                 child: SvgPicture.asset(
                                                   'assets/icons/video.svg',
@@ -1026,8 +1026,8 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                               ),
                                             ),
                                           ),
-                                        ),
-                                      ],
+                      ),
+                    ],
                                     ),
                   ),
                 ),

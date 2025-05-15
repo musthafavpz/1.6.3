@@ -18,7 +18,7 @@ class ExploreScreen extends StatefulWidget {
 
 class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProviderStateMixin {
   var _isInit = true;
-  final searchController = TextEditingController();
+  // final searchController = TextEditingController(); // Search controller no longer needed
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -38,7 +38,7 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
 
   @override
   void dispose() {
-    searchController.dispose();
+    // searchController.dispose(); // Search controller no longer needed
     _animationController.dispose();
     super.dispose();
   }
@@ -64,185 +64,8 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
     }
   }
 
-  Widget _buildSearchBar() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 50, 20, 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: searchController,
-        decoration: InputDecoration(
-          hintText: 'Search for categories...',
-          hintStyle: TextStyle(
-            color: Colors.grey[400],
-            fontSize: 15,
-            fontWeight: FontWeight.w400,
-          ),
-          prefixIcon: const Icon(Icons.search, color: Color(0xFF6366F1)),
-          contentPadding: const EdgeInsets.symmetric(vertical: 16),
-          border: InputBorder.none,
-        ),
-        onSubmitted: (value) {
-          if (value.isNotEmpty) {
-            // Implement category search functionality here
-          }
-        },
-      ),
-    );
-  }
-
-  Widget _buildFeaturedCategories() {
-    return Consumer<Categories>(
-      builder: (context, categoriesData, child) {
-        if (categoriesData.items.isEmpty) {
-          return const SizedBox.shrink();
-        }
-        
-        // Display the first 3 categories as featured (or fewer if less are available)
-        final featuredCount = categoriesData.items.length > 3 ? 3 : categoriesData.items.length;
-        final featuredCategories = categoriesData.items.sublist(0, featuredCount);
-        
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Featured Categories',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      // Show all featured categories
-                    },
-                    child: const Text(
-                      'See All',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF6366F1),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 140,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: featuredCount,
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                itemBuilder: (ctx, index) {
-                  final category = featuredCategories[index];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pushNamed(
-                        CategoryDetailsScreen.routeName,
-                        arguments: {
-                          'category_id': category.id,
-                          'title': category.title,
-                        },
-                      );
-                    },
-                    child: Container(
-                      width: 150,
-                      margin: const EdgeInsets.symmetric(horizontal: 5),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: FadeInImage.assetNetwork(
-                              placeholder: 'assets/images/loading_animated.gif',
-                              image: category.thumbnail.toString(),
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.bottomCenter,
-                                  end: Alignment.topCenter,
-                                  colors: [
-                                    Colors.black.withOpacity(0.7),
-                                    Colors.transparent,
-                                  ],
-                                ),
-                                borderRadius: const BorderRadius.only(
-                                  bottomLeft: Radius.circular(16),
-                                  bottomRight: Radius.circular(16),
-                                ),
-                              ),
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    category.title.toString(),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${category.numberOfSubCategories} sub-categories',
-                                    style: const TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // _buildHeader() removed
+  // _buildFeaturedCategories() removed
 
   Widget _buildCategoryItem(dynamic category) {
     return InkWell(
@@ -255,90 +78,89 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
           },
         );
       },
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
+        margin: const EdgeInsets.only(bottom: 12), // Increased bottom margin
+        padding: const EdgeInsets.all(12), // Added padding
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(16), // More rounded corners
           border: Border.all(
-            color: const Color(0xFF6366F1),
+            color: const Color(0xFF6366F1).withOpacity(0.2), // Softer border color
             width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+              color: Colors.black.withOpacity(0.05), // Softer shadow
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
         child: Row(
           children: <Widget>[
             Container(
-              height: 50,
-              width: 50,
-              margin: const EdgeInsets.all(8),
+              height: 60, // Increased size
+              width: 60,  // Increased size
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12), // More rounded corners
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight
+                )
+              ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
                 child: FadeInImage.assetNetwork(
                   placeholder: 'assets/images/loading_animated.gif',
                   image: category.thumbnail.toString(),
                   fit: BoxFit.cover,
+                  imageErrorBuilder: (context, error, stackTrace) => Container(
+                     color: Colors.grey.shade200,
+                     child: const Icon(Icons.category_outlined, color: Colors.grey, size: 30),
+                  ),
                 ),
               ),
             ),
+            const SizedBox(width: 15), // Increased spacing
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text(
-                      category.title.toString(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF333333),
-                      ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    category.title.toString(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16, // Increased font size
+                      fontWeight: FontWeight.w600, // Bolder
+                      color: Color(0xFF333333),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${category.numberOfSubCategories} sub-categories',
-                      style: const TextStyle(
-                        color: kGreyLightColor,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w400,
-                      ),
+                  ),
+                  const SizedBox(height: 4), // Increased spacing
+                  Text(
+                    '${category.numberOfSubCategories} topics', // Changed wording
+                    style: const TextStyle(
+                      color: Colors.grey, // Standard grey
+                      fontSize: 13, // Increased font size
                     ),
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.all(8),
-              padding: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(6),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF6366F1).withOpacity(0.15),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
                   ),
                 ],
               ),
+            ),
+            const SizedBox(width: 10), // Added spacing before icon
+            Container(
+              padding: const EdgeInsets.all(8), // Larger padding for icon button feel
+              decoration: BoxDecoration(
+                color: const Color(0xFF6366F1).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(30), // Circular shape
+              ),
               child: const Icon(
-                Icons.arrow_forward_rounded,
-                color: Colors.white,
-                size: 14,
+                Icons.arrow_forward_ios_rounded,
+                color: Color(0xFF6366F1),
+                size: 16, // Adjusted size
               ),
             ),
           ],
@@ -350,74 +172,66 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height -
-        MediaQuery.of(context).padding.top -
-        kToolbarHeight;
+        MediaQuery.of(context).padding.top; // Adjusted height calculation
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: null, // Remove the app bar completely
       body: Container(
-        color: Colors.white,
+        color: const Color(0xFFF8F9FA), // Consistent light background
         child: RefreshIndicator(
           color: const Color(0xFF6366F1),
           onRefresh: refreshList,
           child: FadeTransition(
             opacity: _fadeAnimation,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                  // Add top padding to replace the removed search bar
-                  const SizedBox(height: 30),
-                
-                // All Categories
-                Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'All Categories',
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF6366F1),
+            child: CustomScrollView( // Changed to CustomScrollView for more flexible layout
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                // _buildHeader() removed
+                // _buildFeaturedCategories() removed
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 15), // Reduced top padding from 50 to 20
+                    child: Text(
+                      'All Categories',
+                      style: TextStyle(
+                        fontSize: 18, 
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF333333), // Darker text color
+                      ),
                     ),
                   ),
                 ),
-                  const SizedBox(height: 12),
-                
-                // List of all categories
                 Consumer<Categories>(
                   builder: (context, categoriesData, child) {
                     if (categoriesData.items.isEmpty) {
-                      return SizedBox(
-                        height: height * 0.5,
-                        child: const Center(
+                      return SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: height * 0.4, // Adjusted height
+                          child: const Center(
                             child: CupertinoActivityIndicator(
                               color: Color(0xFF6366F1),
                             ),
+                          ),
                         ),
                       );
                     } else {
-                      return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: categoriesData.items.length,
-                          padding: EdgeInsets.zero,
-                          itemBuilder: (ctx, index) {
-                            return _buildCategoryItem(categoriesData.items[index]);
-                          },
+                      return SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20), // Consistent padding
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (ctx, index) {
+                              return _buildCategoryItem(categoriesData.items[index]);
+                            },
+                            childCount: categoriesData.items.length,
+                          ),
                         ),
                       );
                     }
                   },
                 ),
-                
-                // Add bottom spacing to avoid conflict with navigation menu
-                const SizedBox(height: 80),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 80), // Bottom padding for nav bar
+                ),
               ],
-              ),
             ),
           ),
         ),

@@ -269,15 +269,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           const SizedBox(width: 15),
           // Text content
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    Text(
+        children: [
+          Row(
+            children: [
+              Text(
                       'Hello, ',
-                      style: const TextStyle(
+                style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                         color: Color(0xFF666666),
@@ -288,21 +288,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF333333),
-                      ),
-                    ),
-                    const Text(
-                      ' 👋',
-                      style: TextStyle(
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
+                  color: Color(0xFF333333),
                 ),
+              ),
+              const Text(
+                      ' 👋',
+                style: TextStyle(
+                        fontSize: 16,
+                ),
+              ),
+            ],
+          ),
                 const SizedBox(height: 5),
-                const Text(
+          const Text(
                   'Ready to continue your learning journey?',
-                  style: TextStyle(
+            style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF6366F1),
@@ -331,22 +331,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ],
         border: Border.all(
           width: 2,
-          color: const Color(0xFF6366F1),
-        ),
-      ),
+            color: const Color(0xFF6366F1),
+          ),
+            ),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+              color: Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             width: 1,
             color: const Color(0xFF8B5CF6),
           ),
         ),
-        child: ClipRRect(
+      child: ClipRRect(
           borderRadius: BorderRadius.circular(17),
-          child: Stack(
-            children: [
+        child: Stack(
+          children: [
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -387,38 +387,38 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             children: [
                               // Enroll Now Button
                               InkWell(
-                                onTap: () async {
+                onTap: () async {
                                   final Uri enrollUrl = Uri.parse('https://chat.whatsapp.com/IEekUggTZaI77NHW6ruu10');
                                   if (await canLaunchUrl(enrollUrl)) {
                                     await launchUrl(enrollUrl, mode: LaunchMode.externalApplication);
-                                  } else {
-                                    if (mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
+                  } else {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
                                           content: Text('Could not open enrollment link'),
-                                        ),
-                                      );
-                                    }
-                                  }
-                                },
-                                child: Container(
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: Container(
                                   padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                                  decoration: BoxDecoration(
+                  decoration: BoxDecoration(
                                     color: const Color(0xFF10B981),
                                     borderRadius: BorderRadius.circular(30),
-                                    boxShadow: [
-                                      BoxShadow(
+                    boxShadow: [
+                      BoxShadow(
                                         color: const Color(0xFF10B981).withOpacity(0.3),
                                         blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Text(
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Text(
                                     'Enroll Now',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                                       color: Colors.white,
                                     ),
                                   ),
@@ -444,7 +444,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                     children: [
                                       const Icon(
                                         Icons.play_circle_outline,
-                                        color: Color(0xFF6366F1),
+                      color: Color(0xFF6366F1),
                                         size: 16,
                                       ),
                                       const SizedBox(width: 4),
@@ -457,10 +457,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                         ),
                                       ),
                                     ],
-                                  ),
-                                ),
-                              ),
-                            ],
+                ),
+              ),
+            ),
+          ],
                           ),
                         ],
                       ),
@@ -489,7 +489,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
+
   void _showVideoPreview(BuildContext context) {
     // YouTube video ID extracted from the full URL
     const String videoId = 'npSt5pUexhg';
@@ -539,7 +539,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           backgroundColor: Colors.transparent,
           insetPadding: const EdgeInsets.symmetric(horizontal: 20),
           child: Container(
-            width: double.infinity,
+      width: double.infinity,
             height: 300, // Increased height for better viewing
             decoration: BoxDecoration(
               color: Colors.white,
@@ -565,7 +565,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       topRight: Radius.circular(20),
                     ),
                   ),
-                  child: Row(
+      child: Row(
                     children: [
                       const Expanded(
                         child: Text(
@@ -613,21 +613,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 20,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF333333),
-                ),
+              color: Color(0xFF333333),
+            ),
+                  ),
+                ],
               ),
-            ],
-          ),
           const SizedBox(height: 5),
           Container(
-            width: 40,
+            width: 35,
             height: 3,
             decoration: BoxDecoration(
               color: const Color(0xFF6366F1),
@@ -693,27 +693,27 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   Hero(
                     tag: 'course_${course.id}',
                     child: ClipRRect(
-                      borderRadius: const BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(16),
                         topRight: Radius.circular(16),
-                      ),
-                      child: FadeInImage.assetNetwork(
-                        placeholder: 'assets/images/loading_animated.gif',
-                        image: course.thumbnail.toString(),
-                        height: 140,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
                     ),
-                  ),
-                ],
-              ),
+                    child: FadeInImage.assetNetwork(
+                      placeholder: 'assets/images/loading_animated.gif',
+                      image: course.thumbnail.toString(),
+                      height: 140,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                            ),
+                          ),
+                        ],
+                      ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                       // Course Title
                       Text(
                         course.title.toString(),
@@ -734,25 +734,25 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           fontSize: 13,
                           fontWeight: FontWeight.w400,
                           color: Color(0xFF666666),
-                        ),
                       ),
-                      const SizedBox(height: 8),
+                    ),
+                    const SizedBox(height: 8),
                       
                       // Star Rating and Enrollment Count
-                      Row(
-                        children: [
+                    Row(
+                      children: [
                           ...buildRatingStars(),
                           const SizedBox(width: 5),
-                          Text(
+                            Text(
                             '(${_parseEnrollmentCount(course)})',
-                            style: const TextStyle(
+                              style: const TextStyle(
                               fontSize: 12,
-                              fontWeight: FontWeight.w400,
+                                fontWeight: FontWeight.w400,
                               color: Color(0xFF666666),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
                       const SizedBox(height: 8),
                       
                       // Price
@@ -761,11 +761,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF6366F1),
+                              color: Color(0xFF6366F1),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ],
@@ -827,7 +827,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       Color(0xFF8B5CF6),
                     ],
                   ),
-                  borderRadius: const BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(16),
                     bottomLeft: Radius.circular(16),
                   ),
@@ -853,19 +853,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         color: Colors.white,
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
               ),
               // Course information
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+                  children: [
                       Text(
                         myCourse.title.toString(),
                         maxLines: 2,
@@ -877,8 +877,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Row(
-                        children: [
+                    Row(
+                      children: [
                           Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
@@ -895,20 +895,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           Expanded(
                             child: Text(
                               '${myCourse.totalNumberOfCompletedLessons ?? 0}/${myCourse.totalNumberOfLessons ?? 0} Lessons',
-                              style: const TextStyle(
+                          style: const TextStyle(
                                 fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w500,
                                 color: kGreyLightColor,
                                 overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
+                          ),
+                        ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -925,29 +925,29 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               offset: const Offset(0, 2),
                             ),
                           ],
-                        ),
-                        child: const Row(
+                          ),
+                          child: const Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.play_circle_filled,
-                              color: Colors.white,
-                              size: 12,
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              'CONTINUE',
-                              style: TextStyle(
+                            children: [
+                              Icon(
+                                Icons.play_circle_filled,
                                 color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
+                                size: 12,
                               ),
-                            ),
-                          ],
+                              SizedBox(width: 4),
+                              Text(
+                                'CONTINUE',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
                 ),
               ),
             ],
@@ -1094,7 +1094,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
               ),
               
-              const SizedBox(height: 8),
+                    const SizedBox(height: 8),
               
               // Instructor Name
               Padding(
@@ -1123,14 +1123,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: [
+                      children: [
                     Icon(
                       Icons.person,
                       size: 10,
                       color: gradientColor[0],
                     ),
                     const SizedBox(width: 2),
-                    Text(
+                        Text(
                       '${instructor['totalEnrollment']}',
                       style: TextStyle(
                         fontSize: 10,
@@ -1254,7 +1254,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                       child: Text(
                         isFreeCourse ? 'FREE' : 'PREMIUM',
-                        style: const TextStyle(
+                          style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -1264,7 +1264,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ],
               ),
-              Expanded(
+                        Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: Column(
@@ -1274,8 +1274,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       Text(
                         course.title.toString(),
                         maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF333333),
@@ -1288,7 +1288,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         course.instructor ?? '',
                         style: const TextStyle(
                           fontSize: 13,
-                          fontWeight: FontWeight.w400,
+                              fontWeight: FontWeight.w400,
                           color: Color(0xFF666666),
                         ),
                       ),
@@ -1305,10 +1305,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
                               color: Color(0xFF666666),
-                            ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
+                    ),
                       const SizedBox(height: 8),
                       
                       // Price
@@ -1345,46 +1345,51 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         onRefresh: refreshList,
         child: FadeTransition(
           opacity: _fadeAnimation!,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: FutureBuilder(
-              future: Provider.of<Categories>(context, listen: false).fetchCategories(),
-              builder: (ctx, dataSnapshot) {
-                if (dataSnapshot.connectionState == ConnectionState.waiting || _isLoading) {
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: FutureBuilder(
+            future: Provider.of<Categories>(context, listen: false).fetchCategories(),
+            builder: (ctx, dataSnapshot) {
+              if (dataSnapshot.connectionState == ConnectionState.waiting || _isLoading) {
+                return SizedBox(
+                  height: height,
+                  child: const Center(
+                    child: CupertinoActivityIndicator(
+                      color: Color(0xFF6366F1),
+                    ),
+                  ),
+                );
+              } else {
+                if (dataSnapshot.error != null) {
                   return SizedBox(
                     height: height,
-                    child: const Center(
-                      child: CupertinoActivityIndicator(
-                        color: Color(0xFF6366F1),
-                      ),
+                    child: Center(
+                      child: Text('An error occurred: ${dataSnapshot.error}'),
                     ),
                   );
                 } else {
-                  if (dataSnapshot.error != null) {
-                    return SizedBox(
-                      height: height,
-                      child: Center(
-                        child: Text('An error occurred: ${dataSnapshot.error}'),
-                      ),
-                    );
-                  } else {
                     // Filter courses by free/paid status
                     final freeCourses = topCourses.where((course) => course.isPaid == 0).toList();
                     final paidCourses = topCourses.where((course) => course.isPaid == 1).toList();
                     
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 10),
-                        // Welcome Message with User Name and Hand Wave
-                        _buildWelcomeSection(),
-                        
-                        // Custom Banner with Join Now button
-                        _buildCustomBanner(),
-                        const SizedBox(height: 15),
-                        
-                        // Continue Learning Section
-                        Consumer<MyCourses>(
+                    // Create a list of new courses (sorted by ID, assuming higher IDs are newer courses)
+                    final newAddedCourses = List.from(topCourses);
+                    newAddedCourses.sort((a, b) => b.id!.compareTo(a.id!));
+                    final latestCourses = newAddedCourses.take(8).toList(); // Take top 8 newest courses
+                    
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 10),
+                      // Welcome Message with User Name and Hand Wave
+                      _buildWelcomeSection(),
+                      
+                      // Custom Banner with Join Now button
+                      _buildCustomBanner(),
+                      const SizedBox(height: 15),
+                      
+                      // Continue Learning Section
+                      Consumer<MyCourses>(
                           builder: (ctx, myCourses, _) {
                             // Filter out courses with 100% completion
                             final inProgressCourses = myCourses.items
@@ -1392,34 +1397,34 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                 .toList();
                                 
                             return inProgressCourses.isNotEmpty
-                              ? Column(
-                                  children: [
+                          ? Column(
+                              children: [
                                     _buildSectionTitle('Continue Learning'),
-                                    Container(
+                                Container(
                                       height: 120,
-                                      margin: const EdgeInsets.only(bottom: 20),
-                                      child: ListView.builder(
-                                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                                        scrollDirection: Axis.horizontal,
+                                  margin: const EdgeInsets.only(bottom: 20),
+                                  child: ListView.builder(
+                                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                                    scrollDirection: Axis.horizontal,
                                         itemCount: inProgressCourses.length,
-                                        itemBuilder: (ctx, index) {
+                                    itemBuilder: (ctx, index) {
                                           return _buildContinueLearningCard(inProgressCourses[index]);
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                )
+                                    },
+                                  ),
+                                ),
+                              ],
+                            )
                               : const SizedBox.shrink();
                           },
-                        ),
-                        
-                        // Trending Courses Section
+                      ),
+                      
+                      // Trending Courses Section
                         _buildSectionTitle('Trending Courses'),
-                        
-                        Container(
+                      
+                      Container(
                           height: 280,
-                          margin: const EdgeInsets.only(bottom: 15),
-                          child: topCourses.isEmpty
+                        margin: const EdgeInsets.only(bottom: 15),
+                        child: topCourses.isEmpty
                             ? const Center(child: Text('No trending courses available'))
                             : ListView.builder(
                                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1429,7 +1434,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                   return _buildTrendingCourseCard(topCourses[index]);
                                 },
                               ),
-                        ),
+                      ),
                         
                         // Trending Instructors Section
                         _buildSectionTitle('Trending Instructors'),
@@ -1488,13 +1493,71 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           ),
                         ],
                         
-                        // Add proper bottom padding for menu tabs
-                        const SizedBox(height: 80),
-                      ],
-                    );
-                  }
+                        // New Added Courses Section
+                        if (latestCourses.isNotEmpty) ...[
+                          _buildSectionTitle('New Added Courses'),
+                          Container(
+                            height: 280,
+                            margin: const EdgeInsets.only(bottom: 20),
+                            child: ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              scrollDirection: Axis.horizontal,
+                              itemCount: latestCourses.length,
+                              itemBuilder: (ctx, index) {
+                                final course = latestCourses[index];
+                                return Stack(
+                                  children: [
+                                    _buildTrendingCourseCard(course),
+                                    Positioned(
+                                      top: 10,
+                                      left: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: const BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              Color(0xFFEF4444),
+                                              Color(0xFFDC2626),
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.only(
+                                            topRight: Radius.circular(20),
+                                            bottomRight: Radius.circular(20),
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Color(0xFFEF4444),
+                                              blurRadius: 8,
+                                              offset: Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: const Text(
+                                          'NEW',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      
+                      // Add proper bottom padding for menu tabs
+                      const SizedBox(height: 80),
+                    ],
+                  );
                 }
-              },
+              }
+            },
             ),
           ),
         ),
