@@ -1,5 +1,6 @@
 import 'package:academy_lms_app/screens/tab_screen.dart';
 import 'package:academy_lms_app/screens/cart.dart'; // Add this import
+import 'package:academy_lms_app/screens/notifications_screen.dart'; // Add this import
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../constants.dart';
@@ -55,95 +56,11 @@ class _AppBarOneState extends State<AppBarOne> {
         // Notification icon
         GestureDetector(
           onTap: () {
-            // Show welcome callout with message
-            showDialog(
-              context: context,
-              builder: (context) => Dialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 0,
-                backgroundColor: Colors.transparent,
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Welcome icon
-                      Container(
-                        width: 70,
-                        height: 70,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Color(0xFF6366F1),
-                              Color(0xFF8B5CF6),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(35),
-                        ),
-                        child: const Icon(
-                          Icons.sentiment_very_satisfied,
-                          color: Colors.white,
-                          size: 40,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      // Welcome title
-                      const Text(
-                        "Welcome Back!",
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF333333),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      // Welcome message
-                      const Text(
-                        "Happy learning journey ahead! We're excited to see your progress today.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Color(0xFF666666),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      // Close button
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF6366F1),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                        child: const Text(
-                          "Let's Begin!",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+            // Navigate to Notifications screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NotificationsScreen(),
               ),
             );
           },

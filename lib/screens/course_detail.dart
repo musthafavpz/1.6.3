@@ -7,6 +7,7 @@ import 'package:academy_lms_app/screens/tab_screen.dart';
 import 'package:academy_lms_app/widgets/from_vimeo_player.dart';
 import 'package:academy_lms_app/widgets/new_youtube_player.dart';
 import 'package:academy_lms_app/widgets/no_preview_video.dart';
+import 'package:academy_lms_app/screens/webview_screen_iframe.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -17,6 +18,8 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter/services.dart';
 
 import '../constants.dart';
 import '../providers/courses.dart';
@@ -150,44 +153,80 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
           
           // Handle different video types
           if (previewUrl.contains("youtube.com") || previewUrl.contains("youtu.be")) {
-                                      Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
+            // Set landscape orientation for YouTube videos
+            SystemChrome.setPreferredOrientations([
+              DeviceOrientation.landscapeLeft,
+              DeviceOrientation.landscapeRight,
+            ]);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
                 builder: (context) => YoutubeVideoPlayerFlutter(
                   courseId: courseDetail.courseId!,
                   videoUrl: previewUrl,
                 ),
               ),
             );
+            // Reset to portrait orientation when returned
+            SystemChrome.setPreferredOrientations([
+              DeviceOrientation.portraitUp,
+              DeviceOrientation.portraitDown,
+            ]);
           } else if (previewUrl.contains("drive.google.com")) {
             final RegExp regExp = RegExp(r'[-\w]{25,}');
             final Match? match = regExp.firstMatch(previewUrl);
             if (match != null) {
-              String url = 'https://drive.google.com/uc?export=download&id=${match.group(0)}';
-              _initializeVideoPlayer(url);
-                                          } else {
+              // Use iframe for Google Drive
+              String iframeUrl = "https://drive.google.com/file/d/${match.group(0)}/preview";
               Navigator.push(
                 context,
-                                      MaterialPageRoute(
+                MaterialPageRoute(
+                  builder: (context) => WebViewScreenIframe(url: iframeUrl),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
                   builder: (context) => NoPreviewVideo(),
                 ),
               );
             }
           } else if (previewUrl.contains("vimeo.com")) {
             String vimeoVideoId = previewUrl.split('/').last;
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
+            // Set landscape orientation for Vimeo videos
+            SystemChrome.setPreferredOrientations([
+              DeviceOrientation.landscapeLeft,
+              DeviceOrientation.landscapeRight,
+            ]);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
                 builder: (context) => FromVimeoPlayer(
                   courseId: courseDetail.courseId!,
                   vimeoVideoId: vimeoVideoId
                 ),
               )
             );
+            // Reset to portrait orientation when returned
+            SystemChrome.setPreferredOrientations([
+              DeviceOrientation.portraitUp,
+              DeviceOrientation.portraitDown,
+            ]);
           } else if (RegExp(r"\.mp4(\?|$)").hasMatch(previewUrl) || 
                      RegExp(r"\.webm(\?|$)").hasMatch(previewUrl) || 
                      RegExp(r"\.ogg(\?|$)").hasMatch(previewUrl)) {
+            // Set landscape orientation for direct video files
+            SystemChrome.setPreferredOrientations([
+              DeviceOrientation.landscapeLeft,
+              DeviceOrientation.landscapeRight,
+            ]);
             _initializeVideoPlayer(previewUrl);
+            // Reset to portrait orientation when returned
+            SystemChrome.setPreferredOrientations([
+              DeviceOrientation.portraitUp,
+              DeviceOrientation.portraitDown,
+            ]);
           }
         }
 
@@ -343,6 +382,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                 GestureDetector(
                                   onTap: () {
                                       if (previewUrl.contains("youtube.com") || previewUrl.contains("youtu.be")) {
+                                        // Set landscape orientation for YouTube videos
+                                        SystemChrome.setPreferredOrientations([
+                                          DeviceOrientation.landscapeLeft,
+                                          DeviceOrientation.landscapeRight,
+                                        ]);
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
@@ -352,12 +396,23 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                             ),
                                           ),
                                         );
+                                        // Reset to portrait orientation when returned
+                                        SystemChrome.setPreferredOrientations([
+                                          DeviceOrientation.portraitUp,
+                                          DeviceOrientation.portraitDown,
+                                        ]);
                                       } else if (previewUrl.contains("drive.google.com")) {
                                         final RegExp regExp = RegExp(r'[-\w]{25,}');
                                         final Match? match = regExp.firstMatch(previewUrl);
                                         if (match != null) {
-                                          String url = 'https://drive.google.com/uc?export=download&id=${match.group(0)}';
-                                          _initializeVideoPlayer(url);
+                                          // Use iframe for Google Drive
+                                          String iframeUrl = "https://drive.google.com/file/d/${match.group(0)}/preview";
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => WebViewScreenIframe(url: iframeUrl),
+                                            ),
+                                          );
                                         } else {
                                         Navigator.push(
                                           context,
@@ -368,6 +423,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                         }
                                       } else if (previewUrl.contains("vimeo.com")) {
                                         String vimeoVideoId = previewUrl.split('/').last;
+                                        // Set landscape orientation for Vimeo videos
+                                        SystemChrome.setPreferredOrientations([
+                                          DeviceOrientation.landscapeLeft,
+                                          DeviceOrientation.landscapeRight,
+                                        ]);
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
@@ -377,10 +437,25 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                             ),
                                           )
                                         );
+                                        // Reset to portrait orientation when returned
+                                        SystemChrome.setPreferredOrientations([
+                                          DeviceOrientation.portraitUp,
+                                          DeviceOrientation.portraitDown,
+                                        ]);
                                       } else if (RegExp(r"\.mp4(\?|$)").hasMatch(previewUrl) || 
                                                 RegExp(r"\.webm(\?|$)").hasMatch(previewUrl) || 
                                                 RegExp(r"\.ogg(\?|$)").hasMatch(previewUrl)) {
+                                        // Set landscape orientation for direct video files
+                                        SystemChrome.setPreferredOrientations([
+                                          DeviceOrientation.landscapeLeft,
+                                          DeviceOrientation.landscapeRight,
+                                        ]);
                                         _initializeVideoPlayer(previewUrl);
+                                        // Reset to portrait orientation when returned
+                                        SystemChrome.setPreferredOrientations([
+                                          DeviceOrientation.portraitUp,
+                                          DeviceOrientation.portraitDown,
+                                        ]);
                                     } else {
                                       Navigator.push(
                                         context,

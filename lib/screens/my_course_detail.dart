@@ -10,7 +10,7 @@ import 'package:pdf/widgets.dart' as pw; // For PDF widgets
 import 'package:printing/printing.dart'; // For printing/sharing PDF
 import 'package:intl/intl.dart'; // For date formatting
 import 'package:shared_preferences/shared_preferences.dart'; // For user name
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart';
 
 import 'package:academy_lms_app/screens/course_detail.dart';
 import 'package:academy_lms_app/screens/image_viewer_Screen.dart';
@@ -36,7 +36,7 @@ import '../widgets/common_functions.dart';
 import '../widgets/from_network.dart';
 import '../widgets/live_class_tab_widget.dart';
 import 'file_data_screen.dart';
-import 'webview_screen_iframe.dart';
+import 'package:academy_lms_app/screens/webview_screen_iframe.dart';
 import 'package:http/http.dart' as http;
 
 class MyCourseDetailScreen extends StatefulWidget {
@@ -167,7 +167,12 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
       _launchURL(url);
     } else {
       if (lesson.lessonType == 'system-video') {
-        Navigator.push(
+        // Rotate to landscape for video playback
+        await SystemChrome.setPreferredOrientations([
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ]);
+        await Navigator.push(
           context,
           MaterialPageRoute(
               builder: (context) => PlayVideoFromNetwork(
@@ -175,23 +180,32 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                   lessonId: lesson.id!,
                   videoUrl: lesson.videoUrl!)),
         );
+        // Restore to portrait orientation
+        await SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+        ]);
       } else if (lesson.lessonType == 'google_drive') {
         final RegExp regExp = RegExp(r'[-\w]{25,}');
         final Match? match = regExp.firstMatch(lesson.videoUrl.toString());
         final fileId = match!.group(0)!;
 
-        String url = "https://www.googleapis.com/drive/v3/files/$fileId?alt=media";
-
-        Navigator.push(
+        // Create an iframe URL for Google Drive
+        String iframeUrl = "https://drive.google.com/file/d/$fileId/preview";
+        
+        await Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => PlayVideoFromNetwork(
-                  courseId: widget.courseId,
-                  lessonId: lesson.id!,
-                  videoUrl: url)),
+            builder: (context) => WebViewScreenIframe(url: iframeUrl),
+          ),
         );
       } else if (lesson.lessonType == 'html5') {
-        Navigator.push(
+        // Rotate to landscape for video playback
+        await SystemChrome.setPreferredOrientations([
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ]);
+        await Navigator.push(
           context,
           MaterialPageRoute(
               builder: (context) => PlayVideoFromNetwork(
@@ -199,22 +213,41 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                   lessonId: lesson.id!,
                   videoUrl: lesson.videoUrl!)),
         );
+        // Restore to portrait orientation
+        await SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+        ]);
       } else if (lesson.lessonType == 'vimeo-url') {
         String vimeoVideoId = lesson.videoUrl!.split('/').last;
 
-        // Directly use Vimeo player instead of showing dialog
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FromVimeoPlayer(
-                          courseId: widget.courseId,
-                          lessonId: lesson.id!,
-                          vimeoVideoId: vimeoVideoId,
-                        ),
-                      ),
+        // Rotate to landscape for video playback
+        await SystemChrome.setPreferredOrientations([
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ]);
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => FromVimeoPlayer(
+              courseId: widget.courseId,
+              lessonId: lesson.id!,
+              vimeoVideoId: vimeoVideoId,
+            ),
+          ),
         );
+        // Restore to portrait orientation
+        await SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+        ]);
       } else {
-        Navigator.push(
+        // Rotate to landscape for video playback
+        await SystemChrome.setPreferredOrientations([
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ]);
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => YoutubeVideoPlayerFlutter(
@@ -224,6 +257,11 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
             ),
           ),
         );
+        // Restore to portrait orientation
+        await SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+        ]);
       }
     }
   }

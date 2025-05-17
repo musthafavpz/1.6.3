@@ -5,6 +5,7 @@ import 'package:academy_lms_app/constants.dart';
 import 'package:academy_lms_app/providers/my_courses.dart';
 import 'package:academy_lms_app/providers/shared_pref_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:vimeo_embed_player/vimeo_embed_player.dart';
@@ -32,7 +33,12 @@ class _FromVimeoPlayerState extends State<FromVimeoPlayer> {
   @override
   void initState() {
     super.initState();
-
+    // Enter fullscreen and lock orientation to landscape
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     if (widget.lessonId != null) {
       timer = Timer.periodic(
           const Duration(seconds: 5), (Timer t) => updateWatchHistory());
@@ -101,21 +107,59 @@ class _FromVimeoPlayerState extends State<FromVimeoPlayer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      body: Center(
-        child: GestureDetector(
-          onTap: () {
-            // Toggle between play and pause
-            isPlaying ? onPause() : onPlay();
-          },
-          child: AspectRatio(
-            aspectRatio: 16.0 / 9.0,
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          Positioned.fill(
             child: VimeoEmbedPlayer(
               vimeoId: widget.vimeoVideoId,
               autoPlay: true,
             ),
           ),
-        ),
+          // Block taps only on the top-left control area (3-dots/download)
+          Positioned(
+            top: 8,
+            left: 8,
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () {},
+                child: Container(color: Colors.transparent),
+              ),
+            ),
+          ),
+          // Block taps on the top-right quadrant of the video
+          Positioned.fill(
+            child: Align(
+              alignment: Alignment.topRight,
+              child: FractionallySizedBox(
+                widthFactor: 0.387,
+                heightFactor: 0.387,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () {},
+                  child: Container(color: Colors.transparent),
+                ),
+              ),
+            ),
+          ),
+          // Block taps on the bottom-right control area (Vimeo logo, fullscreen)
+          Positioned(
+            bottom: 8,
+            right: 8,
+            child: SizedBox(
+              width: 80,
+              height: 50,
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () {},
+                child: Container(color: Colors.transparent),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -123,6 +167,12 @@ class _FromVimeoPlayerState extends State<FromVimeoPlayer> {
   @override
   void dispose() {
     timer?.cancel();
+    // Exit fullscreen and restore portrait orientation
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     super.dispose();
   }
 }

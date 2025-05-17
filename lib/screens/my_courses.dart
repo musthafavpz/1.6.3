@@ -91,7 +91,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
         }
         
         return Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(15),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
@@ -101,11 +101,11 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                 Color(0xFF8B5CF6),
               ],
             ),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF6366F1).withOpacity(0.2),
-                blurRadius: 10,
+                blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
             ],
@@ -123,16 +123,16 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                   Text(
                     '${myCourseData.items.length} Courses',
                     style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 18,
                       fontWeight: FontWeight.bold,
                           color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 3),
                   const Text(
                     'Continue your learning journey',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: Colors.white70,
                         ),
@@ -147,7 +147,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                       }
                     },
                     child: Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         shape: BoxShape.circle,
@@ -155,7 +155,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                       child: const Icon(
                         Icons.play_arrow,
                         color: Colors.white,
-                        size: 28,
+                        size: 24,
                       ),
                     ),
                   ),
@@ -164,14 +164,14 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
               
               // Progress section
               if (myCourseData.items.isNotEmpty) ...[
-                const SizedBox(height: 20),
+                const SizedBox(height: 15),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
                       'Overall Progress',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w500,
                         color: Colors.white,
                       ),
@@ -179,17 +179,17 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                     Text(
                       '${averageProgress.toStringAsFixed(1)}%',
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w700,
                   color: Colors.white,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 // Progress bar
                 LinearPercentIndicator(
-                  lineHeight: 8.0,
+                  lineHeight: 6.0,
                   percent: averageProgress / 100,
                   backgroundColor: Colors.white.withOpacity(0.2),
                   progressColor: Colors.white,
@@ -198,7 +198,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                   animation: true,
                   animationDuration: 1000,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 
                 // Stats row
                 Row(
@@ -232,31 +232,31 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
             icon,
             color: Colors.white,
-            size: 20,
+            size: 18,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
           value,
           style: const TextStyle(
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 3),
         Text(
           label,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 11,
             color: Colors.white.withOpacity(0.8),
           ),
         ),
@@ -373,50 +373,191 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                   );
                 }
                 
-                return Column(
+                // Split courses into In Progress and Completed
+                final inProgressCourses = myCourseData.items
+                    .where((course) => (course.courseCompletion ?? 0) < 100)
+                    .toList();
+                    
+                final completedCourses = myCourseData.items
+                    .where((course) => (course.courseCompletion ?? 0) == 100)
+                    .toList();
+                
+                return DefaultTabController(
+                  length: 2,
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'My Learning',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF374151),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            // View all courses
-                          },
-                          child: const Text(
-                            'View All',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF6366F1),
+                      // Tab Bar
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
                             ),
+                          ],
+                        ),
+                        child: TabBar(
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          indicator: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Color(0xFF6366F1),
+                                Color(0xFF8B5CF6),
+                              ],
+                            ),
+                          ),
+                          unselectedLabelStyle: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
+                          ),
+                          labelStyle: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                          dividerHeight: 0,
+                          tabs: [
+                            Tab(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.play_circle_outline),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "In Progress (${inProgressCourses.length})",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Tab(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.check_circle_outline),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "Completed (${completedCourses.length})",
+                                    style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Tab Bar View
+                      Container(
+                        constraints: BoxConstraints(
+                          minHeight: 250,
+                          maxHeight: MediaQuery.of(context).size.height * 0.6,
+                        ),
+                        child: TabBarView(
+                          children: [
+                            // In Progress Courses Tab
+                            inProgressCourses.isEmpty
+                                ? Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.play_circle_outline,
+                                          size: 60,
+                                          color: Colors.grey[400],
+                                        ),
+                                        const SizedBox(height: 16),
+                                        const Text(
+                                          'No courses in progress',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : SingleChildScrollView(
+                                    physics: const BouncingScrollPhysics(),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(bottom: 16.0),
+                                      child: AlignedGridView.count(
+                                        shrinkWrap: true,
+                                        crossAxisCount: 2,
+                                        mainAxisSpacing: 16,
+                                        crossAxisSpacing: 16,
+                                        physics: const NeverScrollableScrollPhysics(),
+                                        itemCount: inProgressCourses.length,
+                                        itemBuilder: (ctx, index) {
+                                          return MyCourseGrid(
+                                            myCourse: inProgressCourses[index],
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  
+                            // Completed Courses Tab
+                            completedCourses.isEmpty
+                                ? Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.check_circle_outline,
+                                          size: 60,
+                                          color: Colors.grey[400],
+                                        ),
+                                        const SizedBox(height: 16),
+                                        const Text(
+                                          'No completed courses yet',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.grey,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    AlignedGridView.count(
+                                  )
+                                : SingleChildScrollView(
+                                    physics: const BouncingScrollPhysics(),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(bottom: 16.0),
+                                      child: AlignedGridView.count(
                   shrinkWrap: true,
                   crossAxisCount: 2,
                       mainAxisSpacing: 16,
                       crossAxisSpacing: 16,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: myCourseData.items.length,
+                                        itemCount: completedCourses.length,
                   itemBuilder: (ctx, index) {
                     return MyCourseGrid(
-                      myCourse: myCourseData.items[index],
+                                            myCourse: completedCourses[index],
                     );
                   },
                     ),
+                                    ),
+                                  ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 50),
                   ],
+                  ),
                 );
               },
             );

@@ -104,11 +104,7 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
               width: 60,  // Increased size
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12), // More rounded corners
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight
-                )
+                color: Colors.grey.shade200, // Neutral background color instead of gradient
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
@@ -135,13 +131,13 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 16, // Increased font size
-                      fontWeight: FontWeight.w600, // Bolder
+                      fontWeight: FontWeight.w500, // Reduced font weight
                       color: Color(0xFF333333),
                     ),
                   ),
                   const SizedBox(height: 4), // Increased spacing
                   Text(
-                    '${category.numberOfSubCategories} topics', // Changed wording
+                    '${category.numberOfSubCategories} Sub-Categories', // Changed wording
                     style: const TextStyle(
                       color: Colors.grey, // Standard grey
                       fontSize: 13, // Increased font size
