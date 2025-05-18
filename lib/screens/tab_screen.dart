@@ -96,6 +96,45 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
       _pageController.jumpToPage(index);
     });
   }
+  
+  // Get screen details for AI context based on selected index
+  String _getScreenName() {
+    switch (_selectedPageIndex) {
+      case 0: return 'Home';
+      case 1: return 'Explore';
+      case 2: return isLoggedIn ? 'My Courses' : 'Login';
+      case 3: return isLoggedIn ? 'Account' : 'Login';
+      default: return 'Home';
+    }
+  }
+  
+  String _getScreenDetails() {
+    switch (_selectedPageIndex) {
+      case 0:
+        return 'This is the Home screen where you can see featured courses, '
+               'top courses, and instructors. You can browse popular courses, '
+               'see recently added content, and get personalized recommendations.';
+      case 1:
+        return 'This is the Explore screen where you can browse all available courses '
+               'by category. You can search for courses, filter by categories, and '
+               'discover new learning opportunities.';
+      case 2:
+        return isLoggedIn
+            ? 'This is the My Courses screen where you can see all the courses you are '
+              'enrolled in. You can track your progress, continue where you left off, '
+              'and access your learning materials.'
+            : 'This is the Login screen where you can sign in to your account to access '
+              'your courses and personalized content.';
+      case 3:
+        return isLoggedIn
+            ? 'This is the Account screen where you can manage your profile, '
+              'view your achievements, update your settings, and access account options.'
+            : 'This is the Login screen where you can sign in to your account to access '
+              'your courses and personalized content.';
+      default:
+        return 'This is the Home screen of the Elegance educational app.';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +142,11 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
     
     return Scaffold(
       extendBody: true, // This ensures content goes behind the bottom nav bar
-      appBar: const AppBarOne(logo: 'light_logo.png'),
+      appBar: AppBarOne(
+        logo: 'light_logo.png',
+        currentScreen: _getScreenName(),
+        screenDetails: _getScreenDetails(),
+      ),
       body: _isInit
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
           : PageView(

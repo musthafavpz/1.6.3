@@ -86,6 +86,26 @@ class MyApp extends StatelessWidget {
             fontFamily: 'Poppins',
             colorScheme: const ColorScheme.light(primary: kWhiteColor),
             useMaterial3: true,
+            textSelectionTheme: const TextSelectionThemeData(
+              cursorColor: Colors.black,
+              selectionColor: Colors.black12,
+              selectionHandleColor: Colors.black54,
+            ),
+            inputDecorationTheme: const InputDecorationTheme(
+              filled: true,
+              fillColor: Color(0xFFF5F5F5),
+              hintStyle: TextStyle(color: Colors.grey),
+              labelStyle: TextStyle(color: Colors.black87),
+              floatingLabelStyle: TextStyle(color: Color(0xFF6366F1)),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFF6366F1)),
+                borderRadius: BorderRadius.all(Radius.circular(12.0)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey),
+                borderRadius: BorderRadius.all(Radius.circular(12.0)),
+              ),
+            ),
           ),
           debugShowCheckedModeBanner: false,
           home: isLoggedIn 

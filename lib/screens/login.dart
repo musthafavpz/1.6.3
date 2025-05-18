@@ -128,15 +128,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   }
   
   void _showSuccessToast(String message) {
-    Fluttertoast.showToast(
+      Fluttertoast.showToast(
       msg: message,
       toastLength: Toast.LENGTH_SHORT,
       gravity: ToastGravity.BOTTOM,
       backgroundColor: const Color(0xFF10B981),
-      textColor: Colors.white,
+        textColor: Colors.white,
       fontSize: 16.0,
-    );
-  }
+      );
+    }
   
   void _showErrorToast(String message) {
     Fluttertoast.showToast(

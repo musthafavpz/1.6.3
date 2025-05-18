@@ -75,6 +75,7 @@ dependencies:
   printing: ^5.14.2
   screenshot: ^3.0.0
   path_provider_windows: ^2.3.0
+  flutter_spinkit: ^5.2.0
   # flutter_html_to_pdf: ^0.7.0  # Temporarily disabling due to Kotlin version conflict
   # Using alternative PDF generation solution
 
@@ -132,6 +133,9 @@ flutter:
     - assets/icons/key.svg
     - assets/icons/logout.svg
     - assets/icons/wishlist.svg
+    - assets/config/
+    - assets/config/ai_assistant_config.txt
+    - assets/config/ai_assistant_config.json
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

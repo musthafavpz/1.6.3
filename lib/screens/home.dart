@@ -125,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         
         // Only fetch user's enrolled courses if user is logged in
         if (user != null) {
-          Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
+        Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
         }
       } catch (e) {
         print('Error in didChangeDependencies: $e');

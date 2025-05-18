@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 
 import 'package:academy_lms_app/screens/course_detail.dart';
 import 'package:academy_lms_app/screens/image_viewer_Screen.dart';
+import 'package:academy_lms_app/screens/ai_assistant.dart'; // Import for AI Assistant
 import 'package:academy_lms_app/widgets/appbar_one.dart';
 import 'package:academy_lms_app/widgets/from_vimeo_player.dart';
 import 'package:academy_lms_app/widgets/new_youtube_player.dart';
@@ -28,6 +29,7 @@ import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../constants.dart';
 import '../models/lesson.dart';
@@ -38,6 +40,200 @@ import '../widgets/live_class_tab_widget.dart';
 import 'file_data_screen.dart';
 import 'package:academy_lms_app/screens/webview_screen_iframe.dart';
 import 'package:http/http.dart' as http;
+
+// AI Chat Message model
+class AIChatMessage {
+  final String content;
+  final bool isUser;
+  final DateTime timestamp;
+
+  AIChatMessage({
+    required this.content,
+    required this.isUser,
+    DateTime? timestamp,
+  }) : timestamp = timestamp ?? DateTime.now();
+
+  // Convert to map for storing locally
+  Map<String, dynamic> toMap() {
+    return {
+      'content': content,
+      'isUser': isUser,
+      'timestamp': timestamp.millisecondsSinceEpoch,
+    };
+  }
+
+  // Create from map when loading from storage
+  factory AIChatMessage.fromMap(Map<String, dynamic> map) {
+    return AIChatMessage(
+      content: map['content'],
+      isUser: map['isUser'],
+      timestamp: DateTime.fromMillisecondsSinceEpoch(map['timestamp']),
+    );
+  }
+}
+
+// AI Chat Service
+class AIChatService {
+  static const String apiKey = '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';
+  static const String apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+  final List<Map<String, dynamic>> _memory = [];
+  String _systemPrompt = '';
+  Map<String, dynamic> _config = {};
+  List<Map<String, dynamic>> _predefinedPrompts = [];
+
+  // Initialize with system message
+  AIChatService() {
+    _loadSystemPrompt();
+  }
+
+  // Load system prompt from configuration file
+  Future<void> _loadSystemPrompt() async {
+    try {
+      // Default system prompt in case file loading fails
+      _systemPrompt = 'You are an educational AI tutor for Elegance, created by Musthafa. '
+          'You specialize in explaining complex concepts in simple terms. '
+          'You are friendly, supportive, and patient. '
+          'Focus your answers on educational content related to the course lessons. '
+          'Keep your responses concise but informative. '
+          'If you don\'t know something, be honest about it rather than making up information.';
+      
+      // Try to load JSON config first
+      try {
+        final String configJson = await rootBundle.loadString('assets/config/ai_assistant_config.json');
+        if (configJson.isNotEmpty) {
+          _config = jsonDecode(configJson);
+          _systemPrompt = _config['systemPrompt'] ?? _systemPrompt;
+          _predefinedPrompts = List<Map<String, dynamic>>.from(_config['predefinedPrompts'] ?? []);
+          print('Loaded AI assistant JSON configuration');
+        }
+      } catch (e) {
+        print('Could not load AI assistant JSON config: $e');
+        
+        // Try to load text config as fallback
+        try {
+          final String configText = await rootBundle.loadString('assets/config/ai_assistant_config.txt');
+          if (configText.isNotEmpty) {
+            _systemPrompt = configText;
+            print('Loaded AI assistant text configuration');
+          }
+        } catch (e) {
+          print('Could not load AI assistant text config: $e');
+          // Continue with default prompt
+        }
+      }
+      
+      // Add system message to memory
+      _memory.add({
+        'role': 'system',
+        'content': _systemPrompt
+      });
+    } catch (e) {
+      print('Error in _loadSystemPrompt: $e');
+      // Ensure we at least have a basic system prompt
+      _memory.add({
+        'role': 'system',
+        'content': 'You are an educational AI assistant for Elegance courses.'
+      });
+    }
+  }
+
+  // Get the list of predefined prompts
+  List<Map<String, dynamic>> getPredefinedPrompts() {
+    return _predefinedPrompts;
+  }
+
+  // Add a message to memory
+  void addToMemory(String message, bool isUser) {
+    _memory.add({
+      'role': isUser ? 'user' : 'assistant',
+      'content': message
+    });
+  }
+
+  // Clear conversation memory but keep system prompt
+  void clearMemory() {
+    final systemMessage = _memory.first;
+    _memory.clear();
+    _memory.add(systemMessage);
+  }
+
+  Future<String> sendMessage(String message) async {
+    try {
+      // Add user message to memory
+      addToMemory(message, true);
+      
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'meta-llama/llama-3.3-8b-instruct:free',
+          'messages': _memory,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final aiResponse = data['choices'][0]['message']['content'];
+        
+        // Add AI response to memory
+        addToMemory(aiResponse, false);
+        
+        return aiResponse;
+      } else {
+        print('API Error: ${response.statusCode} - ${response.body}');
+        return 'Sorry, I encountered an error. Please try again later.';
+      }
+    } catch (e) {
+      print('Exception in AI Chat: $e');
+      return 'Sorry, I encountered an error. Please try again later.';
+    }
+  }
+
+  // Save conversation to local storage
+  Future<void> saveConversation(int courseId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final conversations = _memory.where((msg) => msg['role'] != 'system').toList();
+      await prefs.setString('chat_history_$courseId', jsonEncode(conversations));
+    } catch (e) {
+      print('Error saving chat history: $e');
+    }
+  }
+
+  // Load conversation from local storage
+  Future<List<AIChatMessage>> loadConversation(int courseId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? chatHistoryString = prefs.getString('chat_history_$courseId');
+      
+      if (chatHistoryString == null || chatHistoryString.isEmpty) {
+        return [];
+      }
+      
+      final List<dynamic> chatHistoryJson = jsonDecode(chatHistoryString);
+      final List<AIChatMessage> messages = [];
+      
+      // Restore memory
+      for (var msg in chatHistoryJson) {
+        if (msg['role'] != 'system') {
+          addToMemory(msg['content'], msg['role'] == 'user');
+          messages.add(AIChatMessage(
+            content: msg['content'],
+            isUser: msg['role'] == 'user',
+          ));
+        }
+      }
+      
+      return messages;
+    } catch (e) {
+      print('Error loading chat history: $e');
+      return [];
+    }
+  }
+}
 
 class MyCourseDetailScreen extends StatefulWidget {
   final int courseId;
@@ -60,17 +256,62 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
   
   // Set to store expanded section indices
   Set<int> _expandedSections = {};
+  
+  // AI Chat related variables
+  final AIChatService _aiChatService = AIChatService();
+  final List<AIChatMessage> _chatMessages = [];
+  final TextEditingController _chatTextController = TextEditingController();
+  bool _isAILoading = false;
+  bool _isChatHistoryLoaded = false;
+  String? _selectedLessonName;
+  List<String> _lessonNames = [];
+  Map<String, String> _lessonDescriptions = {};
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_scrollListener);
+    _loadChatHistory();
+  }
+
+  Future<void> _loadChatHistory() async {
+    if (!_isChatHistoryLoaded) {
+      final loadedMessages = await _aiChatService.loadConversation(widget.courseId);
+      if (loadedMessages.isNotEmpty && mounted) {
+        setState(() {
+          _chatMessages.addAll(loadedMessages);
+          _isChatHistoryLoaded = true;
+        });
+      }
+    }
+  }
+
+  // Extract lesson names and descriptions from sections
+  void _extractLessonInfo(List sections) {
+    _lessonNames.clear();
+    _lessonDescriptions.clear();
+    
+    for (var section in sections) {
+      if (section.mLesson != null && section.mLesson!.isNotEmpty) {
+        for (var lesson in section.mLesson!) {
+          if (lesson.title != null) {
+            _lessonNames.add(lesson.title!);
+            if (lesson.summary != null && lesson.summary!.isNotEmpty) {
+              _lessonDescriptions[lesson.title!] = lesson.summary!;
+            }
+          }
+        }
+      }
+    }
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _chatTextController.dispose();
+    // Save chat history before disposing
+    _aiChatService.saveConversation(widget.courseId);
     super.dispose();
   }
 
@@ -92,6 +333,8 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
           setState(() {
             _isLoading = false;
             _activeLesson = activeSections.first.mLesson!.first;
+            // Extract lesson names and descriptions for AI chat
+            _extractLessonInfo(activeSections);
           });
         } else {
           setState(() {
@@ -302,6 +545,33 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
+          // AI Chat icon - with the current course context
+          IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6366F1).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: const Icon(Icons.smart_toy_rounded, size: 18, color: Color(0xFF6366F1)),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AIAssistantScreen(
+                    currentScreen: 'Course Detail',
+                    screenDetails: 'You are viewing the course "${myLoadedCourse.title}". '
+                        'This course has ${myLoadedCourse.totalNumberOfLessons ?? 0} lessons and '
+                        'you have completed ${myLoadedCourse.totalNumberOfCompletedLessons ?? 0} lessons '
+                        '(${myLoadedCourse.courseCompletion ?? 0}% complete). The course includes '
+                        'various types of content such as videos, text lessons, and quizzes.',
+                  ),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: Container(
               padding: const EdgeInsets.all(5),
@@ -317,6 +587,90 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
           ),
           const SizedBox(width: 10),
         ],
+      ),
+      // Add floating chat button
+      floatingActionButton: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        margin: const EdgeInsets.only(bottom: 16, right: 8),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF6366F1),
+              Color(0xFF8B5CF6),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6366F1).withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(28),
+            onTap: _showAIChatDialog,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 20, 12),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.smart_toy_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Elegance AI',
+                            style: GoogleFonts.montserrat(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            'Ask me anything',
+                            style: GoogleFonts.montserrat(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                // Notification dot
+                Positioned(
+                  top: -4,
+                  right: -4,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
       body: Container(
         height: MediaQuery.of(context).size.height,
@@ -1808,6 +2162,685 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
       return totalMinutes > 0 ? '${totalHours}h ${totalMinutes}m' : '${totalHours}h';
     } else {
       return '${totalMinutes}m';
+    }
+  }
+
+  // Show AI Chat Dialog
+  void _showAIChatDialog() {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: Colors.black.withOpacity(0.5),
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
+        return SafeArea(
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              return Scaffold(
+                backgroundColor: Colors.transparent,
+                body: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutQuad,
+                  child: _buildChatDialog(context, setState),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+  
+  // Build the chat dialog content
+  Widget _buildChatDialog(BuildContext context, StateSetter setState) {
+    return Container(
+      height: MediaQuery.of(context).size.height,
+      width: MediaQuery.of(context).size.width,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+      ),
+      child: Column(
+        children: [
+          // Chat Dialog Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF6366F1),
+                  Color(0xFF8B5CF6),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x29000000),
+                  blurRadius: 8,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.smart_toy_rounded,
+                    color: Color(0xFF6366F1),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Course AI Assistant',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        'Ask anything about your lessons',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          color: Colors.white.withOpacity(0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Clear chat button
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.white),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Clear Chat'),
+                          content: const Text('Are you sure you want to clear the chat history?'),
+                          actions: [
+                            TextButton(
+                              child: const Text('Cancel'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            TextButton(
+                              child: const Text('Clear'),
+                              onPressed: () {
+                                setState(() {
+                                  _chatMessages.clear();
+                                  _aiChatService.clearMemory();
+                                });
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          
+          // Lesson selector
+          if (_lessonNames.isNotEmpty) 
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            color: Colors.grey[50],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Select a lesson to discuss:',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF333333),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 40,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _lessonNames.length > 8 ? 8 : _lessonNames.length, // Limit to 8 lessons
+                    itemBuilder: (context, index) {
+                      final lessonName = _lessonNames[index];
+                      final isSelected = _selectedLessonName == lessonName;
+                      
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(
+                            lessonName.length > 20 ? '${lessonName.substring(0, 20)}...' : lessonName,
+                            style: GoogleFonts.montserrat(
+                              color: isSelected ? Colors.white : const Color(0xFF6366F1),
+                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
+                            ),
+                          ),
+                          selected: isSelected,
+                          backgroundColor: const Color(0xFF6366F1).withOpacity(0.08),
+                          selectedColor: const Color(0xFF6366F1),
+                          onSelected: (selected) {
+                            setState(() {
+                              _selectedLessonName = selected ? lessonName : null;
+                              if (selected) {
+                                _chatTextController.text = 'Tell me about $lessonName';
+                              }
+                            });
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Suggestion chips
+          if (_chatMessages.isEmpty)
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'How can I help you?',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF333333),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _aiChatService.getPredefinedPrompts().map((prompt) {
+                      return _buildSuggestionChip(
+                        prompt['label'], 
+                        prompt['prefix'], 
+                        setState,
+                        iconName: prompt['icon'],
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+          
+          // Chat Messages List
+          Expanded(
+            child: _chatMessages.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SvgPicture.asset(
+                          'assets/images/chat_bot.svg',
+                          height: 80,
+                          colorFilter: const ColorFilter.mode(
+                            Color(0xFF6366F1),
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Ask me anything about your course lessons',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Your conversations are saved locally',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 12,
+                            color: Colors.grey[400],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  )
+                : Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                    ),
+                    child: ListView.builder(
+                      reverse: false,
+                      itemCount: _chatMessages.length,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      itemBuilder: (context, index) {
+                        final message = _chatMessages[index];
+                        return _buildChatMessage(message);
+                      },
+                    ),
+                  ),
+          ),
+          
+          // AI Thinking Indicator
+          if (_isAILoading)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+              color: Colors.white,
+              child: Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF6366F1),
+                          Color(0xFF8B5CF6),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(
+                      Icons.smart_toy_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const SpinKitThreeBounce(
+                    color: Color(0xFF6366F1),
+                    size: 16,
+                  ),
+                ],
+              ),
+            ),
+          
+          // Input area
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 2,
+                  offset: const Offset(0, -1),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _chatTextController,
+                    decoration: InputDecoration(
+                      hintText: 'Type your question here...',
+                      hintStyle: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        color: Colors.grey[400],
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.mic, color: Color(0xFF6366F1)),
+                        onPressed: () {
+                          // Voice input functionality could be added here
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Voice input coming soon!'),
+                              duration: Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    onSubmitted: (_) => _sendChatMessage(setState),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF6366F1),
+                        Color(0xFF8B5CF6),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF6366F1).withOpacity(0.3),
+                        spreadRadius: 1,
+                        blurRadius: 3,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                    ),
+                    onPressed: () => _sendChatMessage(setState),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // Build a suggestion chip
+  Widget _buildSuggestionChip(String label, String prefix, StateSetter setState, {String? iconName}) {
+    // Map string icon names to actual Icons
+    IconData getIconData(String? name) {
+      switch (name) {
+        case 'lightbulb_outline': return Icons.lightbulb_outline;
+        case 'book_outlined': return Icons.book_outlined;
+        case 'help_outline': return Icons.help_outline;
+        case 'school': return Icons.school;
+        case 'compare_arrows': return Icons.compare_arrows;
+        case 'summarize': return Icons.summarize;
+        case 'lightbulb': return Icons.lightbulb;
+        case 'quiz': return Icons.quiz;
+        case 'assignment': return Icons.assignment;
+        case 'psychology': return Icons.psychology;
+        default: return Icons.lightbulb_outline;
+      }
+    }
+    
+    return InkWell(
+      onTap: () {
+        _chatTextController.text = '$prefix ';
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFF6366F1).withOpacity(0.08),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: const Color(0xFF6366F1).withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              getIconData(iconName),
+              size: 16,
+              color: const Color(0xFF6366F1),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: GoogleFonts.montserrat(
+                color: const Color(0xFF6366F1),
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  // Build a single chat message
+  Widget _buildChatMessage(AIChatMessage message) {
+    final isUser = message.isUser;
+    
+    // Process formatting in the message content - only bold text wrapped in **text**
+    Widget buildFormattedText(String content) {
+      // If it's a user message, just return regular text
+      if (isUser) {
+        return Text(
+          content,
+          style: GoogleFonts.montserrat(
+            color: Colors.white,
+            fontSize: 14,
+          ),
+        );
+      }
+      
+      // For AI responses, only format text with markdown-style bold syntax
+      List<TextSpan> spans = [];
+      
+      // Check for explicit markdown-style bold formatting (**text**)
+      RegExp boldPattern = RegExp(r'\*\*(.*?)\*\*');
+      
+      int lastMatchEnd = 0;
+      for (Match match in boldPattern.allMatches(content)) {
+        // Add text before the match
+        if (match.start > lastMatchEnd) {
+          spans.add(TextSpan(
+            text: content.substring(lastMatchEnd, match.start),
+            style: GoogleFonts.montserrat(
+              color: const Color(0xFF333333),
+              fontSize: 14,
+            ),
+          ));
+        }
+        
+        // Add the bolded text (without the ** markers)
+        String boldText = match.group(1) ?? '';
+        spans.add(TextSpan(
+          text: boldText,
+          style: GoogleFonts.montserrat(
+            color: const Color(0xFF333333),
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ));
+        
+        lastMatchEnd = match.end;
+      }
+      
+      // Add any remaining text after the last match
+      if (lastMatchEnd < content.length) {
+        spans.add(TextSpan(
+          text: content.substring(lastMatchEnd),
+          style: GoogleFonts.montserrat(
+            color: const Color(0xFF333333),
+            fontSize: 14,
+          ),
+        ));
+      }
+      
+      // If no matches were found, just add the entire content as regular text
+      if (spans.isEmpty) {
+        spans.add(TextSpan(
+          text: content,
+          style: GoogleFonts.montserrat(
+            color: const Color(0xFF333333),
+            fontSize: 14,
+          ),
+        ));
+      }
+      
+      return RichText(
+        text: TextSpan(children: spans),
+      );
+    }
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: AnimationConfiguration.staggeredList(
+        position: 0,
+        duration: const Duration(milliseconds: 300),
+        child: SlideAnimation(
+          horizontalOffset: isUser ? 50.0 : -50.0,
+          child: FadeInAnimation(
+            child: Row(
+              mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!isUser) 
+                  Container(
+                    width: 32,
+                    height: 32,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF6366F1),
+                          Color(0xFF8B5CF6),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(
+                      Icons.smart_toy_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isUser 
+                          ? const Color(0xFF6366F1)
+                          : Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(isUser ? 18 : 4),
+                        topRight: Radius.circular(isUser ? 4 : 18),
+                        bottomLeft: const Radius.circular(18),
+                        bottomRight: const Radius.circular(18),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 5,
+                          offset: const Offset(0, 2),
+                        )
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        buildFormattedText(message.content),
+                        const SizedBox(height: 4),
+                        Text(
+                          // Format time as HH:MM
+                          '${message.timestamp.hour.toString().padLeft(2, '0')}:${message.timestamp.minute.toString().padLeft(2, '0')}',
+                          style: GoogleFonts.montserrat(
+                            color: isUser ? Colors.white.withOpacity(0.7) : Colors.grey[400],
+                            fontSize: 10,
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                if (isUser)
+                  Container(
+                    width: 32,
+                    height: 32,
+                    margin: const EdgeInsets.only(left: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  // Send a chat message
+  void _sendChatMessage(StateSetter setState) async {
+    final userMessage = _chatTextController.text.trim();
+    if (userMessage.isEmpty) return;
+    
+    setState(() {
+      _chatMessages.add(AIChatMessage(
+        content: userMessage,
+        isUser: true,
+      ));
+      _isAILoading = true;
+      _chatTextController.clear();
+      _selectedLessonName = null; // Clear lesson selection after sending
+    });
+    
+    try {
+      final aiResponse = await _aiChatService.sendMessage(userMessage);
+      
+      if (mounted) {
+        setState(() {
+          _chatMessages.add(AIChatMessage(
+            content: aiResponse,
+            isUser: false,
+          ));
+          _isAILoading = false;
+        });
+        
+        // Save conversation to local storage
+        _aiChatService.saveConversation(widget.courseId);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _chatMessages.add(AIChatMessage(
+            content: "Sorry, I encountered an error. Please try again.",
+            isUser: false,
+          ));
+          _isAILoading = false;
+        });
+      }
     }
   }
 }

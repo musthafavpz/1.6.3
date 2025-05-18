@@ -1,6 +1,6 @@
 import 'package:academy_lms_app/screens/tab_screen.dart';
-import 'package:academy_lms_app/screens/cart.dart'; // Add this import
 import 'package:academy_lms_app/screens/notifications_screen.dart'; // Add this import
+import 'package:academy_lms_app/screens/ai_assistant.dart'; // Add this import
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../constants.dart';
@@ -10,8 +10,17 @@ class AppBarOne extends StatefulWidget implements PreferredSizeWidget {
   final Size preferredSize;
   final dynamic title;
   final dynamic logo;
-  const AppBarOne({super.key, this.title, this.logo})
-      : preferredSize = const Size.fromHeight(70.0);
+  final String? currentScreen;
+  final String? screenDetails;
+  
+  const AppBarOne({
+    super.key, 
+    this.title, 
+    this.logo,
+    this.currentScreen,
+    this.screenDetails,
+  }) : preferredSize = const Size.fromHeight(70.0);
+    
   @override
   State<AppBarOne> createState() => _AppBarOneState();
 }
@@ -24,6 +33,11 @@ class _AppBarOneState extends State<AppBarOne> {
 
   @override
   Widget build(BuildContext context) {
+    // Get current route name for screen context
+    final currentRoute = ModalRoute.of(context)?.settings.name;
+    final screenName = widget.currentScreen ?? currentRoute ?? 'Home';
+    final screenDetails = widget.screenDetails ?? 'This is the ${widget.title ?? screenName} screen.';
+    
     return AppBar(
       backgroundColor: kBackGroundColor,
       toolbarHeight: 70,
@@ -53,6 +67,55 @@ class _AppBarOneState extends State<AppBarOne> {
           : null,
       // Actions on the right side
       actions: [
+        // AI Chat icon
+        GestureDetector(
+          onTap: () {
+            // Navigate to AI Assistant screen with current screen context
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AIAssistantScreen(
+                  currentScreen: screenName,
+                  screenDetails: screenDetails,
+                ),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(right: 16.0, top: 18, bottom: 18),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // AI Assistant icon
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6366F1).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.smart_toy_rounded,
+                    size: 20,
+                    color: Color(0xFF6366F1),
+                  ),
+                ),
+                // Animation dot
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         // Notification icon
         GestureDetector(
           onTap: () {
@@ -65,7 +128,7 @@ class _AppBarOneState extends State<AppBarOne> {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.only(right: 16.0, top: 18, bottom: 18),
+            padding: const EdgeInsets.only(right: 20.0, top: 18, bottom: 18),
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -111,31 +174,6 @@ class _AppBarOneState extends State<AppBarOne> {
             ),
           ),
         ),
-        // Cart icon
-        GestureDetector(
-          onTap: () {
-            // Navigate to Cart screen
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CartScreen(),
-                ));
-          },
-          child: Padding(
-            padding: const EdgeInsets.only(right: 20.0, top: 18, bottom: 18),
-            child: Stack(
-              fit: StackFit.loose,
-              alignment: Alignment.center,
-              clipBehavior: Clip.none,
-              children: [
-                SvgPicture.asset(
-                  'assets/icons/shopping-cart 1.svg',
-                ),
-                // Cart badge code commented out
-              ],
-            ),
-          ),
-        )
       ],
     );
   }
