@@ -3,6 +3,7 @@ import 'package:academy_lms_app/screens/login.dart';
 import 'package:academy_lms_app/screens/onboarding_screen.dart';
 import 'package:academy_lms_app/screens/splash.dart';
 import 'package:academy_lms_app/screens/tab_screen.dart';
+import 'package:academy_lms_app/screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
@@ -82,13 +83,15 @@ class MyApp extends StatelessWidget {
             useMaterial3: true,
           ),
           debugShowCheckedModeBanner: false,
-          home: showOnboarding ? const OnboardingScreen() : const SplashScreen(),
+          home: showOnboarding ? const OnboardingScreen() : const WelcomeScreen(),
           routes: {
             '/home': (ctx) => const TabsScreen(
                   pageIndex: 0,
                 ),
             '/login': (ctx) => const LoginScreen(),
+            '/welcome': (ctx) => const WelcomeScreen(),
             OnboardingScreen.routeName: (ctx) => const OnboardingScreen(),
+            WelcomeScreen.routeName: (ctx) => const WelcomeScreen(),
             CoursesScreen.routeName: (ctx) => const CoursesScreen(),
             CategoryDetailsScreen.routeName: (ctx) =>
                 const CategoryDetailsScreen(),

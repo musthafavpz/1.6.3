@@ -12,7 +12,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SignUpScreen extends StatefulWidget {
-  // static const routeName = '/signup';
+  static const routeName = '/signup';
   const SignUpScreen({super.key});
 
   @override
@@ -44,14 +44,17 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
     String email,
     String password,
     String password_confirmation,
-    BuildContext context, // Added context parameter
+    BuildContext context,
   ) async {
-    sharedPreferences = await SharedPreferences.getInstance();
-
-    var urls = "$baseUrl/api/signup?type=registration";
+    if (!_validateInputs()) return;
+  
     setState(() {
       _isLoading = true;
     });
+    
+    sharedPreferences = await SharedPreferences.getInstance();
+    var urls = "$baseUrl/api/signup?type=registration";
+    
     try {
       final responses = await http.post(
         Uri.parse(urls),
@@ -71,22 +74,13 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
         final responseData = jsonDecode(responses.body);
 
         if (responseData['success'] == true) {
-          // Success condition
           if (responseData['student_email_verification'] == "1") {
             // Email verification is required
-            Fluttertoast.showToast(
-              msg: "Email sent to the user for verification.",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-              timeInSecForIosWeb: 2,
-              backgroundColor: Colors.grey,
-              textColor: Colors.white,
-              fontSize: 16.0,
-            );
+            _showSuccessToast("Email sent for verification. Please verify your email.");
             setState(() {
-              _isLoading = false; // Stop loading
+              _isLoading = false;
             });
-
+            
             // Navigate to the email verification page
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -95,84 +89,159 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
             );
           } else {
             // No email verification required
-            Fluttertoast.showToast(
-              msg: "User created successfully",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-              timeInSecForIosWeb: 2,
-              backgroundColor: Colors.grey,
-              textColor: Colors.white,
-              fontSize: 16.0,
-            );
-            setState(() {
-              _isLoading = false; // Stop loading
-            });
-
-            // Navigate to another page
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => TabsScreen(pageIndex: 1),
-              ),
-            );
+            _showSuccessToast("Account created successfully!");
+            
+            // Automatically log in after signup
+            await _autoLogin(email, password);
           }
         } else {
-          // If 'success' is false
-          Fluttertoast.showToast(
-            msg: responseData['message'] ?? "Failed to create user.",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 2,
-            backgroundColor: Colors.red,
-            textColor: Colors.white,
-            fontSize: 16.0,
-          );
+          _showErrorToast(responseData['message'] ?? "Failed to create user.");
           setState(() {
-            _isLoading = false; // Stop loading
+            _isLoading = false;
           });
         }
       } else if (responses.statusCode == 422) {
         final responseData = jsonDecode(responses.body);
 
         if (responseData['validationError'] != null) {
+          String errorMessage = "";
           responseData['validationError'].forEach((key, value) {
-            Fluttertoast.showToast(
-              msg: value[0], // Display the first error message
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.BOTTOM,
-              timeInSecForIosWeb: 2,
-              backgroundColor: Colors.red,
-              textColor: Colors.white,
-              fontSize: 16.0,
-            );
-            setState(() {
-              _isLoading = false; // Stop loading
-            });
+            errorMessage = value[0]; // Display the first error message
+          });
+          _showErrorToast(errorMessage);
+          setState(() {
+            _isLoading = false;
+          });
+        } else {
+          _showErrorToast("Validation error occurred.");
+          setState(() {
+            _isLoading = false;
           });
         }
       } else {
-        Fluttertoast.showToast(
-          msg: "User Created Successfully",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 2,
-          backgroundColor: Colors.green,
-          textColor: Colors.white,
-          fontSize: 16.0,
-        );
+        // Handle other status codes
+        _showErrorToast("An error occurred. Please try again.");
         setState(() {
-          _isLoading = false; // Stop loading
+          _isLoading = false;
         });
-        
-        // Redirect to login page
-        Navigator.of(context).pushReplacementNamed('/login');
       }
     } catch (error) {
       print('Error: $error');
-    } finally {
+      _showErrorToast("Connection error. Please check your internet connection.");
       setState(() {
-        _isLoading = false; // Stop loading
+        _isLoading = false;
       });
     }
+  }
+  
+  // Auto-login after successful signup
+  Future<void> _autoLogin(String email, String password) async {
+    try {
+      var loginUrl = "$baseUrl/api/login";
+      var loginResponse = await http.post(
+        Uri.parse(loginUrl),
+        body: {
+          "email": email,
+          "password": password,
+        },
+      );
+      
+      if (loginResponse.statusCode == 201) {
+        final data = jsonDecode(loginResponse.body);
+        final user = data["user"];
+        
+        // Store user data in SharedPreferences
+        sharedPreferences!.setString("access_token", data["token"]);
+        sharedPreferences!.setString("user", jsonEncode(user));
+        sharedPreferences!.setString("email", email);
+        sharedPreferences!.setString("password", password);
+        
+        setState(() {
+          _isLoading = false;
+        });
+        
+        // Navigate to home screen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const TabsScreen(
+              pageIndex: 0,
+            ),
+          ),
+        );
+      } else {
+        // Login failed but account was created
+        setState(() {
+          _isLoading = false;
+        });
+        _showSuccessToast("Account created! Please log in.");
+        Navigator.of(context).pop(); // Go back to welcome screen
+      }
+    } catch (e) {
+      // Error during auto-login
+      print("Auto-login error: $e");
+      setState(() {
+        _isLoading = false;
+      });
+      _showSuccessToast("Account created! Please log in.");
+      Navigator.of(context).pop(); // Go back to welcome screen
+    }
+  }
+  
+  bool _validateInputs() {
+    if (_nameController.text.isEmpty) {
+      _showErrorToast("Name field cannot be empty");
+      return false;
+    }
+    
+    if (_emailController.text.isEmpty) {
+      _showErrorToast("Email field cannot be empty");
+      return false;
+    }
+    
+    if (!RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+        .hasMatch(_emailController.text)) {
+      _showErrorToast("Please enter a valid email address");
+      return false;
+    }
+    
+    if (_passwordController.text.isEmpty) {
+      _showErrorToast("Password field cannot be empty");
+      return false;
+    }
+    
+    if (_passwordController.text.length < 8) {
+      _showErrorToast("Password must be at least 8 characters long");
+      return false;
+    }
+    
+    if (_passwordController.text != _conPasswordController.text) {
+      _showErrorToast("Passwords do not match");
+      return false;
+    }
+    
+    return true;
+  }
+  
+  void _showSuccessToast(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: const Color(0xFF10B981),
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
+  }
+  
+  void _showErrorToast(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.redAccent,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
   }
 
   @override
@@ -208,6 +277,10 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
   @override
   void dispose() {
     _controller.dispose();
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _conPasswordController.dispose();
     super.dispose();
   }
 
@@ -219,7 +292,7 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: kDefaultColor, width: 1),
+        borderSide: BorderSide(color: const Color(0xFF6366F1), width: 1),
       ),
       border: OutlineInputBorder(
         borderRadius: const BorderRadius.all(Radius.circular(16.0)),
@@ -240,7 +313,7 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
       contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
       prefixIcon: Icon(
         icon,
-        color: kDefaultColor,
+        color: const Color(0xFF6366F1),
         size: 22,
       ),
     );
@@ -270,7 +343,7 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                 ),
               ],
             ),
-            child: Icon(Icons.arrow_back, color: kDefaultColor, size: 20),
+            child: Icon(Icons.arrow_back, color: const Color(0xFF6366F1), size: 20),
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -287,7 +360,7 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                 width: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: kDefaultColor.withOpacity(0.05),
+                  color: const Color(0xFF6366F1).withOpacity(0.05),
                 ),
               ),
             ),
@@ -299,7 +372,7 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                 width: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: kDefaultColor.withOpacity(0.05),
+                  color: const Color(0xFF6366F1).withOpacity(0.05),
                 ),
               ),
             ),
@@ -324,7 +397,7 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                               style: TextStyle(
                                 fontSize: 30,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                                color: const Color(0xFF333333),
                                 letterSpacing: 0.5,
                               ),
                             ),
@@ -356,12 +429,6 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                       Icons.person_outline,
                                     ),
                                     controller: _nameController,
-                                    validator: (value) {
-                                      if (value!.isEmpty) {
-                                        return 'Please enter your full name';
-                                      }
-                                      return null;
-                                    },
                                   ),
                                   SizedBox(height: 20),
                                   
@@ -377,11 +444,6 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                     ),
                                     controller: _emailController,
                                     keyboardType: TextInputType.emailAddress,
-                                    validator: (input) =>
-                                        !RegExp(r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")
-                                                .hasMatch(input!)
-                                            ? "Email should be valid"
-                                            : null,
                                   ),
                                   SizedBox(height: 20),
                                   
@@ -393,15 +455,6 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                     ),
                                     keyboardType: TextInputType.text,
                                     controller: _passwordController,
-                                    validator: (value) {
-                                      if (value!.isEmpty) {
-                                        return 'Please enter min 8 character password';
-                                      }
-                                      if (value.length < 8) {
-                                        return 'Password must be at least 8 characters long';
-                                      }
-                                      return null;
-                                    },
                                     obscureText: hidePassword,
                                     decoration: InputDecoration(
                                       enabledBorder: OutlineInputBorder(
@@ -410,7 +463,7 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(Radius.circular(16.0)),
-                                        borderSide: BorderSide(color: kDefaultColor, width: 1),
+                                        borderSide: BorderSide(color: const Color(0xFF6366F1), width: 1),
                                       ),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(Radius.circular(16.0)),
@@ -423,7 +476,7 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                       contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
                                       prefixIcon: Icon(
                                         Icons.lock_outline,
-                                        color: kDefaultColor,
+                                        color: const Color(0xFF6366F1),
                                         size: 22,
                                       ),
                                       suffixIcon: IconButton(
@@ -451,15 +504,6 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                     ),
                                     keyboardType: TextInputType.text,
                                     controller: _conPasswordController,
-                                    validator: (value) {
-                                      if (value!.isEmpty) {
-                                        return 'Please confirm your password';
-                                      }
-                                      if (value != _passwordController.text) {
-                                        return 'Passwords do not match';
-                                      }
-                                      return null;
-                                    },
                                     obscureText: hideConPassword,
                                     decoration: InputDecoration(
                                       enabledBorder: OutlineInputBorder(
@@ -468,7 +512,7 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(Radius.circular(16.0)),
-                                        borderSide: BorderSide(color: kDefaultColor, width: 1),
+                                        borderSide: BorderSide(color: const Color(0xFF6366F1), width: 1),
                                       ),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(Radius.circular(16.0)),
@@ -481,7 +525,7 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                       contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
                                       prefixIcon: Icon(
                                         Icons.lock_outline,
-                                        color: kDefaultColor,
+                                        color: const Color(0xFF6366F1),
                                         size: 22,
                                       ),
                                       suffixIcon: IconButton(
@@ -512,7 +556,7 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                       ),
                                       child: Center(
                                         child: CircularProgressIndicator(
-                                          color: kDefaultColor,
+                                          color: const Color(0xFF6366F1),
                                           strokeWidth: 3,
                                         ),
                                       ),
@@ -521,32 +565,32 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                     Container(
                                       width: double.infinity,
                                       decoration: BoxDecoration(
-                                        color: kDefaultColor,
+                                        gradient: const LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            Color(0xFF6366F1),
+                                            Color(0xFF8B5CF6),
+                                          ],
+                                        ),
                                         borderRadius: BorderRadius.circular(16),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: kDefaultColor.withOpacity(0.25),
-                                            blurRadius: 20,
-                                            offset: Offset(0, 10),
+                                            color: const Color(0xFF6366F1).withOpacity(0.3),
+                                            blurRadius: 12,
+                                            offset: Offset(0, 6),
                                           ),
                                         ],
                                       ),
                                       child: ElevatedButton(
                                         onPressed: () {
-                                          if (globalFormKey.currentState!.validate()) {
-                                            globalFormKey.currentState!.save();
-                                            if (_passwordController.text == _conPasswordController.text) {
-                                              signup(
-                                                _nameController.text.toString(),
-                                                _emailController.text.toString(),
-                                                _passwordController.text.toString(),
-                                                _conPasswordController.text.toString(),
-                                                context,
-                                              );
-                                            } else {
-                                              Fluttertoast.showToast(msg: "Passwords do not match!");
-                                            }
-                                          }
+                                          signup(
+                                            _nameController.text.toString(),
+                                            _emailController.text.toString(),
+                                            _passwordController.text.toString(),
+                                            _conPasswordController.text.toString(),
+                                            context,
+                                          );
                                         },
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.transparent,
@@ -589,7 +633,7 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                         child: Text(
                                           "Login",
                                           style: TextStyle(
-                                            color: kDefaultColor,
+                                            color: const Color(0xFF6366F1),
                                             fontWeight: FontWeight.bold,
                                             fontSize: 14,
                                           ),

@@ -39,6 +39,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   final _passwordController = TextEditingController();
 
   getLogin() async {
+    if (!_validateInputs()) return;
+    
     setState(() {
       _isLoading = true;
     });
@@ -83,12 +85,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               ),
             ),
           );
-          Fluttertoast.showToast(msg: "Login Successful");
+          _showSuccessToast("Login Successful");
         } else {
           // If email is not verified, navigate to the email verification page
-          Fluttertoast.showToast(
-            msg: "Please verify your email before logging in.",
-          );
+          _showErrorToast("Please verify your email before logging in.");
           navigator.pushReplacement(
             MaterialPageRoute(
               builder: (context) => EmailVerificationNotice(),
@@ -96,18 +96,56 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           );
         }
       } else {
-        Fluttertoast.showToast(msg: data['message']);
+        _showErrorToast(data['message'] ?? "Login failed");
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      Fluttertoast.showToast(
-        msg: "An error occurred: $e",
-        backgroundColor: Colors.red,
-        textColor: Colors.white,
-      );
+      _showErrorToast("An error occurred: ${e.toString().split('\n')[0]}");
     }
+  }
+
+  bool _validateInputs() {
+    if (_emailController.text.isEmpty) {
+      _showErrorToast("Email field cannot be empty");
+      return false;
+    } 
+    
+    if (_passwordController.text.isEmpty) {
+      _showErrorToast("Password field cannot be empty");
+      return false;
+    }
+    
+    if (!RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+        .hasMatch(_emailController.text)) {
+      _showErrorToast("Please enter a valid email address");
+      return false;
+    }
+    
+    return true;
+  }
+  
+  void _showSuccessToast(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: const Color(0xFF10B981),
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
+  }
+  
+  void _showErrorToast(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.redAccent,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
   }
 
   isLogin() async {
@@ -118,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       if (token == null) {
         // print("Token is Null");
       } else {
-        Fluttertoast.showToast(msg: "Welcome Back");
+        _showSuccessToast("Welcome Back");
         navigator.pushReplacement(MaterialPageRoute(
             builder: (context) => const TabsScreen(
                   pageIndex: 0,
@@ -163,6 +201,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   @override
   void dispose() {
     _controller.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -174,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: const BorderRadius.all(Radius.circular(16.0)),
-        borderSide: BorderSide(color: kDefaultColor, width: 1),
+        borderSide: BorderSide(color: const Color(0xFF6366F1), width: 1),
       ),
       border: OutlineInputBorder(
         borderRadius: const BorderRadius.all(Radius.circular(16.0)),
@@ -195,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
       prefixIcon: Icon(
         icon,
-        color: kDefaultColor,
+        color: const Color(0xFF6366F1),
         size: 22,
       ),
     );
@@ -219,7 +259,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 width: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: kDefaultColor.withOpacity(0.05),
+                  color: const Color(0xFF6366F1).withOpacity(0.05),
                 ),
               ),
             ),
@@ -231,7 +271,35 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 width: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: kDefaultColor.withOpacity(0.05),
+                  color: const Color(0xFF6366F1).withOpacity(0.05),
+                ),
+              ),
+            ),
+            
+            // Back button
+            Positioned(
+              top: 20,
+              left: 20,
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    size: 18,
+                    color: Color(0xFF6366F1),
+                  ),
                 ),
               ),
             ),
@@ -250,7 +318,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            SizedBox(height: 30),
+                            SizedBox(height: 60),
                             // App Logo
                             Container(
                               height: 100,
@@ -260,7 +328,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
+                                    color: const Color(0xFF6366F1).withOpacity(0.1),
                                     blurRadius: 20,
                                     spreadRadius: 5,
                                   ),
@@ -268,7 +336,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               ),
                               child: Center(
                                 child: Image.asset(
-                                  'assets/images/logo.png',
+                                  'assets/images/light_logo.png',
                                   height: 70,
                                   width: 70,
                                   fit: BoxFit.contain,
@@ -283,7 +351,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               style: TextStyle(
                                 fontSize: 30,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                                color: const Color(0xFF333333),
                                 letterSpacing: 0.5,
                               ),
                             ),
@@ -296,7 +364,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               ),
                               textAlign: TextAlign.center,
                             ),
-                            SizedBox(height: 60),
+                            SizedBox(height: 50),
                             
                             // Login Form
                             Form(
@@ -315,11 +383,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                     ),
                                     controller: _emailController,
                                     keyboardType: TextInputType.emailAddress,
-                                    validator: (input) =>
-                                        !RegExp(r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")
-                                                .hasMatch(input!)
-                                            ? "Email should be valid"
-                                            : null,
                                   ),
                                   SizedBox(height: 20),
                                   
@@ -331,9 +394,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                     ),
                                     keyboardType: TextInputType.text,
                                     controller: _passwordController,
-                                    validator: (input) => input!.length < 3
-                                        ? "Password should be more than 3 characters"
-                                        : null,
                                     obscureText: hidePassword,
                                     decoration: InputDecoration(
                                       enabledBorder: OutlineInputBorder(
@@ -342,7 +402,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(Radius.circular(16.0)),
-                                        borderSide: BorderSide(color: kDefaultColor, width: 1),
+                                        borderSide: BorderSide(color: const Color(0xFF6366F1), width: 1),
                                       ),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.all(Radius.circular(16.0)),
@@ -355,7 +415,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                       contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
                                       prefixIcon: Icon(
                                         Icons.lock_rounded,
-                                        color: kDefaultColor,
+                                        color: const Color(0xFF6366F1),
                                         size: 22,
                                       ),
                                       suffixIcon: IconButton(
@@ -390,7 +450,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                       child: Text(
                                         'Forgot Password?',
                                         style: TextStyle(
-                                          color: kDefaultColor,
+                                          color: const Color(0xFF6366F1),
                                           fontWeight: FontWeight.w600,
                                           fontSize: 14,
                                         ),
@@ -410,7 +470,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                       ),
                                       child: Center(
                                         child: CircularProgressIndicator(
-                                          color: kDefaultColor,
+                                          color: const Color(0xFF6366F1),
                                           strokeWidth: 3,
                                         ),
                                       ),
@@ -419,32 +479,25 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                     Container(
                                       width: double.infinity,
                                       decoration: BoxDecoration(
-                                        color: kDefaultColor,
+                                        gradient: const LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            Color(0xFF6366F1),
+                                            Color(0xFF8B5CF6),
+                                          ],
+                                        ),
                                         borderRadius: BorderRadius.circular(16),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: kDefaultColor.withOpacity(0.25),
-                                            blurRadius: 20,
-                                            offset: Offset(0, 10),
+                                            color: const Color(0xFF6366F1).withOpacity(0.3),
+                                            blurRadius: 12,
+                                            offset: Offset(0, 6),
                                           ),
                                         ],
                                       ),
                                       child: ElevatedButton(
-                                        onPressed: () {
-                                          if (_emailController.text.isNotEmpty &&
-                                              _passwordController.text.isNotEmpty) {
-                                            getLogin();
-                                          } else if (_emailController.text.isEmpty) {
-                                            Fluttertoast.showToast(
-                                                msg: "Email field cannot be empty");
-                                          } else if (_passwordController.text.isEmpty) {
-                                            Fluttertoast.showToast(
-                                                msg: "Password field cannot be empty");
-                                          } else {
-                                            Fluttertoast.showToast(
-                                                msg: "Email & password field cannot be empty");
-                                          }
-                                        },
+                                        onPressed: getLogin,
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.transparent,
                                           foregroundColor: Colors.white,
@@ -494,7 +547,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                   child: Text(
                                     "Sign Up",
                                     style: TextStyle(
-                                      color: kDefaultColor,
+                                      color: const Color(0xFF6366F1),
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
                                     ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:academy_lms_app/constants.dart';
-import 'package:academy_lms_app/screens/splash.dart';
+import 'package:academy_lms_app/screens/welcome_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   static const routeName = '/onboarding';
@@ -57,7 +57,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     await prefs.setBool('onboarding_completed', true);
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const SplashScreen()),
+        MaterialPageRoute(builder: (_) => const WelcomeScreen()),
       );
     }
   }
@@ -77,7 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: const Text(
                     'Skip',
                     style: TextStyle(
-                      color: kBlueColor,
+                      color: Color(0xFF6366F1),
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -120,7 +120,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         width: _currentPage == index ? 24 : 8,
                         decoration: BoxDecoration(
                           color: _currentPage == index
-                              ? kBlueColor
+                              ? const Color(0xFF6366F1)
                               : Colors.grey.shade300,
                           borderRadius: BorderRadius.circular(4),
                         ),
@@ -143,8 +143,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                       decoration: BoxDecoration(
-                        color: kBlueColor,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF6366F1),
+                            Color(0xFF8B5CF6),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF6366F1).withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Row(
                         children: [
@@ -231,7 +245,7 @@ class OnboardingPage extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF253342),
+                color: Color(0xFF333333),
               ),
               textAlign: TextAlign.center,
             ),
@@ -254,7 +268,7 @@ class OnboardingPage extends StatelessWidget {
               description,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey.shade600,
+                color: Colors.grey.shade700,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,

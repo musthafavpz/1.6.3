@@ -126,8 +126,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         // Fetch top instructors
         Provider.of<Courses>(context, listen: false).fetchTopInstructors();
         
-        // Fetch user's enrolled courses
-        Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
+        // Only fetch user's enrolled courses if user is logged in
+        if (user != null) {
+          Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
+        }
       } catch (e) {
         print('Error in didChangeDependencies: $e');
       }
@@ -193,7 +195,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       
       await Provider.of<Courses>(context, listen: false).fetchTopCourses();
       await Provider.of<Courses>(context, listen: false).fetchTopInstructors();
-      await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
+      
+      // Only fetch my courses if user is logged in
+      if (user != null) {
+        await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
+      }
 
       if (mounted) {
         setState(() {
@@ -218,8 +224,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         setState(() {
           _isLoading = false;
         });
-        const errorMsg = 'Could not refresh!';
-        CommonFunctions.showErrorDialog(errorMsg, context);
+        // Don't show error dialog for authentication issues
+        if (user == null) {
+          print('User not logged in - skipping error dialog');
+        } else {
+          const errorMsg = 'Could not refresh!';
+          CommonFunctions.showErrorDialog(errorMsg, context);
+        }
       }
     }
 
@@ -284,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                     ),
                     Text(
-                      userName != null ? '$userName!' : 'there!',
+                      userName != null ? '$userName!' : 'Guest!',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -300,9 +311,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ],
           ),
                 const SizedBox(height: 5),
-          const Text(
-                  'Ready to continue your learning journey?',
-            style: TextStyle(
+          Text(
+                  user != null 
+                  ? 'Ready to continue your learning journey?'
+                  : 'Sign in to track your progress and courses.',
+            style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF6366F1),
@@ -1391,6 +1404,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       // Continue Learning Section
                       Consumer<MyCourses>(
                           builder: (ctx, myCourses, _) {
+                            // Only show continue learning section if user is logged in
+                            if (user == null) {
+                              return const SizedBox.shrink();
+                            }
+                            
                             // Filter out courses with 100% completion
                             final inProgressCourses = myCourses.items
                                 .where((course) => (course.courseCompletion ?? 0) < 100)
