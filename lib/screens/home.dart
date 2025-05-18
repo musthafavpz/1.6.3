@@ -54,13 +54,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     if (mounted) {
       _animationController!.forward();
     }
-    
-    // Immediately refresh data when screen first loads
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        refreshList();
-      }
-    });
   }
 
   @override
@@ -102,7 +95,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void didChangeDependencies() {
     if (_isInit) {
-      setState(() {});
+      setState(() {
+        _isLoading = true; // Show loading indicator while fetching data
+      });
 
       try {
         Provider.of<Courses>(context, listen: false).fetchTopCourses().then((_) {
@@ -119,6 +114,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 // Sort in descending order (higher enrollment first)
                 return bEnrollment.compareTo(aEnrollment);
               });
+              
+              _isLoading = false; // Hide loading indicator when finished
             });
           }
         });
@@ -132,6 +129,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         }
       } catch (e) {
         print('Error in didChangeDependencies: $e');
+        if (mounted) {
+          setState(() {
+            _isLoading = false; // Hide loading indicator on error
+          });
+        }
       }
     }
     _isInit = false;
@@ -198,7 +200,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       
       // Only fetch my courses if user is logged in
       if (user != null) {
-        await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
+      await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
       }
 
       if (mounted) {
@@ -228,8 +230,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         if (user == null) {
           print('User not logged in - skipping error dialog');
         } else {
-          const errorMsg = 'Could not refresh!';
-          CommonFunctions.showErrorDialog(errorMsg, context);
+        const errorMsg = 'Could not refresh!';
+        CommonFunctions.showErrorDialog(errorMsg, context);
         }
       }
     }

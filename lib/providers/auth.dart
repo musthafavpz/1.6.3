@@ -39,11 +39,15 @@ class Auth with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
 
+    // Remove all user-related data
     prefs.remove('access_token');
     prefs.remove('user_name');
     prefs.remove('user_photo');
     prefs.remove('school_name');
-    prefs.clear();
+    prefs.remove('user');
+    prefs.remove('email');
+    prefs.remove('password');
+    // Don't clear onboarding_completed so users don't see onboarding again
   }
 
   Future<void> updateUserPassword(String currentPassword, String newPassword,

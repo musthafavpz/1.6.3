@@ -117,66 +117,21 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
     }
   }
 
-  @override
-  void initState() {
-    _tabController = TabController(length: 2, vsync: this);
-    super.initState();
-  }
-
-  @override
-  void didChangeDependencies() async {
-    if (_isInit) {
-      final prefs = await SharedPreferences.getInstance();
-      setState(() {
-        token = (prefs.getString('access_token') ?? '');
-      });
-      setState(() {
-        _isLoading = true;
-        // _authToken = Provider.of<Auth>(context, listen: false).token;
-        if (token != null && token.isNotEmpty) {
-          _isAuth = true;
-        } else {
-          _isAuth = false;
-        }
-      });
-
-      courseId = ModalRoute.of(context)!.settings.arguments as int;
-
-      Provider.of<Courses>(context, listen: false)
-          .fetchCourseDetailById(courseId)
-          .then((_) {
-        final courseDetail = Provider.of<Courses>(context, listen: false).getCourseDetail;
-        
-        // Initialize video player if preview is available
-        if (courseDetail.preview != null && courseDetail.preview!.isNotEmpty) {
-          final previewUrl = courseDetail.preview!;
-          
-          // Handle different video types
-          if (previewUrl.contains("youtube.com") || previewUrl.contains("youtu.be")) {
-            // Set landscape orientation for YouTube videos
-            SystemChrome.setPreferredOrientations([
-              DeviceOrientation.landscapeLeft,
-              DeviceOrientation.landscapeRight,
-            ]);
+  void _openVideoPlayer(String videoUrl, String type) {
+    if (type == "youtube") {
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => YoutubeVideoPlayerFlutter(
-                  courseId: courseDetail.courseId!,
-                  videoUrl: previewUrl,
+            courseId: loadedCourseDetail?.courseId ?? 0,
+            videoUrl: videoUrl,
                 ),
               ),
             );
-            // Reset to portrait orientation when returned
-            SystemChrome.setPreferredOrientations([
-              DeviceOrientation.portraitUp,
-              DeviceOrientation.portraitDown,
-            ]);
-          } else if (previewUrl.contains("drive.google.com")) {
+    } else if (type == "drive") {
             final RegExp regExp = RegExp(r'[-\w]{25,}');
-            final Match? match = regExp.firstMatch(previewUrl);
+      final Match? match = regExp.firstMatch(videoUrl);
             if (match != null) {
-              // Use iframe for Google Drive
               String iframeUrl = "https://drive.google.com/file/d/${match.group(0)}/preview";
               Navigator.push(
                 context,
@@ -192,44 +147,63 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                 ),
               );
             }
-          } else if (previewUrl.contains("vimeo.com")) {
-            String vimeoVideoId = previewUrl.split('/').last;
-            // Set landscape orientation for Vimeo videos
-            SystemChrome.setPreferredOrientations([
-              DeviceOrientation.landscapeLeft,
-              DeviceOrientation.landscapeRight,
-            ]);
+    } else if (type == "vimeo") {
+      String vimeoVideoId = videoUrl.split('/').last;
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => FromVimeoPlayer(
-                  courseId: courseDetail.courseId!,
+            courseId: loadedCourseDetail?.courseId ?? 0,
                   vimeoVideoId: vimeoVideoId
                 ),
               )
             );
-            // Reset to portrait orientation when returned
-            SystemChrome.setPreferredOrientations([
-              DeviceOrientation.portraitUp,
-              DeviceOrientation.portraitDown,
-            ]);
-          } else if (RegExp(r"\.mp4(\?|$)").hasMatch(previewUrl) || 
-                     RegExp(r"\.webm(\?|$)").hasMatch(previewUrl) || 
-                     RegExp(r"\.ogg(\?|$)").hasMatch(previewUrl)) {
-            // Set landscape orientation for direct video files
-            SystemChrome.setPreferredOrientations([
-              DeviceOrientation.landscapeLeft,
-              DeviceOrientation.landscapeRight,
-            ]);
-            _initializeVideoPlayer(previewUrl);
-            // Reset to portrait orientation when returned
-            SystemChrome.setPreferredOrientations([
-              DeviceOrientation.portraitUp,
-              DeviceOrientation.portraitDown,
-            ]);
-          }
-        }
+    } else if (type == "mp4") {
+      _initializeVideoPlayer(videoUrl);
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => NoPreviewVideo(),
+        ),
+      );
+    }
+  }
 
+  @override
+  void initState() {
+    _tabController = TabController(length: 2, vsync: this);
+    // Set the default orientation to portrait at the start
+            SystemChrome.setPreferredOrientations([
+              DeviceOrientation.portraitUp,
+              DeviceOrientation.portraitDown,
+            ]);
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() async {
+    if (_isInit) {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        token = (prefs.getString('access_token') ?? '');
+      });
+      setState(() {
+        _isLoading = true;
+        if (token != null && token.isNotEmpty) {
+          _isAuth = true;
+        } else {
+          _isAuth = false;
+        }
+      });
+
+      courseId = ModalRoute.of(context)!.settings.arguments as int;
+
+      Provider.of<Courses>(context, listen: false)
+          .fetchCourseDetailById(courseId)
+          .then((_) {
+        final courseDetail = Provider.of<Courses>(context, listen: false).getCourseDetail;
+        loadedCourseDetail = courseDetail;
         setState(() {
           _isLoading = false;
         });
@@ -243,6 +217,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
   void dispose() {
     _tabController.dispose();
     _podController?.dispose();
+    // Reset orientation when leaving the screen
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     super.dispose();
   }
 
@@ -287,6 +266,73 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
         );
     }
 
+  // Add helper function to calculate total duration for a section
+  String _calculateTotalDuration(dynamic section) {
+    if (section.mLesson == null || section.mLesson!.isEmpty) {
+      return '0m';
+    }
+    
+    int totalMinutes = 0;
+    int totalHours = 0;
+    
+    for (final lesson in section.mLesson!) {
+      if (lesson.duration != null && lesson.duration!.isNotEmpty) {
+        // Parse duration strings like "12m", "1h 30m", etc.
+        String duration = lesson.duration!;
+        
+        RegExp hourRegex = RegExp(r'(\d+)h');
+        RegExp minuteRegex = RegExp(r'(\d+)m');
+        
+        // Extract hours
+        final hourMatch = hourRegex.firstMatch(duration);
+        if (hourMatch != null && hourMatch.groupCount >= 1) {
+          totalHours += int.tryParse(hourMatch.group(1) ?? '0') ?? 0;
+        }
+        
+        // Extract minutes
+        final minuteMatch = minuteRegex.firstMatch(duration);
+        if (minuteMatch != null && minuteMatch.groupCount >= 1) {
+          totalMinutes += int.tryParse(minuteMatch.group(1) ?? '0') ?? 0;
+        }
+      }
+    }
+    
+    // Convert excess minutes to hours
+    totalHours += totalMinutes ~/ 60;
+    totalMinutes = totalMinutes % 60;
+    
+    // Format the result
+    if (totalHours > 0) {
+      return totalMinutes > 0 ? '${totalHours}h ${totalMinutes}m' : '${totalHours}h';
+    } else {
+      return '${totalMinutes}m';
+    }
+  }
+
+  // Helper function to get appropriate icon for lesson type
+  IconData _getLessonIcon(String lessonType) {
+    switch (lessonType.toLowerCase()) {
+      case 'video':
+      case 'youtube':
+      case 'vimeo-url':
+      case 'system-video':
+        return Icons.play_circle_outline;
+      case 'text':
+        return Icons.article_outlined;
+      case 'image':
+        return Icons.image_outlined;
+      case 'pdf':
+      case 'document_type':
+        return Icons.insert_drive_file_outlined;
+      case 'quiz':
+        return Icons.quiz_outlined;
+      case 'iframe':
+        return Icons.web_outlined;
+      default:
+        return Icons.play_lesson;
+    }
+    }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -303,6 +349,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                 
                 try {
                   loadedCourseDetails = courses.getCourseDetail;
+                  loadedCourseDetail = loadedCourseDetails;
                 } catch (e) {
                   // If there's an error, show an error message
                   return const Center(
@@ -335,7 +382,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
         );
                 }
                 
-                // Try to extract video URL for preview
+                // Extract video URL for preview
                 String? previewUrl = loadedCourseDetails.preview;
                 
                 return Column(
@@ -345,14 +392,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // YouTube-like thumbnail with embedded video player
+                            // Course thumbnail with play button
                             Stack(
                               alignment: Alignment.center,
                               children: [
-                                // Course thumbnail with YouTube-like aspect ratio
                                 Container(
                                   width: double.infinity,
-                                  height: 220, // Standard YouTube-like height
+                                  height: 220,
                                   decoration: BoxDecoration(
                                     image: DecorationImage(
                                       fit: BoxFit.cover,
@@ -382,87 +428,17 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                 GestureDetector(
                                   onTap: () {
                                       if (previewUrl.contains("youtube.com") || previewUrl.contains("youtu.be")) {
-                                        // Set landscape orientation for YouTube videos
-                                        SystemChrome.setPreferredOrientations([
-                                          DeviceOrientation.landscapeLeft,
-                                          DeviceOrientation.landscapeRight,
-                                        ]);
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => YoutubeVideoPlayerFlutter(
-                                              courseId: loadedCourseDetails.courseId!,
-                                              videoUrl: previewUrl,
-                                            ),
-                                          ),
-                                        );
-                                        // Reset to portrait orientation when returned
-                                        SystemChrome.setPreferredOrientations([
-                                          DeviceOrientation.portraitUp,
-                                          DeviceOrientation.portraitDown,
-                                        ]);
+                                      _openVideoPlayer(previewUrl, "youtube");
                                       } else if (previewUrl.contains("drive.google.com")) {
-                                        final RegExp regExp = RegExp(r'[-\w]{25,}');
-                                        final Match? match = regExp.firstMatch(previewUrl);
-                                        if (match != null) {
-                                          // Use iframe for Google Drive
-                                          String iframeUrl = "https://drive.google.com/file/d/${match.group(0)}/preview";
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => WebViewScreenIframe(url: iframeUrl),
-                                            ),
-                                          );
-                                        } else {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) => NoPreviewVideo(),
-                                          ),
-                                        );
-                                        }
+                                      _openVideoPlayer(previewUrl, "drive");
                                       } else if (previewUrl.contains("vimeo.com")) {
-                                        String vimeoVideoId = previewUrl.split('/').last;
-                                        // Set landscape orientation for Vimeo videos
-                                        SystemChrome.setPreferredOrientations([
-                                          DeviceOrientation.landscapeLeft,
-                                          DeviceOrientation.landscapeRight,
-                                        ]);
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => FromVimeoPlayer(
-                                              courseId: loadedCourseDetails.courseId!,
-                                              vimeoVideoId: vimeoVideoId
-                                            ),
-                                          )
-                                        );
-                                        // Reset to portrait orientation when returned
-                                        SystemChrome.setPreferredOrientations([
-                                          DeviceOrientation.portraitUp,
-                                          DeviceOrientation.portraitDown,
-                                        ]);
+                                      _openVideoPlayer(previewUrl, "vimeo");
                                       } else if (RegExp(r"\.mp4(\?|$)").hasMatch(previewUrl) || 
                                                 RegExp(r"\.webm(\?|$)").hasMatch(previewUrl) || 
                                                 RegExp(r"\.ogg(\?|$)").hasMatch(previewUrl)) {
-                                        // Set landscape orientation for direct video files
-                                        SystemChrome.setPreferredOrientations([
-                                          DeviceOrientation.landscapeLeft,
-                                          DeviceOrientation.landscapeRight,
-                                        ]);
-                                        _initializeVideoPlayer(previewUrl);
-                                        // Reset to portrait orientation when returned
-                                        SystemChrome.setPreferredOrientations([
-                                          DeviceOrientation.portraitUp,
-                                          DeviceOrientation.portraitDown,
-                                        ]);
+                                      _openVideoPlayer(previewUrl, "mp4");
                                     } else {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => NoPreviewVideo(),
-                                        ),
-                                      );
+                                      _openVideoPlayer(previewUrl, "other");
                                     }
                                   },
                                   child: Container(
@@ -491,15 +467,19 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                               ],
                             ),
                             
-                            // Course tabs
-                            Padding(
-                              padding: const EdgeInsets.all(16.0),
+                            // Course tabs - now full width and with removed space above
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.only(top: 0), // Removed space above
+                              margin: const EdgeInsets.symmetric(horizontal: 0),
                               child: Column(
                                 children: [
                                   Container(
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.symmetric(horizontal: 0),
                                     decoration: BoxDecoration(
                                       color: Colors.white,
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(0), // Remove rounded corners at top
                                       boxShadow: [
                                         BoxShadow(
                                           color: Colors.black.withOpacity(0.05),
@@ -556,6 +536,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                     ),
                                         ),
                                         Container(
+                                    width: double.infinity, // Full width
                                           constraints: BoxConstraints(
                                             minHeight: 200,
                                             maxHeight: MediaQuery.of(context).size.height * 0.6,
@@ -567,6 +548,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                               // About Tab
                                               SingleChildScrollView(
                                           child: Container(
+                                            width: double.infinity, // Full width
                                             decoration: BoxDecoration(
                                               color: Colors.white,
                                               borderRadius: BorderRadius.circular(12),
@@ -827,7 +809,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                                         ),
                                                       )
                                                     ).toList(),
-                                                const SizedBox(height: 60),
+                                                const SizedBox(height: 80), // Increased bottom spacing
                                                   ],
                                             ),
                                                 ),
@@ -836,6 +818,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                               // Lessons Tab
                                               SingleChildScrollView(
                                           child: Container(
+                                            width: double.infinity,
                                             decoration: BoxDecoration(
                                               color: Colors.white,
                                               borderRadius: BorderRadius.circular(12),
@@ -851,17 +834,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                                 child: Column(
                                                   crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [
-                                                    const Text(
-                                                      'Course Curriculum',
-                                                      style: TextStyle(
-                                                          fontSize: 20,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xFF6366F1),
-                                                  ),
-                                                    ),
-                                                    const SizedBox(height: 15),
-                                                    
-                                                    // Course sections and lessons
+                                                // Removed the "Course Curriculum" text 
+                                                // Course sections and lessons with updated styling
                                                     ListView.builder(
                                                       key: Key('builder ${selected.toString()}'),
                                                       shrinkWrap: true,
@@ -869,138 +843,287 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                                       itemCount: loadedCourseDetails.mSection!.length,
                                                       itemBuilder: (ctx, index) {
                                                         final section = loadedCourseDetails.mSection![index];
+                                                    
+                                                    // Check if we have lessons
+                                                    bool hasLessons = section.mLesson != null && section.mLesson!.isNotEmpty;
+                                                    
                                                         return Padding(
-                                                          padding: const EdgeInsets.only(bottom: 10.0),
+                                                      padding: const EdgeInsets.only(bottom: 18),
                                                           child: Container(
                                                             decoration: BoxDecoration(
+                                                          color: Colors.white,
+                                                          borderRadius: BorderRadius.circular(16),
                                                               boxShadow: [
                                                                 BoxShadow(
-                                                                  color: kBackButtonBorderColor.withOpacity(0.05),
-                                                                  blurRadius: 10,
-                                                                  offset: const Offset(0, 2),
-                                                                ),
-                                                              ],
-                                                              borderRadius: BorderRadius.circular(10),
+                                                              color: Colors.black.withOpacity(0.05),
+                                                              blurRadius: 12,
+                                                              offset: const Offset(0, 3),
                                                             ),
-                                                            child: Card(
-                                                              elevation: 0.5,
-                                                              shape: RoundedRectangleBorder(
-                                                                borderRadius: BorderRadius.circular(10),
-                                                              ),
-                                                              child: ExpansionTile(
-                                                                key: Key(index.toString()),
-                                                                initiallyExpanded: index == selected,
-                                                                onExpansionChanged: ((newState) {
-                                                                  if (newState) {
+                                                          ],
+                                                        ),
+                                                        child: Column(
+                                                          children: [
+                                                            // Section header
+                                                            InkWell(
+                                                              onTap: () {
                                                                     setState(() {
-                                                                      selected = index;
-                                                                    });
-                                                                  } else {
-                                                                    setState(() {
+                                                                  if (selected == index) {
                                                                       selected = -1;
-                                                                    });
+                                                                  } else {
+                                                                    selected = index;
                                                                   }
-                                                                }),
-                                                                iconColor: kDefaultColor,
-                                                                collapsedIconColor: kSelectItemColor,
-                                                                trailing: Icon(
-                                                                  selected == index
-                                                                      ? Icons.keyboard_arrow_up_rounded
-                                                                      : Icons.keyboard_arrow_down_rounded,
-                                                                  size: 30,
+                                                                });
+                                                              },
+                                                              borderRadius: selected == index
+                                                                ? const BorderRadius.only(
+                                                                    topLeft: Radius.circular(16),
+                                                                    topRight: Radius.circular(16),
+                                                                  )
+                                                                : BorderRadius.circular(16),
+                                                              child: Container(
+                                                                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 16),
+                                                                decoration: BoxDecoration(
+                                                                  color: Colors.white,
+                                                                  borderRadius: selected == index
+                                                                    ? const BorderRadius.only(
+                                                                        topLeft: Radius.circular(16),
+                                                                        topRight: Radius.circular(16),
+                                                                      )
+                                                                    : BorderRadius.circular(16),
                                                                 ),
-                                                                shape: RoundedRectangleBorder(
-                                                                  borderRadius: BorderRadius.circular(10),
-                                                                ),
-                                                                title: Padding(
-                                                                  padding: const EdgeInsets.symmetric(vertical: 5.0),
+                                                                child: Row(
+                                                                  children: [
+                                                                    Container(
+                                                                      width: 36,
+                                                                      height: 36,
+                                                                      decoration: BoxDecoration(
+                                                                        color: const Color(0xFF6366F1).withOpacity(0.1),
+                                                                        shape: BoxShape.circle,
+                                                                      ),
+                                                                      child: Center(
+                                                                        child: Text(
+                                                                          '${index + 1}',
+                                                                          style: const TextStyle(
+                                                                            fontWeight: FontWeight.bold,
+                                                                            color: Color(0xFF6366F1),
+                                                                            fontSize: 15,
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                    const SizedBox(width: 12),
+                                                                    Expanded(
                                                                   child: Column(
                                                                     crossAxisAlignment: CrossAxisAlignment.start,
                                                                     children: [
                                                                       Text(
-                                                                        '${index + 1}. ${HtmlUnescape().convert(section.title.toString())}',
+                                                                            HtmlUnescape().convert(section.title.toString()),
                                                                         style: const TextStyle(
-                                                                          fontSize: 16,
-                                                                          fontWeight: FontWeight.w500,
-                                                                        ),
-                                                                      ),
-                                                                      const SizedBox(height: 8),
-                                                                      Row(
-                                                                        children: [
-                                                                          Container(
-                                                                            padding: const EdgeInsets.symmetric(
-                                                                              horizontal: 10,
-                                                                              vertical: 5,
+                                                                              fontSize: 15,
+                                                                              fontWeight: FontWeight.w500, // Reduced from bold to w500
+                                                                              color: Color(0xFF333333),
                                                                             ),
+                                                                          ),
+                                                                          // Return to container pills style matching my_course_detail.dart
+                                                                          Padding(
+                                                                            padding: const EdgeInsets.symmetric(vertical: 5.0),
+                                                                            child: Row(
+                                                                        children: [
+                                                                                Expanded(
+                                                                                  flex: 1,
+                                                                                  child: Container(
                                                                             decoration: BoxDecoration(
                                                                               color: kTimeBackColor.withOpacity(0.12),
                                                                               borderRadius: BorderRadius.circular(5),
                                                                             ),
+                                                                                    padding: const EdgeInsets.symmetric(
+                                                                                      vertical: 5.0,
+                                                                                    ),
+                                                                                    child: Align(
+                                                                                      alignment: Alignment.center,
                                                                             child: Text(
-                                                                              section.totalDuration.toString(),
+                                                                                        section.totalDuration != null ? 
+                                                                                          section.totalDuration.toString() : 
+                                                                                          _calculateTotalDuration(section),
                                                                               style: const TextStyle(
-                                                                                fontSize: 12,
+                                                                                          fontSize: 10,
                                                                                 fontWeight: FontWeight.w400,
                                                                                 color: kTimeColor,
                                                                               ),
                                                                             ),
                                                                           ),
-                                                                          const SizedBox(width: 10),
-                                                                          Container(
-                                                                            padding: const EdgeInsets.symmetric(
-                                                                              horizontal: 10,
-                                                                              vertical: 5,
                                                                             ),
+                                                                                ),
+                                                                                const SizedBox(width: 10.0),
+                                                                                Expanded(
+                                                                                  flex: 1,
+                                                                                  child: Container(
                                                                             decoration: BoxDecoration(
                                                                               color: kLessonBackColor.withOpacity(0.12),
                                                                               borderRadius: BorderRadius.circular(5),
                                                                             ),
+                                                                                    padding: const EdgeInsets.symmetric(
+                                                                                      vertical: 5.0,
+                                                                                    ),
+                                                                                    child: Align(
+                                                                                      alignment: Alignment.center,
                                                                             child: Text(
                                                                               '${section.mLesson!.length} Lessons',
                                                                               style: const TextStyle(
-                                                                                fontSize: 12,
+                                                                                          fontSize: 10,
                                                                                 fontWeight: FontWeight.w400,
                                                                                 color: kLessonColor,
                                                                               ),
                                                                             ),
                                                                           ),
+                                                                                  ),
+                                                                                ),
+                                                                                const Expanded(flex: 1, child: Text("")),
                                                                         ],
+                                                                            ),
                                                                       ),
                                                                     ],
                                                                   ),
                                                                 ),
+                                                                    Container(
+                                                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                                      decoration: BoxDecoration(
+                                                                        color: const Color(0xFF6366F1).withOpacity(0.1),
+                                                                        borderRadius: BorderRadius.circular(16),
+                                                                      ),
+                                                                      child: Icon(
+                                                                        selected == index ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                                                        color: const Color(0xFF6366F1),
+                                                                        size: 20,
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            
+                                                            // Lesson list (expanded/collapsed based on state)
+                                                            AnimatedCrossFade(
+                                                              firstChild: const SizedBox(height: 0),
+                                                              secondChild: Column(
                                                                 children: [
-                                                                  ListView.builder(
-                                                                    shrinkWrap: true,
+                                                                  ListView.separated(
                                                                     physics: const NeverScrollableScrollPhysics(),
+                                                                    shrinkWrap: true,
                                                                     itemCount: section.mLesson!.length,
-                                                                    itemBuilder: (ctx, index) {
-                                                                      return Padding(
-                                                                        padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                                                                    separatorBuilder: (context, index) => Divider(
+                                                                      height: 1,
+                                                                      color: Colors.grey.shade200,
+                                                                    ),
+                                                                    itemBuilder: (ctx, i) {
+                                                                      final lesson = section.mLesson![i];
+                                                                      
+                                                                      return Material(
+                                                                        color: Colors.transparent,
+                                                                        child: InkWell(
+                                                                          highlightColor: const Color(0xFF6366F1).withOpacity(0.05),
+                                                                          splashColor: const Color(0xFF6366F1).withOpacity(0.1),
+                                                                          onTap: () {},
+                                                                          child: Container(
+                                                                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                                                            child: Row(
+                                                                              children: [
+                                                                                // Lesson icon based on type
+                                                                                Container(
+                                                                                  width: 32,
+                                                                                  height: 32,
+                                                                                  decoration: BoxDecoration(
+                                                                                    color: Colors.grey.shade100,
+                                                                                    borderRadius: BorderRadius.circular(10),
+                                                                                  ),
+                                                                                  child: Center(
+                                                                                    child: Icon(
+                                                                                      _getLessonIcon(lesson.lessonType ?? ''),
+                                                                                      color: Colors.grey.shade600,
+                                                                                      size: 18,
+                                                                                    ),
+                                                                                  ),
+                                                                                ),
+                                                                                const SizedBox(width: 12),
+                                                                                
+                                                                                // Lesson title and duration
+                                                                                Expanded(
                                                                         child: Column(
+                                                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                    mainAxisSize: MainAxisSize.min,
                                                                           children: [
-                                                                            LessonListItem(
-                                                                              lesson: section.mLesson![index],
-                                                                              courseId: loadedCourseDetails.courseId!,
+                                                                                      Text(
+                                                                                        lesson.title ?? '',
+                                                                                        style: const TextStyle(
+                                                                                          fontWeight: FontWeight.w500,
+                                                                                          fontSize: 14,
+                                                                                          color: Color(0xFF333333),
+                                                                                        ),
+                                                                                      ),
+                                                                                      if (lesson.duration != null && lesson.duration!.isNotEmpty)
+                                                                                        Padding(
+                                                                                          padding: const EdgeInsets.only(top: 2),
+                                                                                          child: Row(
+                                                                                            children: [
+                                                                                              Icon(
+                                                                                                Icons.access_time,
+                                                                                                size: 10,
+                                                                                                color: Colors.grey.shade600,
+                                                                                              ),
+                                                                                              const SizedBox(width: 3),
+                                                                                              Text(
+                                                                                                lesson.duration ?? '',
+                                                                                                style: TextStyle(
+                                                                                                  fontSize: 11,
+                                                                                                  fontWeight: FontWeight.w500,
+                                                                                                  color: Colors.grey.shade700,
+                                                                                                ),
+                                                                                              ),
+                                                                                            ],
+                                                                                          ),
+                                                                                        ),
+                                                                                    ],
+                                                                                  ),
+                                                                                ),
+                                                                                
+                                                                                // Preview label if available
+                                                                                if (hasLessons && i == 0)
+                                                                                  Container(
+                                                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                                                    decoration: BoxDecoration(
+                                                                                      color: const Color(0xFF6366F1).withOpacity(0.1),
+                                                                                      borderRadius: BorderRadius.circular(4),
+                                                                                    ),
+                                                                                    child: const Text(
+                                                                                      'Preview',
+                                                                                      style: TextStyle(
+                                                                                        fontSize: 10,
+                                                                                        fontWeight: FontWeight.bold,
+                                                                                        color: Color(0xFF6366F1),
+                                                                                      ),
+                                                                                    ),
+                                                                                  ),
+                                                                              ],
                                                                             ),
-                                                                            if ((section.mLesson!.length - 1) != index)
-                                                                              Divider(
-                                                                                color: kGreyLightColor.withOpacity(0.3),
-                                                                              ),
-                                                                            if ((section.mLesson!.length - 1) == index)
-                                                                              const SizedBox(height: 10),
-                                                                          ],
+                                                                          ),
                                                                         ),
                                                                       );
                                                                     },
                                                                   ),
                                                                 ],
                                                               ),
+                                                              crossFadeState: selected == index 
+                                                                  ? CrossFadeState.showSecond 
+                                                                  : CrossFadeState.showFirst,
+                                                              duration: const Duration(milliseconds: 300),
+                                                            ),
+                                                          ],
                                                             ),
                                                           ),
                                                         );
                                                       },
                                                     ),
+                                                const SizedBox(height: 30), // Added bottom spacing for Lessons tab
                                                   ],
                                                 ),
                                           ),
@@ -1062,62 +1185,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                 ),
               ),
               
-              // Buttons
-              if (!loadedCourseDetails.isPurchased!)
-                loadedCourseDetails.isPaid == 1 ? Expanded(
-                  flex: 3,
-                  child: GestureDetector(
-                    onTap: () async {
-                      final prefs = await SharedPreferences.getInstance();
-                      final authToken = (prefs.getString('access_token') ?? '');
-                      if (authToken.isNotEmpty) {
-                        // Call the provider method to toggle the cart state
-                        Provider.of<Courses>(context, listen: false)
-                            .toggleCart(loadedCourseDetails.courseId!, false);
-                        // Show toast based on current state
-                        if (loadedCourseDetails.is_cart!) {
-                          CommonFunctions.showSuccessToast("Removed from cart");
-                        } else {
-                          CommonFunctions.showSuccessToast("Added to cart");
-                        }
-                      } else {
-                        CommonFunctions.showWarningToast('Please login first');
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: loadedCourseDetails.is_cart! 
-                            ? const Color(0xFF6366F1).withOpacity(0.1)
-                            : Colors.grey.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: loadedCourseDetails.is_cart!
-                              ? const Color(0xFF6366F1)
-                              : Colors.grey.withOpacity(0.3),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          loadedCourseDetails.is_cart! ? 'In Cart' : 'Add to Cart',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: loadedCourseDetails.is_cart!
-                                ? const Color(0xFF6366F1)
-                                : Colors.grey[700],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ) : const SizedBox(),
-              
-              const SizedBox(width: 10),
-              
               // Buy Now or Enroll button
               Expanded(
-                flex: 4,
+                flex: 5,
                 child: GestureDetector(
                   onTap: () async {
                     final prefs = await SharedPreferences.getInstance();

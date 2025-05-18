@@ -3,7 +3,7 @@ import 'dart:async';
 import 'dart:math' show pi;
 import 'package:confetti/confetti.dart';
 import '../constants.dart';
-import 'my_courses.dart';
+import 'tab_screen.dart';
 
 class PaymentSuccessfulScreen extends StatefulWidget {
   const PaymentSuccessfulScreen({Key? key}) : super(key: key);
@@ -45,7 +45,7 @@ class _PaymentSuccessfulScreenState extends State<PaymentSuccessfulScreen> {
     if (mounted) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const MyCoursesScreen()),
+        MaterialPageRoute(builder: (context) => const TabsScreen(pageIndex: 2)),
       );
     }
   }
@@ -72,12 +72,12 @@ class _PaymentSuccessfulScreenState extends State<PaymentSuccessfulScreen> {
                   width: 120,
                   height: 120,
                   decoration: BoxDecoration(
-                    color: Colors.green.shade50,
+                    color: const Color(0xFF6366F1).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.check_circle,
-                    color: Colors.green,
+                    color: Color(0xFF10B981),
                     size: 80,
                   ),
                 ),
@@ -90,7 +90,7 @@ class _PaymentSuccessfulScreenState extends State<PaymentSuccessfulScreen> {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green,
+                    color: Color(0xFF10B981),
                   ),
                 ),
                 
@@ -152,10 +152,10 @@ class _PaymentSuccessfulScreenState extends State<PaymentSuccessfulScreen> {
               numberOfParticles: 15,
               gravity: 0.2,
               colors: const [
-                Colors.green,
-                Colors.blue,
-                Colors.orange,
-                Colors.purple,
+                Color(0xFF6366F1),
+                Color(0xFF8B5CF6),
+                Color(0xFF10B981),
+                Color(0xFFFFA000),
               ],
             ),
           ),

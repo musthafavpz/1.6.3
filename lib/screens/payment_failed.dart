@@ -12,7 +12,7 @@ class PaymentFailedScreen extends StatelessWidget {
         title: const Text('Payment Failed'),
         elevation: 0,
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        foregroundColor: Color(0xFF333333),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -33,12 +33,12 @@ class PaymentFailedScreen extends StatelessWidget {
                         width: 120,
                         height: 120,
                         decoration: BoxDecoration(
-                          color: Colors.red.shade50,
+                          color: const Color(0xFF6366F1).withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
                           Icons.cancel,
-                          color: Colors.red,
+                          color: Color(0xFFEF4444), // Red with app color scheme
                           size: 80,
                         ),
                       ),
@@ -64,7 +64,7 @@ class PaymentFailedScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.red,
+                      color: Color(0xFFEF4444), // Red with app color scheme
                     ),
                   ),
                 ),
@@ -117,7 +117,7 @@ class PaymentFailedScreen extends StatelessWidget {
                   child: Text(
                     'Return to Cart',
                     style: TextStyle(
-                      color: Colors.grey.shade700,
+                      color: Color(0xFF6366F1),
                       fontSize: 16,
                     ),
                   ),

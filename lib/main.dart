@@ -34,13 +34,18 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final showOnboarding = prefs.getBool('onboarding_completed') != true;
   
-  runApp(MyApp(showOnboarding: showOnboarding));
+  // Check if user is already logged in
+  final token = prefs.getString('access_token');
+  final isLoggedIn = token != null && token.isNotEmpty;
+  
+  runApp(MyApp(showOnboarding: showOnboarding, isLoggedIn: isLoggedIn));
 }
 
 class MyApp extends StatelessWidget {
   final bool showOnboarding;
+  final bool isLoggedIn;
   
-  const MyApp({super.key, this.showOnboarding = true});
+  const MyApp({super.key, this.showOnboarding = true, this.isLoggedIn = false});
 
   // This widget is the root of your application.
   @override
@@ -83,7 +88,9 @@ class MyApp extends StatelessWidget {
             useMaterial3: true,
           ),
           debugShowCheckedModeBanner: false,
-          home: showOnboarding ? const OnboardingScreen() : const WelcomeScreen(),
+          home: isLoggedIn 
+                ? const TabsScreen(pageIndex: 0) 
+                : (showOnboarding ? const OnboardingScreen() : const WelcomeScreen()),
           routes: {
             '/home': (ctx) => const TabsScreen(
                   pageIndex: 0,

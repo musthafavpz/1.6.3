@@ -78,12 +78,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             sharedPreferences!.setString("password", _passwordController.text.toString());
           });
           token = sharedPreferences!.getString("access_token");
-          navigator.pushReplacement(
+          navigator.pushAndRemoveUntil(
             MaterialPageRoute(
               builder: (context) => const TabsScreen(
                 pageIndex: 0,
               ),
             ),
+            (route) => false, // This clears the navigation stack
           );
           _showSuccessToast("Login Successful");
         } else {
@@ -157,10 +158,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         // print("Token is Null");
       } else {
         _showSuccessToast("Welcome Back");
-        navigator.pushReplacement(MaterialPageRoute(
-            builder: (context) => const TabsScreen(
-                  pageIndex: 0,
-                )));
+        navigator.pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const TabsScreen(pageIndex: 0),
+          ),
+          (route) => false, // This clears the navigation stack
+        );
       }
     } catch (e) {
       // print("Exception is $e");

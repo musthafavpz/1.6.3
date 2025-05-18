@@ -749,6 +749,73 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                             : const Color(0xFF333333), // Dark text for incomplete sections
                                         ),
                                       ),
+                                      const SizedBox(height: 4),
+                                      // Time and lessons info
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 5.0),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              flex: 1,
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  color: allLessonsCompleted 
+                                                    ? Colors.white.withOpacity(0.2) 
+                                                    : kTimeBackColor.withOpacity(0.12),
+                                                  borderRadius: BorderRadius.circular(5),
+                                                ),
+                                                padding: const EdgeInsets.symmetric(
+                                                  vertical: 5.0,
+                                                ),
+                                                child: Align(
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    sections[index].totalDuration != null ? 
+                                                      sections[index].totalDuration.toString() : 
+                                                      _calculateTotalDuration(sections[index]),
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.w400,
+                                                      color: allLessonsCompleted 
+                                                        ? Colors.white
+                                                        : kTimeColor,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 10.0),
+                                            Expanded(
+                                              flex: 1,
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  color: allLessonsCompleted 
+                                                    ? Colors.white.withOpacity(0.2) 
+                                                    : kLessonBackColor.withOpacity(0.12),
+                                                  borderRadius: BorderRadius.circular(5),
+                                                ),
+                                                padding: const EdgeInsets.symmetric(
+                                                  vertical: 5.0,
+                                                ),
+                                                child: Align(
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    '${sections[index].mLesson!.length} Lessons',
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.w400,
+                                                      color: allLessonsCompleted 
+                                                        ? Colors.white
+                                                        : kLessonColor,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const Expanded(flex: 1, child: Text("")),
+                                          ],
+                                        ),
+                                      ),
                                       if (!allLessonsCompleted && sectionCompletionPercentage > 0)
                                         Padding(
                                           padding: const EdgeInsets.only(top: 4),
@@ -789,37 +856,13 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                       : const Color(0xFF6366F1).withOpacity(0.1), // Light purple for incomplete
                                     borderRadius: BorderRadius.circular(16),
                                   ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.play_lesson,
-                                        color: allLessonsCompleted 
-                                          ? Colors.white 
-                                          : const Color(0xFF6366F1), // Purple icon for incomplete
-                                        size: 10,
-                                      ),
-                                      const SizedBox(width: 3),
-                                      Text(
-                                        '${sections[index].mLesson!.length} lessons',
-                                        style: TextStyle(
-                                          fontFamily: 'Arial',
-                                          color: allLessonsCompleted 
-                                            ? Colors.white 
-                                            : const Color(0xFF6366F1), // Purple text for incomplete
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
+                                  child: Icon(
+                                    isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                    color: allLessonsCompleted 
+                                      ? Colors.white 
+                                      : const Color(0xFF6366F1), // Purple icon for incomplete
+                                    size: 20,
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                Icon(
-                                  isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                                  color: allLessonsCompleted 
-                                    ? Colors.white 
-                                    : const Color(0xFF6366F1), // Purple icon for incomplete
-                                  size: 20,
                                 ),
                               ],
                             ),
@@ -1724,5 +1767,47 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
         ),
       ),
     );
+  }
+
+  String _calculateTotalDuration(dynamic section) {
+    if (section.mLesson == null || section.mLesson!.isEmpty) {
+      return '0m';
+    }
+    
+    int totalMinutes = 0;
+    int totalHours = 0;
+    
+    for (final lesson in section.mLesson!) {
+      if (lesson.duration != null && lesson.duration!.isNotEmpty) {
+        // Parse duration strings like "12m", "1h 30m", etc.
+        String duration = lesson.duration!;
+        
+        RegExp hourRegex = RegExp(r'(\d+)h');
+        RegExp minuteRegex = RegExp(r'(\d+)m');
+        
+        // Extract hours
+        final hourMatch = hourRegex.firstMatch(duration);
+        if (hourMatch != null && hourMatch.groupCount >= 1) {
+          totalHours += int.tryParse(hourMatch.group(1) ?? '0') ?? 0;
+        }
+        
+        // Extract minutes
+        final minuteMatch = minuteRegex.firstMatch(duration);
+        if (minuteMatch != null && minuteMatch.groupCount >= 1) {
+          totalMinutes += int.tryParse(minuteMatch.group(1) ?? '0') ?? 0;
+        }
+      }
+    }
+    
+    // Convert excess minutes to hours
+    totalHours += totalMinutes ~/ 60;
+    totalMinutes = totalMinutes % 60;
+    
+    // Format the result
+    if (totalHours > 0) {
+      return totalMinutes > 0 ? '${totalHours}h ${totalMinutes}m' : '${totalHours}h';
+    } else {
+      return '${totalMinutes}m';
+    }
   }
 }
