@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../constants.dart';
+import 'package:flutter/services.dart';
 
 // Reusing AIChatMessage and AIChatService from my_course_detail.dart
 class AIChatMessage {
@@ -42,12 +43,14 @@ class AIChatMessage {
 
 // AI Chat Service - adapted from my_course_detail.dart
 class AppAIChatService {
-  static const String apiKey = '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';
-  static const String apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+  static const String apiKey = 'AIzaSyDzZXEEf4Qq6RGZFspR7NJO3VsfT1NAJnI';
+  static const String apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
   final List<Map<String, dynamic>> _memory = [];
   String _currentScreen = '';
   String _currentScreenDetails = '';
-  final List<Map<String, dynamic>> _predefinedPrompts = [
+  String _systemPrompt = '';
+  Map<String, dynamic> _config = {};
+  List<Map<String, dynamic>> _predefinedPrompts = [
     {
       'label': 'Navigation',
       'prefix': 'How do I navigate to',
@@ -93,8 +96,8 @@ class AppAIChatService {
   // Load system prompt - navigation/support focused
   Future<void> _loadSystemPrompt() async {
     try {
-      // Navigation-focused system prompt
-      String systemPrompt = 'You are an AI support agent for the Elegance educational app. '
+      // Default navigation-focused system prompt
+      _systemPrompt = 'You are an AI support agent for the Elegance educational app. '
           'Your role is to help users navigate the app, understand features, and solve any issues they encounter. '
           'The app has the following main sections: Home, Explore, My Courses, and Account. '
           'You should be friendly, concise, and helpful. '
@@ -103,10 +106,37 @@ class AppAIChatService {
           'When user asks about "this screen", provide information about their current screen. '
           'Keep your responses brief and focused on helping users use the app effectively.';
       
+      // Try to load JSON config first
+      try {
+        final String configJson = await rootBundle.loadString('assets/config/ai_assistant_config.json');
+        if (configJson.isNotEmpty) {
+          _config = jsonDecode(configJson);
+          _systemPrompt = _config['appSystemPrompt'] ?? _systemPrompt; // Use appSystemPrompt for app navigation
+          if (_config['appPredefinedPrompts'] != null) {
+            _predefinedPrompts = List<Map<String, dynamic>>.from(_config['appPredefinedPrompts']);
+          }
+          print('Loaded AI assistant JSON configuration');
+        }
+      } catch (e) {
+        print('Could not load AI assistant JSON config: $e');
+        
+        // Try to load text config as fallback
+        try {
+          final String configText = await rootBundle.loadString('assets/config/ai_assistant_config.txt');
+          if (configText.isNotEmpty) {
+            _systemPrompt = configText;
+            print('Loaded AI assistant text configuration');
+          }
+        } catch (e) {
+          print('Could not load AI assistant text config: $e');
+          // Continue with default prompt
+        }
+      }
+      
       // Add system message to memory
       _memory.add({
         'role': 'system',
-        'content': systemPrompt
+        'content': _systemPrompt
       });
     } catch (e) {
       print('Error in _loadSystemPrompt: $e');
@@ -167,30 +197,92 @@ class AppAIChatService {
       // Add user message to memory
       addToMemory(message, true);
       
+      // Prepare the conversation history for Gemini
+      List<Map<String, dynamic>> contents = [];
+      
+      // Add system message if available
+      if (_memory.isNotEmpty && _memory.first['role'] == 'system') {
+        contents.add({
+          'role': 'user',
+          'parts': [{'text': _memory.first['content']}]
+        });
+        contents.add({
+          'role': 'model',
+          'parts': [{'text': 'I understand. I will help you with the Elegance educational app.'}]
+        });
+      }
+      
+      // Add conversation history
+      for (int i = 1; i < _memory.length; i++) {
+        final msg = _memory[i];
+        contents.add({
+          'role': msg['role'] == 'user' ? 'user' : 'model',
+          'parts': [{'text': msg['content']}]
+        });
+      }
+      
+      // Create request body for Gemini API
+      final Map<String, dynamic> requestBody = {
+        'contents': contents,
+        'generationConfig': {
+          'temperature': 0.7,
+          'topK': 40,
+          'topP': 0.95,
+          'maxOutputTokens': 1024,
+        },
+        'safetySettings': [
+          {
+            'category': 'HARM_CATEGORY_HARASSMENT',
+            'threshold': 'BLOCK_MEDIUM_AND_ABOVE'
+          },
+          {
+            'category': 'HARM_CATEGORY_HATE_SPEECH',
+            'threshold': 'BLOCK_MEDIUM_AND_ABOVE'
+          },
+          {
+            'category': 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+            'threshold': 'BLOCK_MEDIUM_AND_ABOVE'
+          },
+          {
+            'category': 'HARM_CATEGORY_DANGEROUS_CONTENT',
+            'threshold': 'BLOCK_MEDIUM_AND_ABOVE'
+          }
+        ]
+      };
+      
+      // Send request to Gemini API
       final response = await http.post(
-        Uri.parse(apiUrl),
+        Uri.parse('$apiUrl?key=$apiKey'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
-          'HTTP-Referer': 'https://academy_lms_app.com',
-          'X-Title': 'Academy LMS App',
         },
-        body: jsonEncode({
-          'model': 'meta-llama/llama-3-8b-instruct:free',
-          'messages': _memory,
-        }),
+        body: jsonEncode(requestBody),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final aiResponse = data['choices'][0]['message']['content'];
+        
+        // Extract the response text from Gemini's response format
+        String aiResponse = '';
+        if (data['candidates'] != null && data['candidates'].isNotEmpty) {
+          final candidate = data['candidates'][0];
+          if (candidate['content'] != null && 
+              candidate['content']['parts'] != null && 
+              candidate['content']['parts'].isNotEmpty) {
+            aiResponse = candidate['content']['parts'][0]['text'];
+          }
+        }
+        
+        if (aiResponse.isEmpty) {
+          aiResponse = 'I apologize, but I could not generate a proper response. Please try again.';
+        }
         
         // Add AI response to memory
         addToMemory(aiResponse, false);
         
         return aiResponse;
       } else {
-        print('API Error: ${response.statusCode} - ${response.body}');
+        print('Gemini API Error: ${response.statusCode} - ${response.body}');
         // Provide more detailed error message
         if (response.statusCode == 401) {
           print('Authentication error - API key issue');

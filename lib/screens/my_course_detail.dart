@@ -74,16 +74,33 @@ class AIChatMessage {
 
 // AI Chat Service
 class AIChatService {
-  static const String apiKey = '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';
-  static const String apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+  static const String apiKey = 'AIzaSyDzZXEEf4Qq6RGZFspR7NJO3VsfT1NAJnI';
+  static const String apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
   final List<Map<String, dynamic>> _memory = [];
   String _systemPrompt = '';
   Map<String, dynamic> _config = {};
   List<Map<String, dynamic>> _predefinedPrompts = [];
+  String _currentLessonName = '';
+  String _currentLessonDescription = '';
 
   // Initialize with system message
   AIChatService() {
     _loadSystemPrompt();
+  }
+
+  // Set current lesson info
+  void setCurrentLesson(String lessonName, String lessonDescription) {
+    _currentLessonName = lessonName;
+    _currentLessonDescription = lessonDescription;
+    
+    // Add current lesson context to memory if it changed
+    if (_memory.length > 1) {
+      // Add a system message with current lesson context
+      _memory.add({
+        'role': 'system',
+        'content': 'User is currently viewing the lesson "$lessonName". $lessonDescription'
+      });
+    }
   }
 
   // Load system prompt from configuration file
@@ -159,24 +176,70 @@ class AIChatService {
 
   Future<String> sendMessage(String message) async {
     try {
+      // Check if message is asking about current lesson
+      if (message.toLowerCase().contains("this lesson") || 
+          message.toLowerCase().contains("current lesson") ||
+          message.toLowerCase().contains("this topic")) {
+        // Ensure we have current lesson context in the chat
+        if (_currentLessonName.isNotEmpty && !_memory.any((msg) => 
+            msg['role'] == 'system' && 
+            msg['content'].contains('User is currently viewing the lesson "$_currentLessonName"'))) {
+          // Add current lesson context
+          _memory.add({
+            'role': 'system',
+            'content': 'User is currently viewing the lesson "$_currentLessonName". $_currentLessonDescription'
+          });
+        }
+      }
+      
       // Add user message to memory
       addToMemory(message, true);
       
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
+      // Prepare the conversation history for Gemini
+      List<Map<String, dynamic>> contents = [];
+      
+      // Add system message if available
+      if (_memory.isNotEmpty && _memory.first['role'] == 'system') {
+        contents.add({
+          'role': 'user',
+          'parts': [{'text': _memory.first['content']}]
+        });
+        contents.add({
+          'role': 'model',
+          'parts': [{'text': 'I understand. I will help you with the course content.'}]
+        });
+      }
+      
+      // Add conversation history
+      for (int i = 1; i < _memory.length; i++) {
+        final msg = _memory[i];
+        contents.add({
+          'role': msg['role'] == 'user' ? 'user' : 'model',
+          'parts': [{'text': msg['content']}]
+        });
+      }
+      
+      // Create request body for Gemini API
+      final Map<String, dynamic> requestBody = {
+        'contents': contents,
+        'generationConfig': {
+          'temperature': 0.7,
+          'topK': 40,
+          'topP': 0.95,
+          'maxOutputTokens': 1000,
         },
-        body: jsonEncode({
-          'model': 'meta-llama/llama-3.3-8b-instruct:free',
-          'messages': _memory,
-        }),
+      };
+      
+      // Send request to Gemini API
+      final response = await http.post(
+        Uri.parse('$apiUrl?key=$apiKey'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
       );
-
+      
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final aiResponse = data['choices'][0]['message']['content'];
+        final aiResponse = data['candidates'][0]['content']['parts'][0]['text'];
         
         // Add AI response to memory
         addToMemory(aiResponse, false);
@@ -379,6 +442,14 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
   }
 
   void lessonAction(Lesson lesson) async {
+    // Set the current lesson context for AI assistant
+    if (lesson.title != null) {
+      _aiChatService.setCurrentLesson(
+        lesson.title!, 
+        lesson.summary ?? 'No description available for this lesson.'
+      );
+    }
+    
     if (lesson.lessonType == 'text') {
       Navigator.push(
           context,
@@ -2347,7 +2418,11 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                             setState(() {
                               _selectedLessonName = selected ? lessonName : null;
                               if (selected) {
+                                final lessonDescription = _lessonDescriptions[lessonName] ?? 'No description available for this lesson.';
                                 _chatTextController.text = 'Tell me about $lessonName';
+                                
+                                // Update lesson context in AI service
+                                _aiChatService.setCurrentLesson(lessonName, lessonDescription);
                               }
                             });
                           },
@@ -2805,6 +2880,12 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
   void _sendChatMessage(StateSetter setState) async {
     final userMessage = _chatTextController.text.trim();
     if (userMessage.isEmpty) return;
+    
+    // Set the current lesson context if a lesson is selected
+    if (_selectedLessonName != null) {
+      final lessonDescription = _lessonDescriptions[_selectedLessonName] ?? 'No description available for this lesson.';
+      _aiChatService.setCurrentLesson(_selectedLessonName!, lessonDescription);
+    }
     
     setState(() {
       _chatMessages.add(AIChatMessage(
