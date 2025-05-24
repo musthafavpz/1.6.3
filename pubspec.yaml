@@ -60,7 +60,7 @@ dependencies:
   video_player: ^2.9.1
   youtube_player_flutter: ^9.1.1
   vimeo_embed_player: ^1.0.2
-  flutter_inappwebview: ^6.1.5
+  flutter_inappwebview: ^6.0.0
   # vimeo_video_player: ^0.0.16
   google_fonts: ^6.1.0
   flutter_slidable: ^3.0.1
