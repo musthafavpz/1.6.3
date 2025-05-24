@@ -174,4 +174,5 @@ flutter:
   # see https://flutter.dev/custom-fonts/#from-packages
 
 dependency_overrides:
-  flutter_inappwebview_android: 1.0.0
+  flutter_inappwebview: 6.0.0
+  flutter_inappwebview_android: 1.0.2
