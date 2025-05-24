@@ -332,7 +332,7 @@ packages:
     source: hosted
     version: "3.0.0-beta.2"
   flutter_inappwebview:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_inappwebview
       sha256: "80092d13d3e29b6227e25b67973c67c7210bd5e35c4b747ca908e31eb71a46d5"
@@ -1402,6 +1402,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.3"
+  vimeo_embed_player:
+    dependency: "direct main"
+    description:
+      name: vimeo_embed_player
+      sha256: ee5299eed201202ed772f6304cae3bcf9d9355af961296838999cb664d48eccf
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
   vm_service:
     dependency: transitive
     description:

@@ -1,38 +1,17 @@
 buildscript {
-    ext.kotlin_version = '1.8.22'
+    ext.kotlin_version = '1.9.20'
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.3.1'
+        classpath 'com.android.tools.build:gradle:7.1.3'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
 allprojects {
-    beforeEvaluate { project ->
-        project.ext {
-            set("mostRecentSemanticVersion", { String version1, String version2 ->
-                if (version1 == null) return version2
-                if (version2 == null) return version1
-                
-                def v1Parts = version1.tokenize('.')
-                def v2Parts = version2.tokenize('.')
-                
-                for (int i = 0; i < Math.min(v1Parts.size(), v2Parts.size()); i++) {
-                    def v1Part = v1Parts[i].toInteger()
-                    def v2Part = v2Parts[i].toInteger()
-                    if (v1Part > v2Part) return version1
-                    if (v1Part < v2Part) return version2
-                }
-                
-                return v1Parts.size() >= v2Parts.size() ? version1 : version2
-            })
-        }
-    }
-    
     repositories {
         google()
         mavenCentral()
