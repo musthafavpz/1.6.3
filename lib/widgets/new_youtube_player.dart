@@ -59,7 +59,7 @@ class _YoutubeVideoPlayerFlutterState extends State<YoutubeVideoPlayerFlutter> {
         disableDragSeek: false,
         loop: false,
         isLive: false,
-        forceHD: false,
+        forceHD: true,
         enableCaption: true,
       ),
     )..addListener(listener);
@@ -75,6 +75,22 @@ class _YoutubeVideoPlayerFlutterState extends State<YoutubeVideoPlayerFlutter> {
         _playerState = _controller.value.playerState;
         _videoMetaData = _controller.metadata;
       });
+      
+      // Attempt to force high quality by periodically reloading with the HD flag
+      if (_playerState == PlayerState.playing && _controller.value.position.inSeconds % 30 == 0) {
+        // Every 30 seconds, refresh the video to trigger HD quality
+        final videoId = _controller.metadata.videoId;
+        final position = _controller.value.position.inSeconds;
+        if (videoId.isNotEmpty && position > 3) {
+          log('Refreshing video quality');
+          _controller.pause();
+          _controller.load(videoId);
+          Future.delayed(const Duration(milliseconds: 500), () {
+            _controller.seekTo(Duration(seconds: position));
+            _controller.play();
+          });
+        }
+      }
     }
   }
 
@@ -144,6 +160,8 @@ class _YoutubeVideoPlayerFlutterState extends State<YoutubeVideoPlayerFlutter> {
               ),
               onPressed: () {
                 log('Settings Tapped!');
+                // Add a menu to manually set quality to highest
+                _controller.load(_controller.metadata.videoId);
               },
             ),
           ],
