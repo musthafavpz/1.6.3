@@ -12,7 +12,7 @@
     </queries>
 
     <application
-        android:label="Elegance Edge"
+        android:label="Elegance Pro"
         android:name="${applicationName}"
         android:usesCleartextTraffic="true"
         tools:replace="android:usesCleartextTraffic"

@@ -19,6 +19,7 @@ import 'refund_policy_screen.dart';
 import 'support_screen.dart';
 import 'about_us_screen.dart';
 import 'update_password.dart';
+import 'faq_screen.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -333,6 +334,20 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                                   );
                                 },
                                 iconColor: const Color(0xFF6366F1),
+                              ),
+                              _divider(),
+                              _buildProfileOption(
+                                title: 'FAQ',
+                                icon: Icons.help_outline,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const FAQScreen(),
+                                    ),
+                                  );
+                                },
+                                iconColor: const Color(0xFF8B5CF6),
                               ),
                               _divider(),
                               _buildProfileOption(

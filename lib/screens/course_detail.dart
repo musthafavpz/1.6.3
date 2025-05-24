@@ -809,6 +809,250 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                                         ),
                                                       )
                                                     ).toList(),
+                                                    
+                                                    // Certificate You'll Earn - New Section
+                                                    const SizedBox(height: 25),
+                                                    Row(
+                                                      children: [
+                                                        Container(
+                                                          padding: const EdgeInsets.all(8),
+                                                          decoration: BoxDecoration(
+                                                            color: const Color(0xFF6366F1).withOpacity(0.1),
+                                                            borderRadius: BorderRadius.circular(8),
+                                                          ),
+                                                          child: const Icon(
+                                                            Icons.workspace_premium,
+                                                            color: Color(0xFFFFA000),
+                                                            size: 24,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(width: 10),
+                                                        const Text(
+                                                          'Certificate you\'ll earn',
+                                                          style: TextStyle(
+                                                            fontSize: 18,
+                                                            fontWeight: FontWeight.bold,
+                                                            color: Color(0xFF6366F1),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 15),
+                                                    Container(
+                                                      padding: const EdgeInsets.all(15),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white,
+                                                        borderRadius: BorderRadius.circular(16),
+                                                        border: Border.all(
+                                                          color: Colors.grey.withOpacity(0.2),
+                                                          width: 1,
+                                                        ),
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: Colors.black.withOpacity(0.05),
+                                                            blurRadius: 10,
+                                                            offset: const Offset(0, 4),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          // Certificate Preview - Horizontal Layout
+                                                          Container(
+                                                            width: double.infinity,
+                                                            padding: const EdgeInsets.all(0),
+                                                            decoration: BoxDecoration(
+                                                              color: Colors.white,
+                                                              borderRadius: BorderRadius.circular(8),
+                                                              border: Border.all(
+                                                                color: const Color(0xFF6366F1).withOpacity(0.2),
+                                                                width: 1,
+                                                              ),
+                                                            ),
+                                                            child: AspectRatio(
+                                                              aspectRatio: 16 / 9, // Horizontal aspect ratio
+                                                              child: Container(
+                                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                                                decoration: BoxDecoration(
+                                                                  color: Colors.white,
+                                                                  borderRadius: BorderRadius.circular(8),
+                                                                  border: Border.all(
+                                                                    color: const Color(0xFF3B82F6),
+                                                                    width: 2,
+                                                                  ),
+                                                                ),
+                                                                child: Row(
+                                                                  children: [
+                                                                    // Left side - Logo and title
+                                                                    Expanded(
+                                                                      flex: 1,
+                                                                      child: Column(
+                                                                        mainAxisAlignment: MainAxisAlignment.center,
+                                                                        children: [
+                                                                          // Logo
+                                                                          Image.asset(
+                                                                            'assets/images/light_logo.png',
+                                                                            height: 25,
+                                                                            fit: BoxFit.contain,
+                                                                          ),
+                                                                          const SizedBox(height: 10),
+                                                                          // Title
+                                                                          const Text(
+                                                                            'Certificate of\nCompletion',
+                                                                            textAlign: TextAlign.center,
+                                                                            style: TextStyle(
+                                                                              fontSize: 14,
+                                                                              fontWeight: FontWeight.bold,
+                                                                              height: 1.2,
+                                                                            ),
+                                                                          ),
+                                                                          const SizedBox(height: 6),
+                                                                          // Signature
+                                                                          Container(
+                                                                            margin: const EdgeInsets.only(top: 8),
+                                                                            child: Column(
+                                                                              children: [
+                                                                                Container(
+                                                                                  width: 80,
+                                                                                  height: 25,
+                                                                                  decoration: const BoxDecoration(
+                                                                                    image: DecorationImage(
+                                                                                      fit: BoxFit.contain,
+                                                                                      image: AssetImage(
+                                                                                        'assets/images/signature.png',
+                                                                                      ),
+                                                                                    ),
+                                                                                  ),
+                                                                                ),
+                                                                                Container(
+                                                                                  width: 80,
+                                                                                  height: 1,
+                                                                                  color: Colors.black,
+                                                                                ),
+                                                                                const SizedBox(height: 4),
+                                                                                const Text(
+                                                                                  'Musthafa CMA, CSCA',
+                                                                                  style: TextStyle(
+                                                                                    fontSize: 10,
+                                                                                    fontWeight: FontWeight.w500,
+                                                                                  ),
+                                                                                ),
+                                                                                const Text(
+                                                                                  'CEO, Elegance',
+                                                                                  style: TextStyle(
+                                                                                    fontSize: 9,
+                                                                                    color: Color(0xFF6B7280),
+                                                                                  ),
+                                                                                ),
+                                                                              ],
+                                                                            ),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    ),
+                                                                    
+                                                                    // Vertical divider
+                                                                    Container(
+                                                                      height: double.infinity,
+                                                                      width: 1,
+                                                                      color: Colors.grey.withOpacity(0.3),
+                                                                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                                                                    ),
+                                                                    
+                                                                    // Right side - Certificate details
+                                                                    Expanded(
+                                                                      flex: 2,
+                                                                      child: Column(
+                                                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                                                        mainAxisAlignment: MainAxisAlignment.center,
+                                                                        children: [
+                                                                          const Text(
+                                                                            'This certificate is awarded to:',
+                                                                            style: TextStyle(
+                                                                              fontSize: 10,
+                                                                              fontStyle: FontStyle.italic,
+                                                                            ),
+                                                                          ),
+                                                                          const SizedBox(height: 6),
+                                                                          Text(
+                                                                            '[Your Name]',
+                                                                            style: TextStyle(
+                                                                              fontSize: 16,
+                                                                              fontWeight: FontWeight.bold,
+                                                                              color: Colors.blue.shade700,
+                                                                            ),
+                                                                          ),
+                                                                          const SizedBox(height: 6),
+                                                                          const Text(
+                                                                            'for the successful completion of the course',
+                                                                            style: TextStyle(
+                                                                              fontSize: 10,
+                                                                              fontStyle: FontStyle.italic,
+                                                                            ),
+                                                                          ),
+                                                                          const SizedBox(height: 8),
+                                                                          Text(
+                                                                            loadedCourseDetails.title.toString().toUpperCase(),
+                                                                            textAlign: TextAlign.center,
+                                                                            style: const TextStyle(
+                                                                              fontSize: 14,
+                                                                              fontWeight: FontWeight.bold,
+                                                                            ),
+                                                                          ),
+                                                                          const SizedBox(height: 10),
+                                                                          // Date and duration
+                                                                          Row(
+                                                                            mainAxisAlignment: MainAxisAlignment.center,
+                                                                            children: [
+                                                                              Text(
+                                                                                'On ${DateTime.now().toString().substring(0, 10)}',
+                                                                                style: const TextStyle(
+                                                                                  fontSize: 9,
+                                                                                  color: Color(0xFF6B7280),
+                                                                                ),
+                                                                              ),
+                                                                              const Text(
+                                                                                '  •  Course Duration: 2hr  •',
+                                                                                style: TextStyle(
+                                                                                  fontSize: 9,
+                                                                                  color: Color(0xFF6B7280),
+                                                                                ),
+                                                                              ),
+                                                                            ],
+                                                                          ),
+                                                                          const SizedBox(height: 6),
+                                                                          Row(
+                                                                            mainAxisAlignment: MainAxisAlignment.center,
+                                                                            children: [
+                                                                              const Text(
+                                                                                'Certificate ID: ',
+                                                                                style: TextStyle(
+                                                                                  fontSize: 8,
+                                                                                  color: Color(0xFF6B7280),
+                                                                                ),
+                                                                              ),
+                                                                              Text(
+                                                                                'EDP${loadedCourseDetails.courseId}${DateTime.now().year}${DateTime.now().month.toString().padLeft(2, '0')}',
+                                                                                style: const TextStyle(
+                                                                                  fontSize: 8,
+                                                                                  fontWeight: FontWeight.w500,
+                                                                                  color: Color(0xFF6B7280),
+                                                                                ),
+                                                                              ),
+                                                                            ],
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
                                                 const SizedBox(height: 80), // Increased bottom spacing
                                                   ],
                                             ),

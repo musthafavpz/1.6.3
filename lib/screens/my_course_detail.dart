@@ -11,6 +11,8 @@ import 'package:printing/printing.dart'; // For printing/sharing PDF
 import 'package:intl/intl.dart'; // For date formatting
 import 'package:shared_preferences/shared_preferences.dart'; // For user name
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart' show getTemporaryDirectory;
+import 'package:cross_file/cross_file.dart' show XFile;
 
 import 'package:academy_lms_app/screens/course_detail.dart';
 import 'package:academy_lms_app/screens/image_viewer_Screen.dart';
@@ -616,7 +618,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
-          // AI Chat icon - with the current course context
+          // AI Chat full screen icon
           IconButton(
             icon: Container(
               padding: const EdgeInsets.all(5),
@@ -659,107 +661,84 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
           const SizedBox(width: 10),
         ],
       ),
-      // Add floating chat button
-      floatingActionButton: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        margin: const EdgeInsets.only(bottom: 16, right: 8),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF6366F1),
-              Color(0xFF8B5CF6),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF6366F1).withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(28),
-            onTap: _showAIChatDialog,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 20, 12),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.smart_toy_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Elegance AI',
-                            style: GoogleFonts.montserrat(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                          Text(
-                            'Ask me anything',
-                            style: GoogleFonts.montserrat(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                // Notification dot
-                Positioned(
-                  top: -4,
-                  right: -4,
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: const BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
+      body: Stack(
+        children: [
+          // Main content
+          Container(
+            height: MediaQuery.of(context).size.height,
+            color: const Color(0xFFF8F9FA),
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF6366F1)),
+                  )
+                : SingleChildScrollView(
+                    controller: _scrollController,
+                    child: Column(
+                      children: [
+                        _buildCourseHeader(myLoadedCourse),
+                        _buildLessonsContent(sections, myLoadedCourse),
+                        _buildCertificateSection(myLoadedCourse),
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
           ),
-        ),
-      ),
-      body: Container(
-        height: MediaQuery.of(context).size.height,
-        color: const Color(0xFFF8F9FA),
-        child: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF6366F1)),
-              )
-            : SingleChildScrollView(
-                controller: _scrollController,
-                child: Column(
+          
+          // Floating AI Chat button - fixed to the right side
+          Positioned(
+            top: 100, // Position near the thumbnail area
+            right: 20,
+            child: GestureDetector(
+              onTap: _showAIChatDialog,
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF6366F1),
+                      Color(0xFF8B5CF6),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  clipBehavior: Clip.none,
                   children: [
-                    _buildCourseHeader(myLoadedCourse),
-                    _buildLessonsContent(sections, myLoadedCourse),
-                    _buildCertificateSection(myLoadedCourse),
+                    const Center(
+                      child: Icon(
+                        Icons.smart_toy_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                    ),
+                    // Notification dot
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: const BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -819,6 +798,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                   ),
                 ),
               ),
+              
               // Course Title at bottom with additional info
               Positioned(
                 bottom: 15,
@@ -1560,18 +1540,94 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
 
       // Get course details - with error handling
       String courseName = "Course";
-      String instructorName = "Instructor";
+      String courseDuration = "2hr"; // Default duration
       try {
         courseName = myLoadedCourse.title?.toString() ?? "Course";
-        instructorName = _getInstructorName(myLoadedCourse);
-        print("Course name: $courseName, Instructor: $instructorName");
+        print("Calculating duration for course: $courseName");
+        
+        // Try to get actual course duration from sections
+        final sections = Provider.of<MyCourses>(context, listen: false).sectionItems;
+        
+        if (sections.isNotEmpty) {
+          // Calculate total duration across all sections
+          int totalMinutes = 0;
+          
+          print("Found ${sections.length} sections to process");
+          for (final section in sections) {
+            if (section.mLesson != null && section.mLesson!.isNotEmpty) {
+              print("Processing section ${section.title} with ${section.mLesson!.length} lessons");
+              
+              for (final lesson in section.mLesson!) {
+                if (lesson.duration != null && lesson.duration!.isNotEmpty) {
+                  print("Lesson: ${lesson.title} - Duration: ${lesson.duration}");
+                  String durationStr = lesson.duration!;
+                  
+                  // Check for hours (e.g., "1h" or "1h 30m")
+                  if (durationStr.contains('h')) {
+                    final hourParts = durationStr.split('h');
+                    final hours = int.tryParse(hourParts[0].trim()) ?? 0;
+                    totalMinutes += hours * 60;
+                    
+                    // Check for minutes after hours
+                    if (hourParts.length > 1 && hourParts[1].contains('m')) {
+                      final minuteStr = hourParts[1].trim().split('m')[0].trim();
+                      if (minuteStr.isNotEmpty) {
+                        final minutes = int.tryParse(minuteStr) ?? 0;
+                        totalMinutes += minutes;
+                      }
+                    }
+                  }
+                  // Check for minutes only (e.g., "30m")
+                  else if (durationStr.contains('m')) {
+                    final minuteStr = durationStr.split('m')[0].trim();
+                    if (minuteStr.isNotEmpty) {
+                      final minutes = int.tryParse(minuteStr) ?? 0;
+                      totalMinutes += minutes;
+                    }
+                  }
+                }
+              }
+            }
+          }
+          
+          print("Total calculated minutes: $totalMinutes");
+          
+          // Convert total minutes to hours and minutes format
+          final hours = totalMinutes ~/ 60;
+          final minutes = totalMinutes % 60;
+          
+          // Format the result
+          if (hours > 0) {
+            courseDuration = minutes > 0 ? "${hours}h ${minutes}m" : "${hours}h";
+          } else if (minutes > 0) {
+            courseDuration = "${minutes}m";
+          } else {
+            courseDuration = "0m";
+          }
+          
+          print("Calculated duration: $courseDuration");
+        }
+        // Fallback options if sections calculation failed
+        else if (myLoadedCourse.totalDuration != null && myLoadedCourse.totalDuration.toString().isNotEmpty) {
+          courseDuration = myLoadedCourse.totalDuration.toString();
+          print("Using course.totalDuration: $courseDuration");
+        } else if (myLoadedCourse.duration != null && myLoadedCourse.duration.toString().isNotEmpty) {
+          courseDuration = myLoadedCourse.duration.toString();
+          print("Using course.duration: $courseDuration");
+        }
+        
       } catch (courseError) {
-        print("Error getting course data: $courseError");
-        // Continue with defaults
+        print("Error calculating course duration: $courseError");
+        // Continue with default duration
       }
       
-      final completionDate = DateFormat('MMMM dd, yyyy').format(DateTime.now());
-      print("Date formatted: $completionDate");
+      // Format today's date
+      final DateTime now = DateTime.now();
+      final String completionDate = DateFormat('MMMM dd, yyyy').format(now);
+      final String shortDate = DateFormat('MMM dd, yyyy').format(now);
+      
+      // Generate a unique certificate ID
+      final String certificateId = 'EDP${now.millisecondsSinceEpoch.toString().substring(5, 13)}';
 
       // Load logo image
       print("Loading logo image...");
@@ -1585,298 +1641,210 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
         // Continue without logo
       }
 
-      // Create an elegant PDF certificate
-      print("Creating PDF document...");
+      // Load signature image
+      print("Loading signature image...");
+      Uint8List? signatureImageData;
+      try {
+        final ByteData signatureData = await rootBundle.load('assets/images/signature.png');
+        signatureImageData = signatureData.buffer.asUint8List();
+        print("Signature loaded successfully");
+      } catch (imageError) {
+        print("Error loading signature: $imageError");
+        // Continue without signature
+      }
+
+      // Create a PDF certificate in landscape orientation
+      print("Creating PDF document with horizontal layout...");
       final pdf = pw.Document();
       
-      // Set page theme with a nice font
-      const pageTheme = pw.PageTheme(
-        pageFormat: PdfPageFormat.a4,
-        margin: pw.EdgeInsets.all(32),
+      // Use landscape orientation for the certificate
+      final pageTheme = pw.PageTheme(
+        pageFormat: PdfPageFormat.a4.landscape,
+        margin: const pw.EdgeInsets.all(20),
       );
       
       pdf.addPage(
         pw.Page(
           pageTheme: pageTheme,
           build: (pw.Context context) {
+            // Create premium border pattern
             return pw.Container(
               decoration: pw.BoxDecoration(
                 border: pw.Border.all(
-                  color: PdfColors.indigo200,
-                  width: 3,
+                  color: PdfColors.blue300,
+                  width: 3.0,
                 ),
-                borderRadius: pw.BorderRadius.circular(8),
+                borderRadius: pw.BorderRadius.circular(12),
               ),
-              child: pw.Padding(
-                padding: const pw.EdgeInsets.all(20),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.center,
-                  children: [
-                    // Certificate header with logo and decorative element
-                    pw.Container(
-                      padding: const pw.EdgeInsets.only(top: 20, bottom: 24),
-                      decoration: pw.BoxDecoration(
-                        border: pw.Border(
-                          bottom: pw.BorderSide(
-                            color: PdfColors.indigo100,
-                            width: 2,
+              child: pw.Container(
+                margin: const pw.EdgeInsets.all(3),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(
+                    color: PdfColors.blue800,
+                    width: 1.0,
+                  ),
+                  borderRadius: pw.BorderRadius.circular(8),
+                ),
+                child: pw.Padding(
+                  padding: const pw.EdgeInsets.all(20),
+                  child: pw.Column(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Top section with logo - reduced size
+                      if (logoImageData != null)
+                        pw.Container(
+                          height: 40,
+                          child: pw.Image(
+                            pw.MemoryImage(logoImageData),
+                            fit: pw.BoxFit.contain,
+                          ),
+                        ),
+                      
+                      // Certificate title with professional font
+                      pw.Text(
+                        'Certificate of Completion',
+                        style: pw.TextStyle(
+                          fontSize: 35,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.black,
+                          font: pw.Font.times(),
+                        ),
+                        textAlign: pw.TextAlign.center,
+                      ),
+                      
+                      // Decorative line
+                      pw.Container(
+                        width: 200,
+                        height: 2,
+                        margin: const pw.EdgeInsets.symmetric(vertical: 10),
+                        color: PdfColors.blue300,
+                      ),
+                      
+                      // Middle section with recipient info
+                      pw.Container(
+                        margin: const pw.EdgeInsets.symmetric(vertical: 20),
+                        child: pw.Column(
+                          children: [
+                            pw.SizedBox(height: 10),
+                            pw.Text(
+                              'This certificate is awarded to:',
+                              style: pw.TextStyle(
+                                fontSize: 20,
+                                fontStyle: pw.FontStyle.italic,
+                                color: PdfColors.grey800,
+                              ),
+                            ),
+                            pw.SizedBox(height: 15),
+                            pw.Text(
+                              candidateName,
+                              style: pw.TextStyle(
+                                fontSize: 30,
+                                fontWeight: pw.FontWeight.bold,
+                                color: PdfColors.blue700,
+                                font: pw.Font.times(),
+                              ),
+                            ),
+                            pw.SizedBox(height: 15),
+                            pw.Text(
+                              'for the successful completion of the course',
+                              style: pw.TextStyle(
+                                fontSize: 20,
+                                fontStyle: pw.FontStyle.italic,
+                                color: PdfColors.grey800,
+                              ),
+                            ),
+                            pw.SizedBox(height: 20),
+                            pw.Text(
+                              courseName.toUpperCase(),
+                              style: pw.TextStyle(
+                                fontSize: 22,
+                                fontWeight: pw.FontWeight.bold,
+                                color: PdfColors.grey900,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Bottom section with date
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.center,
+                        children: [
+                          pw.Text(
+                            'On $shortDate',
+                            style: pw.TextStyle(
+                              fontSize: 14,
+                              color: PdfColors.grey700,
+                            ),
+                          ),
+                          pw.SizedBox(width: 5),
+                          pw.Text(
+                            'Course Duration: $courseDuration',
+                            style: pw.TextStyle(
+                              fontSize: 14,
+                              color: PdfColors.grey700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      // Signature section with improved styling - increased size
+                      pw.Container(
+                        margin: const pw.EdgeInsets.only(top: 20),
+                        child: pw.Column(
+                          children: [
+                            // Signature image if available - increased size
+                            if (signatureImageData != null)
+                              pw.Container(
+                                height: 50,
+                                width: 150,
+                                child: pw.Image(
+                                  pw.MemoryImage(signatureImageData),
+                                  fit: pw.BoxFit.contain,
+                                ),
+                              )
+                            else
+                              pw.Container(height: 50),
+                              
+                            // Signature line - wider
+                            pw.Container(
+                              width: 180,
+                              height: 1,
+                              color: PdfColors.black,
+                              margin: const pw.EdgeInsets.only(bottom: 5),
+                            ),
+                            pw.Text(
+                              'Muhammed Musthafa CMA, CSCA',
+                              style: pw.TextStyle(
+                                fontSize: 14,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
+                            pw.Text(
+                              'CEO and Founder',
+                              style: pw.TextStyle(
+                                fontSize: 12,
+                                color: PdfColors.grey700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Certificate ID at the bottom
+                      pw.Container(
+                        alignment: pw.Alignment.bottomCenter,
+                        margin: const pw.EdgeInsets.only(top: 10),
+                        child: pw.Text(
+                          'Certificate ID: $certificateId',
+                          style: pw.TextStyle(
+                            fontSize: 12,
+                            color: PdfColors.grey600,
                           ),
                         ),
                       ),
-                      child: pw.Column(
-                        children: [
-                          // Logo image at the top
-                          if (logoImageData != null)
-                            pw.Container(
-                              height: 50,
-                              margin: const pw.EdgeInsets.only(bottom: 20),
-                              child: pw.Image(
-                                pw.MemoryImage(logoImageData),
-                                fit: pw.BoxFit.contain,
-                              ),
-                            ),
-                            
-                          // Decorative seal element
-                          pw.Container(
-                            width: 70,
-                            height: 70,
-                            decoration: pw.BoxDecoration(
-                              color: PdfColors.indigo100,
-                              shape: pw.BoxShape.circle,
-                            ),
-                            child: pw.Center(
-                              child: pw.Text(
-                                'E',
-                                style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  color: PdfColors.indigo700,
-                                  fontSize: 24,
-                                ),
-                              ),
-                            ),
-                          ),
-                          pw.SizedBox(height: 16),
-                          
-                          // Title
-                          pw.Text(
-                            'CERTIFICATE OF COMPLETION',
-                            style: pw.TextStyle(
-                              fontSize: 24,
-                              fontWeight: pw.FontWeight.bold,
-                              color: PdfColors.indigo900,
-                              letterSpacing: 1.5,
-                            ),
-                            textAlign: pw.TextAlign.center,
-                          ),
-                          
-                          pw.SizedBox(height: 8),
-                          
-                          // Subtitle
-                          pw.Text(
-                            'ONLINE COURSE',
-                            style: pw.TextStyle(
-                              fontSize: 14,
-                              color: PdfColors.indigo700,
-                              letterSpacing: 2.0,
-                            ),
-                            textAlign: pw.TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    // Main certificate content
-                    pw.Padding(
-                      padding: const pw.EdgeInsets.symmetric(
-                        vertical: 30,
-                        horizontal: 20,
-                      ),
-                      child: pw.Column(
-                        children: [
-                          pw.Text(
-                            'This is to certify that',
-                            style: pw.TextStyle(
-                              fontSize: 14,
-                              color: PdfColors.grey700,
-                              fontStyle: pw.FontStyle.italic,
-                            ),
-                          ),
-                          
-                          pw.SizedBox(height: 12),
-                          
-                          // Certificate recipient name
-                          pw.Text(
-                            candidateName.toUpperCase(),
-                            style: pw.TextStyle(
-                              fontSize: 24,
-                              fontWeight: pw.FontWeight.bold,
-                              color: PdfColors.indigo900,
-                              letterSpacing: 1.0,
-                            ),
-                            textAlign: pw.TextAlign.center,
-                          ),
-                          
-                          pw.SizedBox(height: 12),
-                          
-                          pw.Text(
-                            'has successfully completed the online course',
-                            style: pw.TextStyle(
-                              fontSize: 14,
-                              color: PdfColors.grey700,
-                            ),
-                          ),
-                          
-                          pw.SizedBox(height: 16),
-                          
-                          // Course name
-                          pw.Container(
-                            padding: const pw.EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 16,
-                            ),
-                            decoration: pw.BoxDecoration(
-                              color: PdfColors.indigo50,
-                              borderRadius: pw.BorderRadius.circular(4),
-                              border: pw.Border.all(
-                                color: PdfColors.indigo200,
-                                width: 1,
-                              ),
-                            ),
-                            child: pw.Text(
-                              courseName,
-                              style: pw.TextStyle(
-                                fontSize: 20,
-                                fontWeight: pw.FontWeight.bold,
-                                color: PdfColors.indigo800,
-                              ),
-                              textAlign: pw.TextAlign.center,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    // Footer section for date and signatures
-                    pw.Container(
-                      padding: const pw.EdgeInsets.only(
-                        top: 30,
-                        left: 20,
-                        right: 20,
-                        bottom: 20,
-                      ),
-                      child: pw.Column(
-                        children: [
-                          // Signature row
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                            children: [
-                              // Date section
-                              pw.Column(
-                                crossAxisAlignment: pw.CrossAxisAlignment.center,
-                                children: [
-                                  pw.Container(
-                                    width: 140,
-                                    padding: const pw.EdgeInsets.symmetric(vertical: 4),
-                                    decoration: const pw.BoxDecoration(
-                                      border: pw.Border(
-                                        bottom: pw.BorderSide(
-                                          color: PdfColors.indigo200,
-                                        ),
-                                      ),
-                                    ),
-                                    child: pw.Text(
-                                      completionDate,
-                                      style: pw.TextStyle(
-                                        fontWeight: pw.FontWeight.bold,
-                                      ),
-                                      textAlign: pw.TextAlign.center,
-                                    ),
-                                  ),
-                                  pw.SizedBox(height: 8),
-                                  pw.Text(
-                                    'Date',
-                                    style: pw.TextStyle(
-                                      fontSize: 12,
-                                      color: PdfColors.grey600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              
-                              // Instructor signature
-                              pw.Column(
-                                crossAxisAlignment: pw.CrossAxisAlignment.center,
-                                children: [
-                                  pw.Container(
-                                    width: 140,
-                                    padding: const pw.EdgeInsets.symmetric(vertical: 4),
-                                    decoration: const pw.BoxDecoration(
-                                      border: pw.Border(
-                                        bottom: pw.BorderSide(
-                                          color: PdfColors.indigo200,
-                                        ),
-                                      ),
-                                    ),
-                                    child: pw.Text(
-                                      instructorName,
-                                      style: pw.TextStyle(
-                                        fontWeight: pw.FontWeight.bold,
-                                      ),
-                                      textAlign: pw.TextAlign.center,
-                                    ),
-                                  ),
-                                  pw.SizedBox(height: 8),
-                                  pw.Text(
-                                    'Instructor',
-                                    style: pw.TextStyle(
-                                      fontSize: 12,
-                                      color: PdfColors.grey600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          
-                          pw.SizedBox(height: 30),
-                          
-                          // Academy seal and verification
-                          pw.Container(
-                            padding: const pw.EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 12,
-                            ),
-                            decoration: pw.BoxDecoration(
-                              color: PdfColors.indigo50,
-                              borderRadius: pw.BorderRadius.circular(4),
-                            ),
-                            child: pw.Row(
-                              mainAxisSize: pw.MainAxisSize.min,
-                              children: [
-                                pw.Container(
-                                  width: 20,
-                                  height: 20,
-                                  decoration: pw.BoxDecoration(
-                                    color: PdfColors.indigo700,
-                                    shape: pw.BoxShape.circle,
-                                  ),
-                                ),
-                                pw.SizedBox(width: 8),
-                                pw.Text(
-                                  'Elegance - Official Certificate',
-                                  style: pw.TextStyle(
-                                    fontSize: 12,
-                                    color: PdfColors.indigo900,
-                                    fontWeight: pw.FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );
@@ -1975,147 +1943,177 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
   }
 
   Widget _buildCertificateSection(dynamic myLoadedCourse) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 30),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF6366F1),
-              Color(0xFF8B5CF6),
-            ],
-            stops: [0.3, 0.9],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF6366F1).withOpacity(0.3),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            // Certificate design elements
-            Positioned(
-              top: -15,
-              right: -15,
-              child: Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
-                ),
+    return Column(
+      children: [
+        // Main Certificate Card
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20, bottom: 15),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF6366F1),
+                  Color(0xFF8B5CF6),
+                ],
+                stops: [0.3, 0.9],
               ),
-            ),
-            Positioned(
-              bottom: -20,
-              left: -20,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF6366F1).withOpacity(0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
                 ),
-              ),
+              ],
             ),
-            
-            // Content
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  // Certificate icon with glowing effect
-                  Container(
-                    width: 50,
-                    height: 50,
+            child: Stack(
+              children: [
+                // Certificate design elements
+                Positioned(
+                  top: -15,
+                  right: -15,
+                  child: Container(
+                    width: 80,
+                    height: 80,
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF6366F1).withOpacity(0.5),
-                          blurRadius: 10,
-                          spreadRadius: 2,
-                        ),
-                      ],
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.1),
                     ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.workspace_premium,
-                        color: Color(0xFF6366F1),
-                        size: 30,
+                  ),
+                ),
+                Positioned(
+                  bottom: -20,
+                  left: -20,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+                  ),
+                ),
+                
+                // Content
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      // Certificate icon with glowing effect
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF6366F1).withOpacity(0.5),
+                              blurRadius: 10,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.workspace_premium,
+                            color: Color(0xFF6366F1),
+                            size: 30,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  
-                  // Certificate text
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Course Certificate",
-                          style: GoogleFonts.montserrat(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                      const SizedBox(width: 16),
+                      
+                      // Certificate text
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Course Certificate",
+                              style: GoogleFonts.montserrat(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              "Complete ${myLoadedCourse.courseCompletion}% to unlock your certificate",
+                              style: GoogleFonts.montserrat(
+                                fontSize: 12,
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 5),
-                        Text(
-                          "Complete ${myLoadedCourse.courseCompletion}% to unlock your certificate",
-                          style: GoogleFonts.montserrat(
-                            fontSize: 12,
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  // Download button
-                  if (myLoadedCourse.courseCompletion != null && myLoadedCourse.courseCompletion! >= 100)
-                    Row(
-                      children: [
-                        // Download button
-                        Container(
-                          height: 40,
-                          width: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(12),
-                              onTap: () {
-                                _generateCertificatePdf(context, myLoadedCourse, shouldShare: false);
-                              },
-                              child: const Center(
-                                child: Icon(
-                                  Icons.download,
-                                  size: 20,
-                                  color: Color(0xFF6366F1),
+                      ),
+                      
+                      // Download button
+                      if (myLoadedCourse.courseCompletion != null && myLoadedCourse.courseCompletion! >= 100)
+                        Row(
+                          children: [
+                            // Download button
+                            Container(
+                              height: 40,
+                              width: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(12),
+                                  onTap: () {
+                                    _generateCertificatePdf(context, myLoadedCourse, shouldShare: false);
+                                  },
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.download,
+                                      size: 20,
+                                      color: Color(0xFF6366F1),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                        
-                        const SizedBox(width: 10),
-                        
-                        // Share button
+                            
+                            const SizedBox(width: 10),
+                            
+                            // Share button
+                            Container(
+                              height: 40,
+                              width: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(12),
+                                  onTap: () {
+                                    _generateCertificatePdf(context, myLoadedCourse, shouldShare: true);
+                                  },
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.share,
+                                      size: 20,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        // Lock button when certificate is not unlocked
                         Container(
                           height: 40,
-                          width: 40,
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(12),
@@ -2125,72 +2123,134 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                             child: InkWell(
                               borderRadius: BorderRadius.circular(12),
                               onTap: () {
-                                _generateCertificatePdf(context, myLoadedCourse, shouldShare: true);
+                                Fluttertoast.showToast(
+                                  msg: "Complete the course to unlock certificate",
+                                  toastLength: Toast.LENGTH_SHORT,
+                                  gravity: ToastGravity.BOTTOM,
+                                );
                               },
-                              child: const Center(
-                                child: Icon(
-                                  Icons.share,
-                                  size: 20,
-                                  color: Colors.white,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: Center(
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.lock,
+                                        size: 16,
+                                        color: Colors.white,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        "Locked",
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ],
-                    )
-                  else
-                    // Lock button when certificate is not unlocked
-                    Container(
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () {
-                            Fluttertoast.showToast(
-                              msg: "Complete the course to unlock certificate",
-                              toastLength: Toast.LENGTH_SHORT,
-                              gravity: ToastGravity.BOTTOM,
-                            );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Center(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.lock,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    "Locked",
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        
+        // LinkedIn Sharing Badge - Only show when certificate is unlocked
+        if (myLoadedCourse.courseCompletion != null && myLoadedCourse.courseCompletion! >= 100)
+          Padding(
+            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 30),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFF6366F1),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () => _shareToLinkedIn(context, myLoadedCourse),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        // LinkedIn Badge
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0077B5), // LinkedIn blue
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.language, // Using web icon instead of LinkedIn
+                              color: Colors.white,
+                              size: 24,
                             ),
                           ),
                         ),
-                      ),
+                        const SizedBox(width: 16),
+                        
+                        // Share text
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Add to LinkedIn Profile",
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF333333),
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                "Showcase this certificate on your LinkedIn profile",
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        // Arrow icon
+                        const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          color: Color(0xFF6366F1),
+                          size: 18,
+                        ),
+                      ],
                     ),
-                ],
+                  ),
+                ),
               ),
             ),
-          ],
-        ),
-      ),
+          ),
+      ],
     );
   }
 
@@ -2200,39 +2260,49 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
     }
     
     int totalMinutes = 0;
-    int totalHours = 0;
     
     for (final lesson in section.mLesson!) {
       if (lesson.duration != null && lesson.duration!.isNotEmpty) {
         // Parse duration strings like "12m", "1h 30m", etc.
-        String duration = lesson.duration!;
+        String durationStr = lesson.duration!;
         
-        RegExp hourRegex = RegExp(r'(\d+)h');
-        RegExp minuteRegex = RegExp(r'(\d+)m');
-        
-        // Extract hours
-        final hourMatch = hourRegex.firstMatch(duration);
-        if (hourMatch != null && hourMatch.groupCount >= 1) {
-          totalHours += int.tryParse(hourMatch.group(1) ?? '0') ?? 0;
+        // Check for hours (e.g., "1h" or "1h 30m")
+        if (durationStr.contains('h')) {
+          final hourParts = durationStr.split('h');
+          final hours = int.tryParse(hourParts[0].trim()) ?? 0;
+          totalMinutes += hours * 60;
+          
+          // Check for minutes after hours
+          if (hourParts.length > 1 && hourParts[1].contains('m')) {
+            final minuteStr = hourParts[1].trim().split('m')[0].trim();
+            if (minuteStr.isNotEmpty) {
+              final minutes = int.tryParse(minuteStr) ?? 0;
+              totalMinutes += minutes;
+            }
+          }
         }
-        
-        // Extract minutes
-        final minuteMatch = minuteRegex.firstMatch(duration);
-        if (minuteMatch != null && minuteMatch.groupCount >= 1) {
-          totalMinutes += int.tryParse(minuteMatch.group(1) ?? '0') ?? 0;
+        // Check for minutes only (e.g., "30m")
+        else if (durationStr.contains('m')) {
+          final minuteStr = durationStr.split('m')[0].trim();
+          if (minuteStr.isNotEmpty) {
+            final minutes = int.tryParse(minuteStr) ?? 0;
+            totalMinutes += minutes;
+          }
         }
       }
     }
     
-    // Convert excess minutes to hours
-    totalHours += totalMinutes ~/ 60;
-    totalMinutes = totalMinutes % 60;
+    // Convert total minutes to hours and minutes format
+    final hours = totalMinutes ~/ 60;
+    final minutes = totalMinutes % 60;
     
     // Format the result
-    if (totalHours > 0) {
-      return totalMinutes > 0 ? '${totalHours}h ${totalMinutes}m' : '${totalHours}h';
+    if (hours > 0) {
+      return minutes > 0 ? '${hours}h ${minutes}m' : '${hours}h';
+    } else if (minutes > 0) {
+      return '${minutes}m';
     } else {
-      return '${totalMinutes}m';
+      return '0m'; // Ensure we return at least "0m" if no duration found
     }
   }
 
@@ -2922,6 +2992,58 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
           _isAILoading = false;
         });
       }
+    }
+  }
+
+  // Add this method for LinkedIn sharing
+  Future<void> _shareToLinkedIn(BuildContext context, dynamic myLoadedCourse) async {
+    try {
+      // Show loading indicator
+      Fluttertoast.showToast(
+        msg: "Preparing certificate for LinkedIn...",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+      );
+      
+      // Create a PDF certificate with proper sharing instructions
+      final String shareMessage = 
+          "I'm excited to share that I've completed the '${myLoadedCourse.title}' course! "
+          "#OnlineLearning #ProfessionalDevelopment";
+          
+      // Generate PDF certificate and share it
+      await _generateCertificatePdf(context, myLoadedCourse, shouldShare: true);
+      
+      // Guide user on how to save as image for LinkedIn
+      Fluttertoast.showToast(
+        msg: "Choose 'Save as Image' when sharing to LinkedIn!",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.CENTER,
+        backgroundColor: const Color(0xFF0077B5),
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+      
+      // Wait a short time then open LinkedIn app or website
+      await Future.delayed(const Duration(milliseconds: 500));
+      try {
+        // Try LinkedIn app first
+        if (await canLaunch('linkedin://')) {
+          await launch('linkedin://');
+        } else {
+          // Fallback to LinkedIn website
+          await launch('https://www.linkedin.com/sharing/share-offsite/');
+        }
+      } catch (e) {
+        print("Error launching LinkedIn: $e");
+      }
+    } catch (e) {
+      print("LinkedIn sharing error: $e");
+      Fluttertoast.showToast(
+        msg: "Error preparing certificate. Please try again.",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+      );
     }
   }
 }
