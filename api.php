@@ -59,8 +59,24 @@ Route::group(['middleware', ['auth:sanctum']], function () {
     Route::get('free_course_enroll/{course_id}', [ApiController::class, 'free_course_enroll']);
 
     Route::get('cart_tools', [ApiController::class, 'cart_tools']);
-    Route::get('/quiz/{lesson_id}', [ApiController::class, 'getQuiz']);
-    Route::post('/quiz/submit', [ApiController::class, 'submitQuiz']);
-    
+});
+
+// Separate route group for quiz endpoints
+Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'quiz'], function () {
+    Route::get('/{lesson_id}', [ApiController::class, 'getQuiz']);
+    Route::post('/submit', [ApiController::class, 'submitQuiz']);
+});
+
+// Public banner routes
+Route::get('/banners', [ApiController::class, 'getBanners']);
+
+// Admin banner management routes
+Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'admin/banners'], function () {
+    Route::get('/', [ApiController::class, 'getAllBanners']);
+    Route::post('/', [ApiController::class, 'createBanner']);
+    Route::get('/{id}', [ApiController::class, 'getBanner']);
+    Route::post('/{id}', [ApiController::class, 'updateBanner']);
+    Route::delete('/{id}', [ApiController::class, 'deleteBanner']);
+    Route::post('/reorder', [ApiController::class, 'reorderBanners']);
 });
 

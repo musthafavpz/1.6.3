@@ -20,6 +20,7 @@ import 'support_screen.dart';
 import 'about_us_screen.dart';
 import 'update_password.dart';
 import 'faq_screen.dart';
+import 'ai_assistant.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -126,6 +127,9 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                         child: Row(
                           children: [
                             // Profile Image
+                            Stack(
+                              alignment: Alignment.bottomRight,
+                              children: [
                             Container(
                                 padding: const EdgeInsets.all(3),
                               decoration: BoxDecoration(
@@ -133,7 +137,7 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                                 border: Border.all(color: Colors.white, width: 2),
                               ),
                               child: CircleAvatar(
-                                  radius: 36,
+                                    radius: 40,
                                 backgroundImage: user?['photo'] != null
                                     ? NetworkImage(user!['photo'])
                                     : null,
@@ -149,42 +153,6 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                                         ),
                                       )
                                     : null,
-                              ),
-                            ),
-                              const SizedBox(width: 20),
-                            // User Info
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    user?['name'] ?? 'No Name',
-                                    style: const TextStyle(
-                                        fontSize: 22,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                    const SizedBox(height: 6),
-                                  Text(
-                                    user?['phone'] ?? "No phone number",
-                                    style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w500,
-                                      color: Colors.white.withOpacity(0.9),
-                                    ),
-                                  ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      user?['email'] ?? "No email available",
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.white.withOpacity(0.8),
-                                      ),
-                                    ),
-                                ],
                               ),
                             ),
                             // Edit Profile Button
@@ -203,16 +171,131 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                                 }
                               },
                                 child: Container(
-                                  padding: const EdgeInsets.all(10),
+                                    padding: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                      color: Colors.white,
                                     shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
                                   ),
                                   child: const Icon(
                                     Icons.edit,
-                                    color: Colors.white,
-                                    size: 20,
+                                      color: Color(0xFF6366F1),
+                                      size: 16,
+                                    ),
                                   ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 20),
+                            // User Info
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          user?['name'] ?? 'No Name',
+                                          style: const TextStyle(
+                                            fontSize: 22,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      Container(
+                                        margin: const EdgeInsets.only(left: 8),
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.verified_user,
+                                              color: Colors.white,
+                                              size: 12,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              "Verified",
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.phone_outlined,
+                                          size: 14,
+                                          color: Colors.white,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          user?['phone'] ?? "No phone number",
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.email_outlined,
+                                          size: 14,
+                                          color: Colors.white,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          user?['email'] ?? "No email available",
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                                 ),
                             ),
                           ],
@@ -226,15 +309,18 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                           children: [
                             Expanded(
                               child: _buildQuickActionButton(
-                                title: "Certificates",
-                                icon: Icons.verified_user_outlined,
+                                title: "AI Assistant",
+                                icon: Icons.smart_toy_rounded,
                                   color: const Color(0xFF6366F1).withOpacity(0.1),
                                   iconColor: const Color(0xFF6366F1),
                                 onTap: () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => const CertificatesScreen(),
+                                      builder: (context) => AIAssistantScreen(
+                                        currentScreen: 'Account',
+                                        screenDetails: 'This is the Account screen where you can manage your profile and app settings.',
+                                      ),
                                     ),
                                   );
                                 },
@@ -243,15 +329,15 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                               const SizedBox(width: 16),
                             Expanded(
                               child: _buildQuickActionButton(
-                                title: "Notifications",
-                                icon: Icons.notifications_outlined,
+                                title: "Certificates",
+                                icon: Icons.verified_user_outlined,
                                   color: const Color(0xFF8B5CF6).withOpacity(0.1),
                                   iconColor: const Color(0xFF8B5CF6),
                                 onTap: () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => const NotificationsScreen(),
+                                      builder: (context) => const CertificatesScreen(),
                                     ),
                                   );
                                 },

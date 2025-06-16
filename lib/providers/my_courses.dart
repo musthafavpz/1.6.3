@@ -191,4 +191,18 @@ class MyCourses with ChangeNotifier {
       rethrow;
     }
   }
+
+  // Find a lesson by its ID across all sections
+  Lesson? findLessonById(int lessonId) {
+    for (var section in _sectionItems) {
+      if (section.mLesson != null && section.mLesson!.isNotEmpty) {
+        for (var lesson in section.mLesson!) {
+          if (lesson.id == lessonId) {
+            return lesson;
+          }
+        }
+      }
+    }
+    return null; // Return null if lesson not found
+  }
 }

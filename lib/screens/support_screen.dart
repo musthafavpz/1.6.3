@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import '../widgets/appbar_one.dart';
 
 class SupportScreen extends StatefulWidget {
   const SupportScreen({Key? key}) : super(key: key);
@@ -11,86 +12,12 @@ class SupportScreen extends StatefulWidget {
 }
 
 class _SupportScreenState extends State<SupportScreen> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _subjectController = TextEditingController();
-  final TextEditingController _messageController = TextEditingController();
-  
-  String _selectedIssueType = 'Technical Issue';
-  final List<String> _issueTypes = [
-    'Technical Issue', 
-    'Billing Question', 
-    'Course Content', 
-    'Account Problem',
-    'Other'
-  ];
-  
-  bool _isSubmitting = false;
-
-  @override
-  void dispose() {
-    _subjectController.dispose();
-    _messageController.dispose();
-    super.dispose();
-  }
-
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isSubmitting = true;
-      });
-
-      // Simulate API call
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() {
-          _isSubmitting = false;
-        });
-        
-        // Show success message
-        Fluttertoast.showToast(
-          msg: "Your support request has been submitted. We'll get back to you soon.",
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.green,
-          textColor: Colors.white,
-        );
-        
-        // Reset form
-        _subjectController.clear();
-        _messageController.clear();
-        setState(() {
-          _selectedIssueType = 'Technical Issue';
-        });
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        title: Text(
-          'Help & Support',
-          style: GoogleFonts.montserrat(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-            child: const Icon(Icons.arrow_back_ios_new, size: 16, color: Color(0xFF6366F1)),
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+      appBar: AppBarOne(
+        title: 'Help & Support',
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -157,11 +84,11 @@ class _SupportScreenState extends State<SupportScreen> {
                   child: _buildContactCard(
                     icon: Icons.email_outlined,
                     title: "Email",
-                    subtitle: "support@academylms.com",
+                    subtitle: "support@eleganceprep.com",
                     onTap: () async {
                       final Uri emailUri = Uri(
                         scheme: 'mailto',
-                        path: 'support@academylms.com',
+                        path: 'support@eleganceprep.com',
                         query: 'subject=Support Request&body=Hello, I need assistance with...',
                       );
                       
@@ -182,11 +109,11 @@ class _SupportScreenState extends State<SupportScreen> {
                   child: _buildContactCard(
                     icon: Icons.phone_outlined,
                     title: "Phone",
-                    subtitle: "+1-234-567-8900",
+                    subtitle: "+919744432796",
                     onTap: () async {
                       final Uri phoneUri = Uri(
                         scheme: 'tel',
-                        path: '+12345678900',
+                        path: '+919744432796',
                       );
                       
                       if (await canLaunch(phoneUri.toString())) {
@@ -205,209 +132,6 @@ class _SupportScreenState extends State<SupportScreen> {
             ),
             
             const SizedBox(height: 32),
-            
-            // Submit a ticket form
-            Text(
-              "SUBMIT A SUPPORT TICKET",
-              style: GoogleFonts.montserrat(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF333333),
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.all(20),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Issue type dropdown
-                    Text(
-                      "Issue Type",
-                      style: GoogleFonts.montserrat(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF333333),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedIssueType,
-                          isExpanded: true,
-                          icon: const Icon(Icons.keyboard_arrow_down),
-                          style: GoogleFonts.montserrat(
-                            fontSize: 14,
-                            color: const Color(0xFF333333),
-                          ),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              _selectedIssueType = newValue!;
-                            });
-                          },
-                          items: _issueTypes.map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Subject field
-                    Text(
-                      "Subject",
-                      style: GoogleFonts.montserrat(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF333333),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _subjectController,
-                      decoration: InputDecoration(
-                        hintText: "Brief description of your issue",
-                        hintStyle: GoogleFonts.montserrat(
-                          fontSize: 14,
-                          color: Colors.grey.shade400,
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF6366F1)),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter a subject';
-                        }
-                        return null;
-                      },
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Message field
-                    Text(
-                      "Message",
-                      style: GoogleFonts.montserrat(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF333333),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _messageController,
-                      decoration: InputDecoration(
-                        hintText: "Describe your issue in detail",
-                        hintStyle: GoogleFonts.montserrat(
-                          fontSize: 14,
-                          color: Colors.grey.shade400,
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF6366F1)),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
-                      maxLines: 4,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter a message';
-                        } else if (value.trim().length < 10) {
-                          return 'Message must be at least 10 characters';
-                        }
-                        return null;
-                      },
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Submit button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _isSubmitting ? null : _submitForm,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF6366F1),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: _isSubmitting
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(
-                                "Submit Request",
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 16),
             
             // FAQ suggestion
             Container(
@@ -453,10 +177,7 @@ class _SupportScreenState extends State<SupportScreen> {
                         GestureDetector(
                           onTap: () {
                             // Navigate to FAQ page
-                            Fluttertoast.showToast(
-                              msg: "FAQ page coming soon",
-                              toastLength: Toast.LENGTH_SHORT,
-                            );
+                            Navigator.pushNamed(context, '/faq');
                           },
                           child: Text(
                             "View FAQs →",

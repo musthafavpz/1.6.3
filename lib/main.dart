@@ -4,6 +4,7 @@ import 'package:academy_lms_app/screens/onboarding_screen.dart';
 import 'package:academy_lms_app/screens/splash.dart';
 import 'package:academy_lms_app/screens/tab_screen.dart';
 import 'package:academy_lms_app/screens/welcome_screen.dart';
+import 'package:academy_lms_app/screens/instructor_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
@@ -127,6 +128,7 @@ class MyApp extends StatelessWidget {
             AccountRemoveScreen.routeName: (ctx) => const AccountRemoveScreen(),
             CertificatesScreen.routeName: (ctx) => const CertificatesScreen(),
             AIAssistantScreen.routeName: (ctx) => const AIAssistantScreen(),
+            InstructorScreen.routeName: (ctx) => const InstructorScreen(),
           },
         ),
       ),

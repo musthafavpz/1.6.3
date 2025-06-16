@@ -41,12 +41,41 @@ class _AppBarOneState extends State<AppBarOne> {
     return AppBar(
       backgroundColor: kBackGroundColor,
       toolbarHeight: 70,
-      leadingWidth: 160,
+      leadingWidth: 80,
       centerTitle: false,
-      // Logo on the left
-      leading: widget.logo != null
+      // Back button
+      leading: widget.logo == null ? Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10),
+        child: GestureDetector(
+          child: Card(
+            color: kBackGroundColor,
+            elevation: 0,
+            borderOnForeground: true,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+              side: BorderSide(
+                color: kBackButtonBorderColor.withOpacity(0.1),
+                width: 1.0,
+              ),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.only(left: 8.0),
+              child: Icon(
+                Icons.arrow_back_ios,
+                color: kBlackColor,
+                size: 18,
+              ),
+            ),
+          ),
+          onTap: () {
+            Navigator.pop(context);
+          },
+        ),
+      ) : null,
+      // Logo on the left if provided
+      title: widget.logo != null
           ? Padding(
-              padding: const EdgeInsets.only(left: 15.0),
+              padding: const EdgeInsets.only(left: 0.0),
               child: Image.asset(
                 'assets/images/${widget.logo}',
                 height: 35.0,
@@ -54,68 +83,17 @@ class _AppBarOneState extends State<AppBarOne> {
                 fit: BoxFit.contain,
               ),
             )
-          : null,
-      // Title in the center if no logo
-      title: widget.title != null
-          ? Text(
-              widget.title,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w500,
-              ),
-            )
-          : null,
+          : widget.title != null
+              ? Text(
+                  widget.title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
+                )
+              : null,
       // Actions on the right side
       actions: [
-        // AI Chat icon
-        GestureDetector(
-          onTap: () {
-            // Navigate to AI Assistant screen with current screen context
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AIAssistantScreen(
-                  currentScreen: screenName,
-                  screenDetails: screenDetails,
-                ),
-              ),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.only(right: 16.0, top: 18, bottom: 18),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // AI Assistant icon
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF6366F1).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.smart_toy_rounded,
-                    size: 20,
-                    color: Color(0xFF6366F1),
-                  ),
-                ),
-                // Animation dot
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
         // Notification icon
         GestureDetector(
           onTap: () {

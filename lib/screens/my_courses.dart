@@ -92,7 +92,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
         }
         
         return Container(
-          padding: const EdgeInsets.all(15),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
@@ -102,12 +102,12 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                 Color(0xFF8B5CF6),
               ],
             ),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6366F1).withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
+                color: const Color(0xFF6366F1).withOpacity(0.25),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -124,16 +124,16 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                   Text(
                     '${myCourseData.items.length} Courses',
                     style: const TextStyle(
-                          fontSize: 18,
+                          fontSize: 20,
                       fontWeight: FontWeight.bold,
                           color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                      const SizedBox(height: 5),
                   const Text(
                     'Continue your learning journey',
                     style: TextStyle(
-                      fontSize: 12,
+                          fontSize: 13,
                           fontWeight: FontWeight.w500,
                           color: Colors.white70,
                         ),
@@ -148,15 +148,22 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                       }
                     },
                     child: Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: const Icon(
-                        Icons.play_arrow,
+                        Icons.play_arrow_rounded,
                         color: Colors.white,
-                        size: 24,
+                        size: 28,
                       ),
                     ),
                   ),
@@ -165,14 +172,14 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
               
               // Progress section
               if (myCourseData.items.isNotEmpty) ...[
-                const SizedBox(height: 15),
+                const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
                       'Overall Progress',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color: Colors.white,
                       ),
@@ -180,17 +187,17 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                     Text(
                       '${averageProgress.toStringAsFixed(1)}%',
                       style: const TextStyle(
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                        color: Colors.white,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 // Progress bar
                 LinearPercentIndicator(
-                  lineHeight: 6.0,
+                  lineHeight: 8.0,
                   percent: averageProgress / 100,
                   backgroundColor: Colors.white.withOpacity(0.2),
                   progressColor: Colors.white,
@@ -198,24 +205,6 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                   padding: EdgeInsets.zero,
                   animation: true,
                   animationDuration: 1000,
-                ),
-                const SizedBox(height: 10),
-                
-                // Stats row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStatItem(
-                      icon: Icons.book_outlined,
-                      value: '$totalCompletedLessons/$totalLessons',
-                      label: 'Lessons Completed',
-                    ),
-                    _buildStatItem(
-                      icon: Icons.access_time,
-                      value: _formatLearningTime(myCourseData.items.length),
-                      label: 'Learning Time',
-                    ),
-                  ],
                 ),
               ],
             ],
@@ -225,51 +214,73 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
     );
   }
 
-  Widget _buildStatItem({
-    required IconData icon,
-    required String value,
-    required String label,
-  }) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8),
+  Widget _buildCertificateCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
           ),
-          child: Icon(
-            icon,
-            color: Colors.white,
-            size: 18,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Your Certificate',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF333333),
+            ),
           ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.asset(
+              'assets/images/certificate.png', // Ensure this asset exists
+              fit: BoxFit.cover,
+              width: double.infinity,
+            ),
           ),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.white.withOpacity(0.8),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Completed on May 24, 2025',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF666666),
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Handle download or share
+                },
+                icon: const Icon(Icons.download_rounded, size: 18),
+                label: const Text('Download'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6366F1),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
-  }
-
-  String _formatLearningTime(int courseCount) {
-    // This is a placeholder calculation
-    // In a real app, this would calculate based on actual lesson durations
-    final estimatedHours = courseCount * 2;
-    return '$estimatedHours hrs';
   }
 
   Widget courseView() {
@@ -296,7 +307,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(
-                    Icons.error_outline,
+                      Icons.error_outline_rounded,
                     color: Colors.red,
                     size: 60,
                   ),
@@ -318,8 +329,9 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                       backgroundColor: const Color(0xFF6366F1),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                       ),
+                        elevation: 0,
                     ),
                     onPressed: () {
                       setState(() {});
@@ -369,9 +381,9 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                                 vertical: 12,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(12),
                               ),
-                              elevation: 2,
+                                elevation: 0,
                             ),
                             onPressed: () {
                               // Navigate to explore courses screen
@@ -402,7 +414,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.05),
@@ -414,7 +426,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                         child: TabBar(
                           indicatorSize: TabBarIndicatorSize.tab,
                           indicator: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(12),
                             gradient: const LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -423,6 +435,13 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                                 Color(0xFF8B5CF6),
                               ],
                             ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF6366F1).withOpacity(0.25),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                           ),
                           unselectedLabelStyle: const TextStyle(
                             fontWeight: FontWeight.w500,
@@ -433,14 +452,14 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                             fontSize: 16,
                             color: Colors.white,
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
                           dividerHeight: 0,
                           tabs: [
                             Tab(
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(Icons.play_circle_outline),
+                                    const Icon(Icons.play_circle_outline_rounded),
                                   const SizedBox(width: 8),
                                   Text(
                                     "In Progress (${inProgressCourses.length})",
@@ -456,7 +475,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(Icons.check_circle_outline),
+                                    const Icon(Icons.check_circle_outline_rounded),
                                   const SizedBox(width: 8),
                                   Text(
                                     "Completed (${completedCourses.length})",
@@ -487,7 +506,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         Icon(
-                                          Icons.play_circle_outline,
+                                            Icons.play_circle_outline_rounded,
                                           size: 60,
                                           color: Colors.grey[400],
                                         ),
@@ -505,7 +524,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                                 : SingleChildScrollView(
                                     physics: const BouncingScrollPhysics(),
                                     child: Padding(
-                                      padding: const EdgeInsets.only(bottom: 16.0),
+                                        padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
                                       child: AlignedGridView.count(
                                         shrinkWrap: true,
                                         crossAxisCount: 2,
@@ -529,7 +548,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         Icon(
-                                          Icons.check_circle_outline,
+                                            Icons.check_circle_outline_rounded,
                                           size: 60,
                                           color: Colors.grey[400],
                                         ),
@@ -547,8 +566,11 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                                 : SingleChildScrollView(
                                     physics: const BouncingScrollPhysics(),
                                     child: Padding(
-                                      padding: const EdgeInsets.only(bottom: 16.0),
-                                      child: AlignedGridView.count(
+                                        padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
+                                        child: Column(
+                                          children: [
+                                            // Remove certificate card
+                                            AlignedGridView.count(
                   shrinkWrap: true,
                   crossAxisCount: 2,
                       mainAxisSpacing: 16,
@@ -561,6 +583,8 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                     );
                   },
                     ),
+                                          ],
+                                        ),
                                     ),
                                   ),
                           ],
@@ -578,7 +602,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Icon(
-                            Icons.error_outline,
+                            Icons.error_outline_rounded,
                             color: Colors.red,
                             size: 60,
                           ),
@@ -594,8 +618,9 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                               backgroundColor: const Color(0xFF6366F1),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(12),
                               ),
+                              elevation: 0,
                             ),
                             onPressed: () {
                               setState(() {});

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "696200533094",
+    "project_id": "elegance-pro",
+    "storage_bucket": "elegance-pro.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:696200533094:android:42b79a14fa30b2a64f09a7",
+        "android_client_info": {
+          "package_name": "com.pro.eleganceprep"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAI53yJkf5l4F71EW5ZKypLftDVoTDKhw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

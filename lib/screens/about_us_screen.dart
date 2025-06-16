@@ -72,19 +72,19 @@ class AboutUsScreen extends StatelessWidget {
             // Our Mission
             _buildSection(
               title: 'OUR MISSION',
-              content: 'Our mission at Academy LMS is to make quality education accessible to everyone, everywhere. We believe in the transformative power of learning and strive to create an environment where knowledge can be shared freely and effectively.',
+              content: 'Our mission at Elegance Pro is to make quality education accessible to everyone, everywhere. We believe in the transformative power of learning and strive to create an environment where knowledge can be shared freely and effectively.',
             ),
             
             // About Us
             _buildSection(
               title: 'ABOUT US',
-              content: 'Academy LMS was founded in 2018 with a vision to revolutionize online education. Our platform connects expert instructors with eager learners from around the globe, offering a wide range of courses across various disciplines.\n\nStarting with just 5 courses and a handful of students, we have grown to feature over 1,000 courses and a community of more than 500,000 learners. Our success is built on our commitment to quality content, engaging teaching methods, and a user-friendly platform that makes learning enjoyable and effective.',
+              content: 'Elegance Pro was founded in 2018 with a vision to revolutionize online education. Our platform connects expert instructors with eager learners from around the globe, offering a wide range of courses across various disciplines.\n\nStarting with just 5 courses and a handful of students, we have grown to feature over 1,000 courses and a community of more than 500,000 learners. Our success is built on our commitment to quality content, engaging teaching methods, and a user-friendly platform that makes learning enjoyable and effective.',
             ),
             
             // Our Team
             _buildSection(
               title: 'OUR TEAM',
-              content: 'Academy LMS is powered by a diverse team of educators, technologists, and lifelong learners. Our team members bring a wealth of experience from various fields, united by a shared passion for education and innovation.',
+              content: 'Elegance Pro is powered by a diverse team of educators, technologists, and lifelong learners. Our team members bring a wealth of experience from various fields, united by a shared passion for education and innovation.',
               useList: false,
             ),
             
@@ -100,7 +100,7 @@ class AboutUsScreen extends StatelessWidget {
                 childAspectRatio: 0.8,
                 children: [
                   _buildTeamMember(
-                    name: 'Sarah Johnson',
+                    name: 'Musthafa CMA, CSCA',
                     role: 'Founder & CEO',
                     photoUrl: 'assets/images/team/member1.jpg',
                   ),
@@ -151,11 +151,11 @@ class AboutUsScreen extends StatelessWidget {
                   Expanded(
                     child: _buildContactItem(
                       icon: Icons.email_outlined,
-                      text: 'info@academylms.com',
+                      text: 'info@elegancepro.com',
                       onTap: () async {
                         final Uri emailUri = Uri(
                           scheme: 'mailto',
-                          path: 'info@academylms.com',
+                          path: 'info@elegancepro.com',
                         );
                         if (await canLaunch(emailUri.toString())) {
                           await launch(emailUri.toString());
@@ -206,11 +206,11 @@ class AboutUsScreen extends StatelessWidget {
                   Expanded(
                     child: _buildContactItem(
                       icon: Icons.web_outlined,
-                      text: 'www.academylms.com',
+                      text: 'www.elegancepro.com',
                       onTap: () async {
                         final Uri webUri = Uri(
                           scheme: 'https',
-                          host: 'www.academylms.com',
+                          host: 'www.elegancepro.com',
                         );
                         if (await canLaunch(webUri.toString())) {
                           await launch(webUri.toString());

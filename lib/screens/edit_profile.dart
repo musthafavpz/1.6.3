@@ -228,10 +228,11 @@ class _EditPrfileScreenState extends State<EditPrfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: const AppBarOne(title: 'Update Profile'),
       body: Container(
         height: MediaQuery.of(context).size.height * 1,
-        color: kBackGroundColor,
+        color: const Color(0xFFF8F9FA),
         child: _isLoading
             ? const Center(
                 child: CircularProgressIndicator(color: kDefaultColor),
@@ -243,269 +244,218 @@ class _EditPrfileScreenState extends State<EditPrfileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 20),
-                      Center(
-                        child: Stack(
-                          children: [
-                            ClipOval(
-                              child: InkWell(
-                                onTap: () {
-                                  // _pickImage();
-                                },
-                                child: Container(
-                                  width: 130,
-                                  height: 130,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: const [kDefaultShadow],
-                                    border: Border.all(
-                                      color: kDefaultColor.withOpacity(.3),
-                                      width: 1.0,
-                                    ),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(5.0),
-                                    child: CircleAvatar(
-                                      radius: 55,
-                                      backgroundImage: _image != null
-                                          ? FileImage(_image!)
-                                              as ImageProvider<Object>?
-                                          : (user != null &&
-                                                  user!['photo'] is String
-                                              ? NetworkImage(
-                                                      user!['photo'] as String)
-                                                  as ImageProvider<Object>?
-                                              : null),
-                                      backgroundColor: kDefaultColor,
-                                    ),
-                                  ),
-                                ),
-                              ),
+                      // Profile Image Section with Gradient
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF6366F1),
+                              Color(0xFF8B5CF6),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF6366F1).withOpacity(0.2),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
-                            Positioned(
-                              right: 10,
-                              bottom: 0,
-                              child: Container(
-                                height: 45,
-                                width: 45,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: kDefaultColor.withOpacity(.3),
-                                    width: 1.0,
-                                  ),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(3.0),
-                                  child: ClipOval(
-                                    child: FloatingActionButton(
-                                      elevation: 1,
-                                      onPressed: () {
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            Center(
+                              child: Stack(
+                                children: [
+                                  ClipOval(
+                                    child: InkWell(
+                                      onTap: () {
                                         _pickImage();
-                                        print(_image);
                                       },
-                                      tooltip: 'Choose Image',
-                                      backgroundColor: Colors.white,
-                                      child: const CircleAvatar(
-                                        radius: 22,
-                                        backgroundColor: kDefaultColor,
-                                        child: Icon(
-                                          Icons.camera_alt_outlined,
+                                      child: Container(
+                                        width: 130,
+                                        height: 130,
+                                        decoration: BoxDecoration(
                                           color: Colors.white,
-                                          size: 20,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.1),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                          border: Border.all(
+                                            color: Colors.white.withOpacity(0.3),
+                                            width: 1.0,
+                                          ),
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(5.0),
+                                          child: CircleAvatar(
+                                            radius: 55,
+                                            backgroundImage: _image != null
+                                                ? FileImage(_image!) as ImageProvider<Object>?
+                                                : (user != null && user!['photo'] is String
+                                                    ? NetworkImage(user!['photo'] as String) as ImageProvider<Object>?
+                                                    : null),
+                                            backgroundColor: kDefaultColor,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
+                                  Positioned(
+                                    right: 10,
+                                    bottom: 0,
+                                    child: Container(
+                                      height: 45,
+                                      width: 45,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.1),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(3.0),
+                                        child: ClipOval(
+                                          child: FloatingActionButton(
+                                            elevation: 0,
+                                            onPressed: () {
+                                              _pickImage();
+                                            },
+                                            tooltip: 'Choose Image',
+                                            backgroundColor: const Color(0xFF6366F1),
+                                            child: const Icon(
+                                              Icons.camera_alt_outlined,
+                                              color: Colors.white,
+                                              size: 20,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                ],
                               ),
-                            )
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Update Profile Picture',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      SizedBox(
-                        width: double.infinity,
+                      const SizedBox(height: 20),
+                      // Form Section
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
                         child: Form(
                           key: _formKey,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const CustomText(
-                                text: 'User Name',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                              ),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 5.0),
-                                child: TextFormField(
-                                  style: const TextStyle(fontSize: 14),
-                                  initialValue: user?['name'] ??
-                                      '', // Use an empty string if null
-                                  decoration: getInputDecoration(''),
-                                  keyboardType: TextInputType.name,
-                                  validator: (value) {
-                                    if (value!.isEmpty) {
-                                      return 'Name cannot be empty';
-                                    }
-                                    return null;
-                                  },
-                                  onSaved: (value) {
-                                    _nameController.text = value ??
-                                        ''; // Use an empty string if null
-                                    _userData['name'] = value ??
-                                        ''; // Use an empty string if null
-                                  },
+                              const Text(
+                                'Personal Information',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF333333),
                                 ),
                               ),
-                              const SizedBox(
-                                height: 10,
+                              const SizedBox(height: 20),
+                              // Form Fields
+                              _buildFormField(
+                                label: 'User Name',
+                                initialValue: user?['name'] ?? '',
+                                validator: (value) {
+                                  if (value!.isEmpty) {
+                                    return 'Name cannot be empty';
+                                  }
+                                  return null;
+                                },
+                                onSaved: (value) {
+                                  _userData['name'] = value ?? '';
+                                },
                               ),
-                              const CustomText(
-                                text: 'Biography',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
+                              _buildFormField(
+                                label: 'Biography',
+                                initialValue: user?['biography'] ?? '',
+                                maxLines: 3,
+                                onSaved: (value) {
+                                  _userData['biography'] = value ?? '';
+                                },
                               ),
-                              const SizedBox(
-                                height: 10,
+                              _buildFormField(
+                                label: 'About',
+                                initialValue: user?['about'] ?? '',
+                                maxLines: 3,
+                                onSaved: (value) {
+                                  _userData['about'] = value ?? '';
+                                },
                               ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 5.0),
-                                child: TextFormField(
-                                  style: const TextStyle(fontSize: 16),
-                                  initialValue: user?['biography'] ?? '',
-                                  decoration: getInputDecoration(''),
-                                  keyboardType: TextInputType.multiline,
-                                  maxLines: 5,
-                                  onSaved: (value) {
-                                    _userData['biography'] = value ?? '';
-                                  },
+                              _buildFormField(
+                                label: 'Address',
+                                initialValue: user?['address'] ?? '',
+                                onSaved: (value) {
+                                  _userData['address'] = value ?? '';
+                                },
+                              ),
+                              const SizedBox(height: 20),
+                              const Text(
+                                'Social Media Links',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF333333),
                                 ),
                               ),
-                              const SizedBox(
-                                height: 10,
+                              const SizedBox(height: 20),
+                              _buildFormField(
+                                label: 'Twitter',
+                                initialValue: user?['twitter'] ?? '',
+                                onSaved: (value) {
+                                  _userData['twitter'] = value ?? '';
+                                },
                               ),
-                              const CustomText(
-                                text: 'About',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
+                              _buildFormField(
+                                label: 'Facebook',
+                                initialValue: user?['facebook'] ?? '',
+                                onSaved: (value) {
+                                  _userData['facebook'] = value ?? '';
+                                },
                               ),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 5.0),
-                                child: TextFormField(
-                                  style: const TextStyle(fontSize: 16),
-                                  initialValue: user?['about'] ?? '',
-                                  decoration: getInputDecoration(''),
-                                  keyboardType: TextInputType.multiline,
-                                  maxLines: 5,
-                                  onSaved: (value) {
-                                    _userData['about'] = value ?? '';
-                                  },
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                              const CustomText(
-                                text: 'Address',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                              ),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 5.0),
-                                child: TextFormField(
-                                  style: const TextStyle(fontSize: 16),
-                                  initialValue: user?['address'] ?? '',
-                                  decoration: getInputDecoration(''),
-                                  onSaved: (value) {
-                                    _userData['address'] = value ?? '';
-                                  },
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                              const CustomText(
-                                text: 'Twitter',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                              ),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 5.0),
-                                child: TextFormField(
-                                  style: const TextStyle(fontSize: 16),
-                                  initialValue: user?['twitter'] ?? '',
-                                  decoration: getInputDecoration(''),
-                                  onSaved: (value) {
-                                    _userData['twitter'] = value ?? '';
-                                  },
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                              const CustomText(
-                                text: 'Facebook',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                              ),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 5.0),
-                                child: TextFormField(
-                                  style: const TextStyle(fontSize: 16),
-                                  initialValue: user?['facebook'] ?? '',
-                                  decoration: getInputDecoration(''),
-                                  onSaved: (value) {
-                                    _userData['facebook'] = value ?? '';
-                                  },
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                              const CustomText(
-                                text: 'LinkedIn',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                              ),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 5.0),
-                                child: TextFormField(
-                                  style: const TextStyle(fontSize: 16),
-                                  initialValue: user?['linkedin'] ?? '',
-                                  decoration: getInputDecoration(''),
-                                  onSaved: (value) {
-                                    _userData['linkedin'] = value ?? '';
-                                  },
-                                ),
+                              _buildFormField(
+                                label: 'LinkedIn',
+                                initialValue: user?['linkedin'] ?? '',
+                                onSaved: (value) {
+                                  _userData['linkedin'] = value ?? '';
+                                },
                               ),
                               const SizedBox(height: 30),
                               SizedBox(
@@ -513,39 +463,88 @@ class _EditPrfileScreenState extends State<EditPrfileScreen> {
                                 child: _isLoading
                                     ? const CircularProgressIndicator()
                                     : MaterialButton(
-                                        onPressed: () {
-                                          _submit();
-                                        },
-                                        color: kDefaultColor,
+                                        onPressed: _submit,
+                                        height: 50,
+                                        color: const Color(0xFF6366F1),
                                         textColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 15, vertical: 15),
-                                        splashColor: kDefaultColor,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(16.0),
-                                          side: const BorderSide(
-                                              color: kDefaultColor),
+                                          borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: const Text(
-                                          'Update Now',
+                                          'Update Profile',
                                           style: TextStyle(
-                                              fontWeight: FontWeight.bold),
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
-                              ),
-                              const SizedBox(
-                                height: 25,
                               ),
                             ],
                           ),
                         ),
                       ),
+                      const SizedBox(height: 25),
                     ],
                   ),
                 ),
               ),
       ),
+    );
+  }
+
+  Widget _buildFormField({
+    required String label,
+    required String initialValue,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+    required Function(String?)? onSaved,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF666666),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          initialValue: initialValue,
+          maxLines: maxLines,
+          style: const TextStyle(fontSize: 14),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xFFF8F9FA),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFF65054), width: 1),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFF65054), width: 1),
+            ),
+          ),
+          validator: validator,
+          onSaved: onSaved,
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 }

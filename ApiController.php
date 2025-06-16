@@ -14,6 +14,7 @@ use App\Models\Certificate;
 use App\Models\Lesson;
 use App\Models\Question;
 use App\Models\QuizSubmission;
+use App\Models\Banner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -32,53 +33,142 @@ use Illuminate\Support\Facades\Log;
 class ApiController extends Controller
 {
 
+    
     /**
      * Get quiz details for a specific lesson
      */
     public function getQuiz(Request $request, $lesson_id)
     {
-        $user = $request->user();
-        
-        // Check if lesson exists and is a quiz
-        $quiz = Lesson::where('id', $lesson_id)
-                      ->where('lesson_type', 'quiz')
-                      ->first();
-        
-        if (!$quiz) {
+        try {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            // Convert lesson_id to integer
+            $lesson_id = (int)$lesson_id;
+
+            // Log user and authentication info
+            Log::info('Quiz request from user:', [
+                'user_id' => $user->id,
+                'lesson_id' => $lesson_id
+            ]);
+            
+            // Check if lesson exists and is a quiz
+            $quiz = Lesson::where('id', $lesson_id)
+                          ->where('lesson_type', 'quiz')
+                          ->first();
+            
+            if (!$quiz) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Quiz not found'
+                ], 404);
+            }
+            
+            // Get questions for this quiz
+            $questions = Question::where('quiz_id', $lesson_id)
+                                ->orderBy('sort', 'asc')
+                                ->get();
+            
+            if ($questions->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No questions found for this quiz',
+                    'quiz_id' => $quiz->id,
+                    'title' => 'Quiz',
+                    'questions' => []
+                ]);
+            }
+            
+            // Format response for mobile app
+            $formattedQuestions = $questions->map(function ($question) {
+                // Handle the answer based on question type
+                $answer = null;
+                
+                // Clean the question title from HTML tags
+                $cleanTitle = strip_tags($question->title);
+                
+                try {
+                    if (is_string($question->answer) && 
+                        (strpos($question->answer, '[') === 0 || strpos($question->answer, '{') === 0)) {
+                        // It's a JSON string, attempt to decode
+                        $answer = json_decode($question->answer);
+                        
+                        // If JSON decode fails, use as is
+                        if (json_last_error() !== JSON_ERROR_NONE) {
+                            $answer = $question->answer;
+                        }
+                    } else {
+                        // Not a JSON string, use as is
+                        $answer = $question->answer;
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error parsing question answer: ' . $e->getMessage());
+                    $answer = $question->answer;
+                }
+
+                // Parse options
+                $options = [];
+                try {
+                    if (is_string($question->options) && 
+                        (strpos($question->options, '[') === 0 || strpos($question->options, '{') === 0)) {
+                        // It's a JSON string, attempt to decode
+                        $options = json_decode($question->options);
+                        
+                        // If JSON decode fails or result is not an array, create an empty array
+                        if (json_last_error() !== JSON_ERROR_NONE || !is_array($options)) {
+                            $options = [];
+                        }
+                    } else if (is_array($question->options)) {
+                        $options = $question->options;
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error parsing question options: ' . $e->getMessage());
+                    $options = [];
+                }
+                
+                // Log for debugging
+                Log::info('Question ' . $question->id . ' formatted:', [
+                    'title' => $cleanTitle,
+                    'answer' => $answer,
+                    'options' => $options
+                ]);
+                
+                return [
+                    'question_id' => (int)$question->id,
+                    'question_text' => $cleanTitle,
+                    'type' => $question->type,
+                    'answer' => $answer,
+                    'options' => $options,
+                ];
+            });
+            
+            // Get course details for this lesson
+            $courseId = $quiz->course_id;
+            $course = Course::find($courseId);
+            
+            return response()->json([
+                'quiz_id' => (int)$quiz->id,
+                'title' => $course ? $course->title . ' Quiz' : 'Quiz',
+                'total_marks' => $questions->count(),
+                'pass_mark' => 70, // Default passing mark (70%)
+                'duration' => 30, // Default duration in minutes
+                'questions' => $formattedQuestions
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error in getQuiz: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            
             return response()->json([
                 'status' => false,
-                'message' => 'Quiz not found'
-            ], 404);
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
         }
-        
-        // Get questions for this quiz
-        $questions = Question::where('quiz_id', $lesson_id)
-                             ->orderBy('sort', 'asc')
-                             ->get();
-        
-        // Format response for mobile app
-        $formattedQuestions = $questions->map(function ($question) {
-            return [
-                'question_id' => $question->id,
-                'question_text' => $question->title,
-                'type' => $question->type,
-                'mark' => 1, // Default mark value
-                'options' => json_decode($question->options),
-            ];
-        });
-        
-        // Get course details for this lesson
-        $courseId = $quiz->course_id;
-        $course = Course::find($courseId);
-        
-        return response()->json([
-            'quiz_id' => $quiz->id,
-            'title' => $course ? $course->title . ' Quiz' : 'Quiz',
-            'total_marks' => $questions->count(),
-            'pass_mark' => 70, // Default passing mark (70%)
-            'duration' => 30, // Default duration in minutes
-            'questions' => $formattedQuestions
-        ]);
     }
 
     /**
@@ -86,84 +176,235 @@ class ApiController extends Controller
      */
     public function submitQuiz(Request $request)
     {
-        $user = $request->user();
-        
-        // Log the incoming request for debugging
-        Log::info('Quiz submission payload:', $request->all());
-        
         try {
-        $request->validate([
-            'quiz_id' => 'required|integer',
-            'lesson_id' => 'required|integer',
-            'answers' => 'required|array',
-            'time_taken' => 'required|integer',
+            $user = $request->user();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+            
+            // Log user and authentication info
+            Log::info('Quiz submission from user:', [
+                'user_id' => $user->id
+            ]);
+            
+            // Log the incoming request for debugging
+            Log::info('Quiz submission payload:', $request->all());
+            
+            $validatedData = $request->validate([
+                'quiz_id' => 'required|integer',
+                'lesson_id' => 'required|integer',
+                'answers' => 'required|array',
                 'correct_answer' => 'required|integer',
                 'wrong_answer' => 'required|integer',
                 'submits' => 'required|integer',
-        ]);
-        
-        $quizId = $request->quiz_id;
-        $answers = $request->answers;
+            ]);
             
+            $quizId = (int)$validatedData['quiz_id'];
+            $answers = $validatedData['answers'];
+                
             Log::info('Quiz ID: ' . $quizId);
-            Log::info('Answers:', $answers);
-        
-        // Verify this is a valid quiz
-        $quiz = Lesson::where('id', $quizId)
-                      ->where('lesson_type', 'quiz')
-                      ->first();
-        
-        if (!$quiz) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Quiz not found'
-            ], 404);
-        }
-        
-        // Get all questions for this quiz
-        $questions = Question::where('quiz_id', $quizId)->get();
+            Log::info('Answers:', (array) $answers);
+            
+            // Verify this is a valid quiz
+            $quiz = Lesson::where('id', $quizId)
+                          ->where('lesson_type', 'quiz')
+                          ->first();
+            
+            if (!$quiz) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Quiz not found'
+                ], 404);
+            }
+            
+            // Check if course_id exists
+            if (!$quiz->course_id) {
+                Log::error('Quiz has no course_id: ', ['quiz_id' => $quizId]);
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Quiz has no associated course'
+                ], 400);
+            }
+            
+            // Process answers to determine correct and wrong answers
+            $correctQuestionIds = [];
+            $wrongQuestionIds = [];
+            
+            // Get questions for this quiz
+            $questions = Question::where('quiz_id', $quizId)->get();
             Log::info('Questions found: ' . $questions->count());
             
-            // Process answers and calculate score
-            $correctAnswers = $request->correct_answer;
-            $wrongAnswers = $request->wrong_answer;
+            // Check each answer
+            foreach ($answers as $questionId => $selectedAnswers) {
+                // Make sure question ID is an integer to avoid type issues
+                $questionIdInt = (int)$questionId;
+                
+                // Log the questionId and its type for debugging
+                Log::info('Processing question ID: ' . $questionIdInt . ' (type: ' . gettype($questionIdInt) . ')');
+                
+                $question = $questions->firstWhere('id', $questionIdInt);
+                
+                if (!$question) {
+                    Log::warning('Question not found:', ['question_id' => $questionIdInt]);
+                    continue;
+                }
+                
+                $correctAnswer = null;
+                try {
+                    // Attempt to decode answer if it's JSON
+                    if (is_string($question->answer) && 
+                        (strpos($question->answer, '[') === 0 || strpos($question->answer, '{') === 0)) {
+                        $correctAnswer = json_decode($question->answer, true);
+                    } else {
+                        $correctAnswer = $question->answer;
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error parsing answer for question ' . $questionIdInt . ': ' . $e->getMessage());
+                    $correctAnswer = $question->answer;
+                }
+                
+                // Get selected answer - first value in the array
+                $selectedAnswer = isset($selectedAnswers[0]) ? $selectedAnswers[0] : null;
+                
+                // Check if answer is correct
+                $isCorrect = false;
+                if (is_array($correctAnswer)) {
+                    $isCorrect = in_array($selectedAnswer, $correctAnswer);
+                } else {
+                    $isCorrect = $selectedAnswer == $correctAnswer;
+                }
+                
+                // Add to correct or wrong arrays - ensure they're integers
+                if ($isCorrect) {
+                    $correctQuestionIds[] = $questionIdInt;
+                } else {
+                    $wrongQuestionIds[] = $questionIdInt;
+                }
+                
+                Log::info('Question ' . $questionIdInt . ' result:', [
+                    'selected' => $selectedAnswer,
+                    'correct_answer' => $correctAnswer,
+                    'is_correct' => $isCorrect ? 'yes' : 'no'
+                ]);
+            }
             
-            // Save quiz attempt - use updateOrCreate for upsert functionality
-        $submission = QuizSubmission::updateOrCreate(
-            ['quiz_id' => $quizId, 'user_id' => $user->id],
-            [
-                'correct_answer' => $correctAnswers,
-                'wrong_answer' => $wrongAnswers,
-                'submits' => DB::raw('submits + 1'),
-            ]
-        );
+            // Debug the array types and values
+            Log::info('Correct question IDs (before JSON):', [
+                'count' => count($correctQuestionIds),
+                'values' => $correctQuestionIds,
+                'types' => array_map('gettype', $correctQuestionIds)
+            ]);
             
-            Log::info('Quiz submission created/updated: ' . $submission->id);
+            Log::info('Wrong question IDs (before JSON):', [
+                'count' => count($wrongQuestionIds),
+                'values' => $wrongQuestionIds,
+                'types' => array_map('gettype', $wrongQuestionIds)
+            ]);
             
+            // Format data for database storage
+            // Since we're using array casting in the model, we pass PHP arrays directly
+            $correctAnswerData = !empty($correctQuestionIds) ? $correctQuestionIds : null;
+            $wrongAnswerData = !empty($wrongQuestionIds) ? $wrongQuestionIds : null;
+            
+            // Convert all keys to strings to ensure proper JSON formatting
+            $formattedAnswers = [];
+            foreach ($answers as $questionId => $answer) {
+                $formattedAnswers[(string)$questionId] = $answer;
+            }
+            
+            Log::info('Data for database (raw PHP arrays):', [
+                'correct_answer' => $correctAnswerData,
+                'wrong_answer' => $wrongAnswerData,
+                'submits' => $formattedAnswers
+            ]);
+            
+            try {
+                // Always create a new submission record instead of updating
+                $submission = new QuizSubmission();
+                $submission->quiz_id = $quizId;
+                $submission->user_id = $user->id;
+                $submission->correct_answer = $correctAnswerData;
+                $submission->wrong_answer = $wrongAnswerData;
+                $submission->submits = $formattedAnswers;
+                $submission->save();
+                
+                Log::info('New quiz submission saved with ID: ' . $submission->id);
+            } catch (\Exception $e) {
+                Log::error('Error saving quiz submission: ' . $e->getMessage());
+                Log::error('Error stack trace: ' . $e->getTraceAsString());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error saving quiz submission: ' . $e->getMessage()
+                ], 500);
+            }
+                
             // Calculate percentage
             $totalQuestions = $questions->count();
-            $percentage = ($totalQuestions > 0) ? ($correctAnswers / $totalQuestions) * 100 : 0;
+            $correctCount = count($correctQuestionIds);
+            $percentage = ($totalQuestions > 0) ? ($correctCount / $totalQuestions) * 100 : 0;
             $passStatus = ($percentage >= 70) ? 'passed' : 'failed'; // 70% pass threshold
-        
-        // Mark lesson as completed if passed
-        if ($passStatus === 'passed') {
-                // Using class method instead of global function
-                $this->update_watch_history_manually($quizId, $quiz->course_id, $user->id);
-        }
-        
-        return response()->json([
-            'success' => true,
-                'id' => $submission->id,
-            'total_marks' => $totalQuestions,
-            'obtained_marks' => $correctAnswers,
-            'percentage' => $percentage,
-            'status' => $passStatus,
-        ]);
             
+            // Check if the user has passed this quiz before (even if they failed now)
+            $previousPass = false;
+            if ($passStatus === 'failed') {
+                Log::info('Current quiz attempt failed. Checking previous submissions...');
+                $previousSubmissions = QuizSubmission::where('quiz_id', $quizId)
+                                                    ->where('user_id', $user->id)
+                                                    ->get();
+                
+                Log::info('Found ' . $previousSubmissions->count() . ' previous submissions');
+                
+                foreach ($previousSubmissions as $prevSubmission) {
+                    // Calculate percentage for this submission
+                    $prevCorrectCount = is_array($prevSubmission->correct_answer) ? count($prevSubmission->correct_answer) : 0;
+                    $prevWrongCount = is_array($prevSubmission->wrong_answer) ? count($prevSubmission->wrong_answer) : 0;
+                    $prevTotalQuestions = $prevCorrectCount + $prevWrongCount;
+                    
+                    if ($prevTotalQuestions > 0) {
+                        $prevPercentage = ($prevCorrectCount / $prevTotalQuestions) * 100;
+                        Log::info('Previous submission ID: ' . $prevSubmission->id . ', percentage: ' . $prevPercentage);
+                        
+                        if ($prevPercentage >= 70) {
+                            $previousPass = true;
+                            Log::info('User previously passed this quiz with submission ID: ' . $prevSubmission->id);
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // If user previously passed but failed now, set special flag to show in response
+            if ($previousPass && $passStatus === 'failed') {
+                $passStatus = 'previously_passed';
+            }
+            
+            return response()->json([
+                'success' => true,
+                'id' => (int)$submission->id,
+                'total_marks' => (int)$totalQuestions,
+                'obtained_marks' => (int)$correctCount,
+                'percentage' => (float)$percentage,
+                'status' => $passStatus,
+                'previously_passed' => $previousPass,
+                'course_id' => $quiz->course_id,
+                'lesson_id' => $quizId
+            ]);
+                
+        } catch (ValidationException $e) {
+            Log::error('Validation error in quiz submission: ' . json_encode($e->errors()));
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             Log::error('Error in quiz submission: ' . $e->getMessage());
             Log::error('Error stack trace: ' . $e->getTraceAsString());
-            
+                
             return response()->json([
                 'success' => false,
                 'message' => 'Error processing quiz: ' . $e->getMessage()
@@ -1011,34 +1252,385 @@ class ApiController extends Controller
      */
     private function update_watch_history_manually($lesson_id, $course_id, $user_id) 
     {
-        // Mark lesson as completed
-        $lesson_status = DB::table('watch_histories')
-            ->where('lesson_id', $lesson_id)
-            ->where('user_id', $user_id)
-            ->first();
-        
-        if (!$lesson_status) {
-            DB::table('watch_histories')->insert([
+        // Validate inputs
+        if (!$lesson_id || !$course_id || !$user_id) {
+            Log::error('Missing required parameters for update_watch_history_manually', [
                 'lesson_id' => $lesson_id,
-                'user_id' => $user_id,
                 'course_id' => $course_id,
-                'watched' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'user_id' => $user_id
             ]);
-        } else {
-            DB::table('watch_histories')
+            throw new \Exception('Missing required parameters for updating watch history');
+        }
+
+        try {
+            // Mark lesson as completed
+            $lesson_status = DB::table('watch_histories')
                 ->where('lesson_id', $lesson_id)
                 ->where('user_id', $user_id)
-                ->update([
+                ->first();
+            
+            if (!$lesson_status) {
+                DB::table('watch_histories')->insert([
+                    'lesson_id' => $lesson_id,
+                    'user_id' => $user_id,
+                    'course_id' => $course_id,
                     'watched' => 1,
+                    'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+            } else {
+                DB::table('watch_histories')
+                    ->where('lesson_id', $lesson_id)
+                    ->where('user_id', $user_id)
+                    ->update([
+                        'watched' => 1,
+                        'updated_at' => now(),
+                    ]);
+            }
+            
+            // Update course progress
+            $course_progress = course_completion_data($course_id, $user_id);
+            
+            return $course_progress;
+        } catch (\Exception $e) {
+            Log::error('Error in update_watch_history_manually: ' . $e->getMessage());
+            throw $e;
         }
-        
-        // Update course progress
-        $course_progress = course_completion_data($course_id, $user_id);
-        
-        return $course_progress;
+    }
+
+    /**
+     * Get all active banners for the app
+     */
+    public function getBanners(Request $request)
+    {
+        try {
+            $banners = Banner::where('is_active', true)
+                ->orderBy('sort_order', 'asc')
+                ->get();
+
+            // Format the banners for the mobile app
+            $formattedBanners = $banners->map(function ($banner) {
+                return [
+                    'id' => $banner->id,
+                    'title' => $banner->title,
+                    'subtitle' => $banner->subtitle,
+                    'description' => $banner->description,
+                    'image_path' => get_photo('banner_image', $banner->image_path),
+                    'background_type' => $banner->background_type,
+                    'background_value' => $banner->background_value,
+                    'gradient_colors' => [
+                        $banner->gradient_start_color,
+                        $banner->gradient_end_color
+                    ],
+                    'enroll_button' => [
+                        'text' => $banner->enroll_button_text,
+                        'url' => $banner->enroll_button_url
+                    ],
+                    'preview_button' => [
+                        'text' => $banner->preview_button_text,
+                        'video_id' => $banner->preview_video_id
+                    ]
+                ];
+            });
+
+            return response()->json([
+                'status' => true,
+                'banners' => $formattedBanners
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching banners: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch banners'
+            ], 500);
+        }
+    }
+
+    /**
+     * Admin: Get all banners
+     */
+    public function getAllBanners(Request $request)
+    {
+        try {
+            // Check if user is admin
+            $user = $request->user();
+            if ($user->role !== 'admin') {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized access'
+                ], 403);
+            }
+
+            $banners = Banner::orderBy('sort_order', 'asc')->get();
+            
+            return response()->json([
+                'status' => true,
+                'banners' => $banners
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching all banners: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch banners'
+            ], 500);
+        }
+    }
+
+    /**
+     * Admin: Get a specific banner
+     */
+    public function getBanner(Request $request, $id)
+    {
+        try {
+            // Check if user is admin
+            $user = $request->user();
+            if ($user->role !== 'admin') {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized access'
+                ], 403);
+            }
+
+            $banner = Banner::find($id);
+            
+            if (!$banner) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Banner not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => true,
+                'banner' => $banner
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching banner: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to fetch banner'
+            ], 500);
+        }
+    }
+
+    /**
+     * Admin: Create a new banner
+     */
+    public function createBanner(Request $request)
+    {
+        try {
+            // Check if user is admin
+            $user = $request->user();
+            if ($user->role !== 'admin') {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized access'
+                ], 403);
+            }
+
+            // Validate request data
+            $validatedData = $request->validate([
+                'title' => 'required|string|max:255',
+                'subtitle' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'background_type' => 'nullable|in:color,image',
+                'background_value' => 'nullable|string|max:255',
+                'gradient_start_color' => 'nullable|string|max:20',
+                'gradient_end_color' => 'nullable|string|max:20',
+                'enroll_button_text' => 'nullable|string|max:50',
+                'enroll_button_url' => 'nullable|string|max:255',
+                'preview_button_text' => 'nullable|string|max:50',
+                'preview_video_id' => 'nullable|string|max:100',
+                'sort_order' => 'nullable|integer',
+                'is_active' => 'nullable|boolean',
+            ]);
+
+            // Handle image upload if present
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $fileName = 'banner_' . time() . '.' . $file->getClientOriginalExtension();
+                $path = 'assets/upload/banners/' . $fileName;
+                
+                // Upload the file
+                FileUploader::upload($file, $path, null, null, 800);
+                $validatedData['image_path'] = $path;
+            }
+
+            // Create banner
+            $banner = Banner::create($validatedData);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Banner created successfully',
+                'banner' => $banner
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Error creating banner: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to create banner: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Admin: Update an existing banner
+     */
+    public function updateBanner(Request $request, $id)
+    {
+        try {
+            // Check if user is admin
+            $user = $request->user();
+            if ($user->role !== 'admin') {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized access'
+                ], 403);
+            }
+
+            // Find banner
+            $banner = Banner::find($id);
+            if (!$banner) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Banner not found'
+                ], 404);
+            }
+
+            // Validate request data
+            $validatedData = $request->validate([
+                'title' => 'nullable|string|max:255',
+                'subtitle' => 'nullable|string|max:255',
+                'description' => 'nullable|string',
+                'background_type' => 'nullable|in:color,image',
+                'background_value' => 'nullable|string|max:255',
+                'gradient_start_color' => 'nullable|string|max:20',
+                'gradient_end_color' => 'nullable|string|max:20',
+                'enroll_button_text' => 'nullable|string|max:50',
+                'enroll_button_url' => 'nullable|string|max:255',
+                'preview_button_text' => 'nullable|string|max:50',
+                'preview_video_id' => 'nullable|string|max:100',
+                'sort_order' => 'nullable|integer',
+                'is_active' => 'nullable|boolean',
+            ]);
+
+            // Handle image upload if present
+            if ($request->hasFile('image')) {
+                // Delete old image if exists
+                if ($banner->image_path) {
+                    // Add code to delete old file if needed
+                }
+
+                $file = $request->file('image');
+                $fileName = 'banner_' . time() . '.' . $file->getClientOriginalExtension();
+                $path = 'assets/upload/banners/' . $fileName;
+                
+                // Upload the file
+                FileUploader::upload($file, $path, null, null, 800);
+                $validatedData['image_path'] = $path;
+            }
+
+            // Update banner
+            $banner->update($validatedData);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Banner updated successfully',
+                'banner' => $banner
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating banner: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to update banner: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Admin: Delete a banner
+     */
+    public function deleteBanner(Request $request, $id)
+    {
+        try {
+            // Check if user is admin
+            $user = $request->user();
+            if ($user->role !== 'admin') {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized access'
+                ], 403);
+            }
+
+            // Find banner
+            $banner = Banner::find($id);
+            if (!$banner) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Banner not found'
+                ], 404);
+            }
+
+            // Delete image if exists
+            if ($banner->image_path) {
+                // Add code to delete file if needed
+            }
+
+            // Delete banner
+            $banner->delete();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Banner deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error deleting banner: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to delete banner'
+            ], 500);
+        }
+    }
+
+    /**
+     * Admin: Reorder banners
+     */
+    public function reorderBanners(Request $request)
+    {
+        try {
+            // Check if user is admin
+            $user = $request->user();
+            if ($user->role !== 'admin') {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized access'
+                ], 403);
+            }
+
+            // Validate request data
+            $validatedData = $request->validate([
+                'banners' => 'required|array',
+                'banners.*.id' => 'required|integer|exists:banners,id',
+                'banners.*.sort_order' => 'required|integer',
+            ]);
+
+            // Update sort order for each banner
+            foreach ($validatedData['banners'] as $bannerData) {
+                Banner::where('id', $bannerData['id'])->update([
+                    'sort_order' => $bannerData['sort_order']
+                ]);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Banners reordered successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error reordering banners: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to reorder banners'
+            ], 500);
+        }
     }
 }

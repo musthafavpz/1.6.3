@@ -45,7 +45,7 @@ class RefundPolicyScreen extends StatelessWidget {
             
             _buildSectionHeader("1. Course Refund Policy"),
             _buildParagraph(
-              "At Academy LMS, we strive to ensure customer satisfaction with all of our educational content. However, we understand that there may be times when a refund is necessary. Please read our refund policy carefully to understand the circumstances under which we provide refunds.",
+              "At Elegance Prep, we strive to ensure customer satisfaction with all of our educational content. However, we understand that there may be times when a refund is necessary. Please read our refund policy carefully to understand the circumstances under which we provide refunds.",
             ),
             
             _buildSectionHeader("2. Refund Eligibility"),
@@ -60,9 +60,9 @@ class RefundPolicyScreen extends StatelessWidget {
             _buildParagraph(
               "To request a refund, please follow these steps:",
             ),
-            _buildBulletPoint("Log in to your account and navigate to 'Purchase History'."),
-            _buildBulletPoint("Select the course for which you want to request a refund."),
-            _buildBulletPoint("Click on 'Request Refund' and fill out the refund request form, providing the reason for your request."),
+            _buildBulletPoint("Log in to your account and navigate to the Contact page."),
+            _buildBulletPoint("Fill out the contact form with your refund request details."),
+            _buildBulletPoint("Include the course name, purchase date, and reason for your refund request."),
             _buildBulletPoint("Submit your request. Our team will review it and respond within 5 business days."),
             
             _buildSectionHeader("4. Refund Processing Time"),
@@ -81,7 +81,7 @@ class RefundPolicyScreen extends StatelessWidget {
             
             _buildSectionHeader("6. Exceptional Circumstances"),
             _buildParagraph(
-              "We may consider refund requests outside of our standard policy in exceptional circumstances. Such requests will be reviewed on a case-by-case basis. Please contact our customer support team to discuss your situation.",
+              "We may consider refund requests outside of our standard policy in exceptional circumstances. Such requests will be reviewed on a case-by-case basis. Please contact our customer support team through the Contact page to discuss your situation.",
             ),
             
             _buildSectionHeader("7. Currency and Payment Method"),
@@ -89,14 +89,14 @@ class RefundPolicyScreen extends StatelessWidget {
               "Refunds will be issued in the same currency and to the same payment method used for the original purchase. If the original payment method is no longer available, we will work with you to find an alternative solution.",
             ),
             
-            _buildSectionHeader("8. Cancellation of Courses by Academy LMS"),
+            _buildSectionHeader("8. Cancellation of Courses by Elegance Prep"),
             _buildParagraph(
-              "In the rare event that Academy LMS cancels a course, all enrolled students will receive a full refund, regardless of how much of the course they have completed.",
+              "In the rare event that Elegance Prep cancels a course, all enrolled students will receive a full refund, regardless of how much of the course they have completed.",
             ),
             
             _buildSectionHeader("9. Policy Changes"),
             _buildParagraph(
-              "Academy LMS reserves the right to modify this refund policy at any time. Any changes will be effective immediately upon posting the updated policy on our website.",
+              "Elegance Prep reserves the right to modify this refund policy at any time. Any changes will be effective immediately upon posting the updated policy on our website.",
             ),
             
             _buildSectionHeader("10. Contact Us"),
@@ -104,7 +104,7 @@ class RefundPolicyScreen extends StatelessWidget {
               "If you have any questions about our refund policy or need assistance with a refund request, please contact our support team at:",
             ),
             _buildParagraph(
-              "Email: support@academylms.com\nPhone: +1-234-567-8900\nSupport Hours: Monday to Friday, 9:00 AM to 6:00 PM EST",
+              "Email: support@eleganceprep.com\nSupport Hours: Monday to Friday, 9:00 AM to 6:00 PM EST",
             ),
             
             const SizedBox(height: 30),

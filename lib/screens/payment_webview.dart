@@ -4,6 +4,7 @@ import 'dart:async';
 import '../constants.dart';
 import 'payment_successful.dart';
 import 'payment_failed.dart';
+import 'my_courses.dart';
 
 class PaymentWebView extends StatefulWidget {
   final String url;
@@ -36,30 +37,19 @@ class _PaymentWebViewState extends State<PaymentWebView> {
           },
           onNavigationRequest: (NavigationRequest request) {
             // Handle successful payment redirect
-            if (request.url.contains('https://app.eleganceprep.com/my-courses')) {
+            if (request.url.contains('https://app.eleganceprep.com/my-courses') || 
+                request.url.contains('payment_success')) {
               _isClosedByUser = false;
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const PaymentSuccessfulScreen(),
+                  builder: (context) => const MyCoursesScreen(),
                 ),
               );
               return NavigationDecision.prevent;
             }
-            // Handle specific redirects if needed
-            if (request.url.contains('payment_success')) {
-              // Handle successful payment
-              _isClosedByUser = false;
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const PaymentSuccessfulScreen(),
-                ),
-              );
-              return NavigationDecision.prevent;
-            }
+            // Handle cancelled payment
             if (request.url.contains('payment_cancelled')) {
-              // Handle cancelled payment
               _isClosedByUser = false;
               Navigator.pushReplacement(
                 context,

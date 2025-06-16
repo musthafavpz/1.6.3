@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import '../constants.dart';
 import '../providers/courses.dart';
@@ -45,8 +46,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
         });
       } else if (pageDataType == CoursesPageData.search) {
         final searchQuery = routeArgs['search_query'] as String;
-        print(searchQuery);
-
         Provider.of<Courses>(context)
             .fetchCoursesBySearchQuery(searchQuery)
             .then((_) {
@@ -81,54 +80,112 @@ class _CoursesScreenState extends State<CoursesScreen> {
   Widget build(BuildContext context) {
     final courseData = Provider.of<Courses>(context, listen: false).items;
     final courseCount = courseData.length;
+    
     return Scaffold(
       appBar: const AppBarOne(title: 'Courses'),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: kDefaultColor),
+              child: CircularProgressIndicator(color: Color(0xFF6366F1)),
             )
           : Container(
-              height: MediaQuery.of(context).size.height * 1,
-              color: kBackGroundColor,
+              color: const Color(0xFFF8F9FA),
               child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(
-                        height: 15,
-                      ),
-                      Text(
-                        'Showing $courseCount Courses',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
+                      const SizedBox(height: 20),
+                      // Header Section
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF6366F1).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.school_outlined,
+                                color: Color(0xFF6366F1),
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Showing $courseCount Courses',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF1F2937),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'Explore our collection of courses',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Color(0xFF6B7280),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(
-                        height: 20,
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Courses List
+                      AnimationLimiter(
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: courseData.length,
+                          itemBuilder: (ctx, index) {
+                            return AnimationConfiguration.staggeredList(
+                              position: index,
+                              duration: const Duration(milliseconds: 375),
+                              child: SlideAnimation(
+                                verticalOffset: 50.0,
+                                child: FadeInAnimation(
+                                  child: CourseListItem(
+                                    id: courseData[index].id,
+                                    title: courseData[index].title.toString(),
+                                    thumbnail: courseData[index].thumbnail.toString(),
+                                    price: courseData[index].price.toString(),
+                                    instructor: courseData[index].instructor.toString(),
+                                    average_rating: courseData[index].average_rating.toString(),
+                                    total_reviews: courseData[index].total_reviews,
+                                    numberOfEnrollment: courseData[index].numberOfEnrollment,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: courseData.length,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemBuilder: (ctx, index) {
-                          return CourseListItem(
-                            id: courseData[index].id,
-                            title: courseData[index].title.toString(),
-                            thumbnail: courseData[index].thumbnail.toString(),
-                            // rating: courseData[index].rating!.toInt(),
-
-                            price: courseData[index].price.toString(),
-                            instructor: courseData[index].instructor.toString(),
-                            average_rating:
-                                courseData[index].average_rating.toString(),
-                            total_reviews: courseData[index].total_reviews,
-                            // noOfRating: courseData[index].totalNumberRating!.toInt(),
-                          );
-                        },
-                      ),
+                      
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),

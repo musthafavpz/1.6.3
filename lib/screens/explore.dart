@@ -18,27 +18,33 @@ class ExploreScreen extends StatefulWidget {
 
 class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProviderStateMixin {
   var _isInit = true;
-  // final searchController = TextEditingController(); // Search controller no longer needed
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 1000),
     );
     _fadeAnimation = CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeInOut,
     );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutCubic,
+    ));
     _animationController.forward();
   }
 
   @override
   void dispose() {
-    // searchController.dispose(); // Search controller no longer needed
     _animationController.dispose();
     super.dispose();
   }
@@ -59,104 +65,217 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
       await Provider.of<Categories>(context, listen: false).fetchCategories();
     } catch (error) {
       const errorMsg = 'Could not refresh categories!';
-      // ignore: use_build_context_synchronously
       CommonFunctions.showErrorDialog(errorMsg, context);
     }
   }
 
-  // _buildHeader() removed
-  // _buildFeaturedCategories() removed
 
-  Widget _buildCategoryItem(dynamic category) {
-    return InkWell(
-      onTap: () {
-        Navigator.of(context).pushNamed(
-          CategoryDetailsScreen.routeName,
-          arguments: {
-            'category_id': category.id,
-            'title': category.title,
-          },
-        );
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12), // Increased bottom margin
-        padding: const EdgeInsets.all(12), // Added padding
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16), // More rounded corners
-          border: Border.all(
-            color: const Color(0xFF6366F1).withOpacity(0.2), // Softer border color
-            width: 1.0,
+
+  Widget _buildCategoryItem(dynamic category, int index) {
+    return SlideTransition(
+      position: _slideAnimation,
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Container(
+          margin: EdgeInsets.only(
+            bottom: 12,
+            left: 24,
+            right: 24,
+            top: index == 0 ? 24 : 0,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05), // Softer shadow
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Row(
-          children: <Widget>[
-            Container(
-              height: 60, // Increased size
-              width: 60,  // Increased size
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12), // More rounded corners
-                color: Colors.grey.shade200, // Neutral background color instead of gradient
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: FadeInImage.assetNetwork(
-                  placeholder: 'assets/images/loading_animated.gif',
-                  image: category.thumbnail.toString(),
-                  fit: BoxFit.cover,
-                  imageErrorBuilder: (context, error, stackTrace) => Container(
-                     color: Colors.grey.shade200,
-                     child: const Icon(Icons.category_outlined, color: Colors.grey, size: 30),
-                  ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                Navigator.of(context).pushNamed(
+                  CategoryDetailsScreen.routeName,
+                  arguments: {
+                    'category_id': category.id,
+                    'title': category.title,
+                  },
+                );
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
+                      spreadRadius: 0,
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.02),
+                      blurRadius: 40,
+                      offset: const Offset(0, 8),
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      height: 50,
+                      width: 50,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF667EEA).withOpacity(0.1),
+                            Color(0xFF764BA2).withOpacity(0.1),
+                          ],
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: FadeInImage.assetNetwork(
+                          placeholder: 'assets/images/loading_animated.gif',
+                          image: category.thumbnail.toString(),
+                          fit: BoxFit.cover,
+                          imageErrorBuilder: (context, error, stackTrace) => Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFF667EEA).withOpacity(0.1),
+                                  Color(0xFF764BA2).withOpacity(0.1),
+                                ],
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.category_rounded,
+                              color: Color(0xFF667EEA),
+                              size: 28,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            category.title.toString(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF1F2937),
+                              letterSpacing: -0.1,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${category.numberOfSubCategories} subcategories',
+                            style: TextStyle(
+                              color: Color(0xFF6B7280),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF667EEA).withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: Color(0xFF667EEA),
+                        size: 16,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(width: 15), // Increased spacing
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(
-                    category.title.toString(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 16, // Increased font size
-                      fontWeight: FontWeight.w500, // Reduced font weight
-                      color: Color(0xFF333333),
-                    ),
-                  ),
-                  const SizedBox(height: 4), // Increased spacing
-                  Text(
-                    '${category.numberOfSubCategories} Sub-Categories', // Changed wording
-                    style: const TextStyle(
-                      color: Colors.grey, // Standard grey
-                      fontSize: 13, // Increased font size
-                    ),
-                  ),
-                ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return SliverToBoxAdapter(
+      child: Container(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Color(0xFF667EEA).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                Icons.explore_outlined,
+                size: 48,
+                color: Color(0xFF667EEA),
               ),
             ),
-            const SizedBox(width: 10), // Added spacing before icon
-            Container(
-              padding: const EdgeInsets.all(8), // Larger padding for icon button feel
-              decoration: BoxDecoration(
-                color: const Color(0xFF6366F1).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(30), // Circular shape
+            const SizedBox(height: 24),
+            Text(
+              'No categories yet',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1F2937),
               ),
-              child: const Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: Color(0xFF6366F1),
-                size: 16, // Adjusted size
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Pull down to refresh and discover new categories',
+              style: TextStyle(
+                fontSize: 16,
+                color: Color(0xFF6B7280),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return SliverToBoxAdapter(
+      child: Container(
+        padding: const EdgeInsets.all(60),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Color(0xFF667EEA).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: CupertinoActivityIndicator(
+                color: Color(0xFF667EEA),
+                radius: 16,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Loading categories...',
+              style: TextStyle(
+                fontSize: 16,
+                color: Color(0xFF6B7280),
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -167,69 +286,36 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
-    final height = MediaQuery.of(context).size.height -
-        MediaQuery.of(context).padding.top; // Adjusted height calculation
-
     return Scaffold(
-      body: Container(
-        color: const Color(0xFFF8F9FA), // Consistent light background
-        child: RefreshIndicator(
-          color: const Color(0xFF6366F1),
-          onRefresh: refreshList,
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: CustomScrollView( // Changed to CustomScrollView for more flexible layout
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                // _buildHeader() removed
-                // _buildFeaturedCategories() removed
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 15), // Reduced top padding from 50 to 20
-                    child: Text(
-                      'All Categories',
-                      style: TextStyle(
-                        fontSize: 18, 
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF333333), // Darker text color
-                      ),
+      backgroundColor: Color(0xFFFAFAFA),
+      body: RefreshIndicator(
+        color: Color(0xFF667EEA),
+        backgroundColor: Colors.white,
+        strokeWidth: 2.5,
+        onRefresh: refreshList,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            Consumer<Categories>(
+              builder: (context, categoriesData, child) {
+                if (categoriesData.items.isEmpty) {
+                  return _buildLoadingState();
+                } else {
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (ctx, index) {
+                        return _buildCategoryItem(categoriesData.items[index], index);
+                      },
+                      childCount: categoriesData.items.length,
                     ),
-                  ),
-                ),
-                Consumer<Categories>(
-                  builder: (context, categoriesData, child) {
-                    if (categoriesData.items.isEmpty) {
-                      return SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: height * 0.4, // Adjusted height
-                          child: const Center(
-                            child: CupertinoActivityIndicator(
-                              color: Color(0xFF6366F1),
-                            ),
-                          ),
-                        ),
-                      );
-                    } else {
-                      return SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20), // Consistent padding
-                        sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (ctx, index) {
-                              return _buildCategoryItem(categoriesData.items[index]);
-                            },
-                            childCount: categoriesData.items.length,
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                ),
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: 80), // Bottom padding for nav bar
-                ),
-              ],
+                  );
+                }
+              },
             ),
-          ),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 100),
+            ),
+          ],
         ),
       ),
     );

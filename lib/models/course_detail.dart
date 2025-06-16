@@ -33,6 +33,7 @@ class CourseDetail {
   List<Section>? mSection;
   String? requirements;
   String? outcomes;
+  String? enableDripContent;
 
   CourseDetail({
     @required this.courseId,
@@ -63,6 +64,7 @@ class CourseDetail {
     @required this.mSection,
     this.requirements,
     this.outcomes,
+    this.enableDripContent,
   });
 }
 // To parse this JSON data, do
@@ -98,6 +100,7 @@ class CourseDetails {
   String? thumbnail;
   String? banner;
   String? preview;
+  String? enableDripContent;
   String? description;
   Map<String, String>? requirements;
   Map<String, String>? outcomes;
@@ -162,6 +165,7 @@ class CourseDetails {
     this.isWishlisted,
     this.isPurchased,
     this.includes,
+    this.enableDripContent,
   });
   factory CourseDetails.fromJson(Map<String, dynamic> json) => CourseDetails(
         id: json["id"],
@@ -184,6 +188,7 @@ class CourseDetails {
         thumbnail: json["thumbnail"],
         banner: json["banner"],
         preview: json["preview"],
+        enableDripContent: json["enable_drip_content"],
         description: json["description"],
         requirements: json["requirements"] is List
             ? {} // Handle empty list case

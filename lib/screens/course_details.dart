@@ -311,7 +311,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 10),
                                 onPressed: () async {
-                                  // await getEnroll(loadedCourse.id.toString());
                                   final prefs =
                                       await SharedPreferences.getInstance();
                                   final authToken =
@@ -320,7 +319,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                     Navigator.of(context).pushReplacement(
                                       MaterialPageRoute(
                                           builder: (context) => TabsScreen(
-                                                pageIndex: 1,
+                                                pageIndex: 2, // Navigate to the 3rd screen (0-indexed)
                                               )),
                                     );
                                   } else {
@@ -338,7 +337,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                       color: kGreenPurchaseColor),
                                 ),
                                 child: const Text(
-                                  'Purchased',
+                                  'Go to Course',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
                                     fontSize: 13,
