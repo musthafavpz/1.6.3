@@ -8,6 +8,7 @@ import 'package:academy_lms_app/screens/login.dart';
 import 'package:academy_lms_app/screens/my_courses.dart';
 import 'package:academy_lms_app/widgets/appbar_one.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -140,55 +141,63 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     
-    return Scaffold(
-      extendBody: true, // This ensures content goes behind the bottom nav bar
-      appBar: AppBarOne(
-        logo: 'light_logo.png',
-        currentScreen: _getScreenName(),
-        screenDetails: _getScreenDetails(),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
       ),
-      body: _isInit
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
-          : PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(), // Keep this to prevent swipe gestures
-              children: _pages(),
-            ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
+      child: Scaffold(
+        extendBody: true, // This ensures content goes behind the bottom nav bar
+        appBar: AppBarOne(
+          logo: 'light_logo.png',
+          currentScreen: _getScreenName(),
+          screenDetails: _getScreenDetails(),
         ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(25.0),
-            topRight: Radius.circular(25.0),
-          ),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-          ),
-          child: BottomNavigationBar(
-              backgroundColor: Colors.transparent,
-              selectedItemColor: const Color(0xFF6366F1),
-              unselectedItemColor: Colors.grey.shade600,
-            showUnselectedLabels: true,
-            type: BottomNavigationBarType.fixed,
-            currentIndex: _selectedPageIndex,
-            onTap: _selectPage,
-            elevation: 0,
-            items: [
-              _buildNavItem('Home', 'assets/icons/home.svg'),
-              _buildNavItem('Explore', 'assets/icons/explore.svg'),
-              _buildNavItem('My Courses', 'assets/icons/my_courses.svg'),
-              _buildNavItem('Account', 'assets/icons/account.svg'),
+        body: _isInit
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
+            : PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(), // Keep this to prevent swipe gestures
+                children: _pages(),
+              ),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
             ],
+          ),
+          child: ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(25.0),
+              topRight: Radius.circular(25.0),
+            ),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+            ),
+            child: BottomNavigationBar(
+                backgroundColor: Colors.transparent,
+                selectedItemColor: const Color(0xFF6366F1),
+                unselectedItemColor: Colors.grey.shade600,
+              showUnselectedLabels: true,
+              type: BottomNavigationBarType.fixed,
+              currentIndex: _selectedPageIndex,
+              onTap: _selectPage,
+              elevation: 0,
+              items: [
+                _buildNavItem('Home', 'assets/icons/home.svg'),
+                _buildNavItem('Explore', 'assets/icons/explore.svg'),
+                _buildNavItem('My Courses', 'assets/icons/my_courses.svg'),
+                _buildNavItem('Account', 'assets/icons/account.svg'),
+              ],
+              ),
             ),
           ),
         ),

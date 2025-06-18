@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,8 +11,22 @@ import '../models/section.dart';
 class MyCourses with ChangeNotifier {
   List<MyCourse> _items = [];
   List<Section> _sectionItems = [];
+  
+  // API call management
+  Timer? _debounceTimer;
+  http.Client? _httpClient;
+  bool _isLoadingMyCourses = false;
 
-  MyCourses(this._items, this._sectionItems);
+  MyCourses(this._items, this._sectionItems) {
+    _httpClient = http.Client();
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    _httpClient?.close();
+    super.dispose();
+  }
 
   List<MyCourse> get items {
     return [..._items];
@@ -30,26 +45,57 @@ class MyCourses with ChangeNotifier {
   }
 
   Future<void> fetchMyCourses() async {
-    final prefs = await SharedPreferences.getInstance();
-    final authToken = (prefs.getString('access_token') ?? '');
-    var url = '$baseUrl/api/my_courses';
-    try {
-      final response = await http.get(Uri.parse(url), headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $authToken',
-      });
-      final extractedData = json.decode(response.body) as List;
-      // ignore: unnecessary_null_comparison
-      if (extractedData.isEmpty || extractedData == null) {
-        return;
-      }
-      // print(extractedData);
-      _items = buildMyCourseList(extractedData);
-      notifyListeners();
-    } catch (error) {
-      rethrow;
+    // Prevent multiple simultaneous calls
+    if (_isLoadingMyCourses) {
+      return;
     }
+    
+    _isLoadingMyCourses = true;
+    
+    // Cancel any pending debounce timer
+    _debounceTimer?.cancel();
+    
+    // Add a small delay to debounce rapid calls
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () async {
+      final prefs = await SharedPreferences.getInstance();
+      final authToken = (prefs.getString('access_token') ?? '');
+      var url = '$baseUrl/api/my_courses';
+      
+      try {
+        final response = await _httpClient!.get(
+          Uri.parse(url), 
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        ).timeout(const Duration(seconds: 10));
+        
+        if (response.statusCode == 200) {
+          // Check if response is HTML (error page) instead of JSON
+          if (response.body.trim().startsWith('<!DOCTYPE html>') || 
+              response.body.trim().startsWith('<html>')) {
+            throw Exception('Server returned HTML instead of JSON. Please try again later.');
+          }
+          
+          final extractedData = json.decode(response.body) as List;
+          
+          if (extractedData.isEmpty || extractedData == null) {
+            return;
+          }
+          
+          _items = buildMyCourseList(extractedData);
+          notifyListeners();
+        } else {
+          throw Exception('Failed to load my courses: ${response.statusCode}');
+        }
+      } catch (error) {
+        print('Error fetching my courses: $error');
+        rethrow;
+      } finally {
+        _isLoadingMyCourses = false;
+      }
+    });
   }
 
   List<MyCourse> buildMyCourseList(List extractedData) {

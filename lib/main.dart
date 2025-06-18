@@ -22,6 +22,29 @@ import 'screens/certificates_screen.dart';
 import 'screens/course_detail.dart';
 import 'screens/courses_screen.dart';
 import 'screens/sub_category.dart';
+import 'package:flutter/services.dart';
+import 'utils/api_utils.dart';
+
+class LifecycleEventHandler extends WidgetsBindingObserver {
+  final Future<void> Function()? detachedCallBack;
+
+  LifecycleEventHandler({
+    this.detachedCallBack,
+  });
+
+  @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    switch (state) {
+      case AppLifecycleState.detached:
+        if (detachedCallBack != null) {
+          await detachedCallBack!();
+        }
+        break;
+      default:
+        break;
+    }
+  }
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +63,15 @@ void main() async {
   final isLoggedIn = token != null && token.isNotEmpty;
   
   runApp(MyApp(showOnboarding: showOnboarding, isLoggedIn: isLoggedIn));
+  
+  // Dispose API utils when app is closed
+  WidgetsBinding.instance.addObserver(
+    LifecycleEventHandler(
+      detachedCallBack: () async {
+        ApiUtils.dispose();
+      },
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

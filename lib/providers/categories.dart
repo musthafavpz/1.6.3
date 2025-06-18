@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
 import '../models/all_category.dart';
 import '../models/category.dart';
 import '../constants.dart';
@@ -16,6 +17,22 @@ class Categories with ChangeNotifier {
   List<SubCategory> _subItems = [];
   List<AllCategory> _allItems = [];
   List<CategoryDetail> _categoryDetailsitems = [];
+  
+  // API call management
+  Timer? _debounceTimer;
+  http.Client? _httpClient;
+  bool _isLoadingCategories = false;
+
+  Categories() {
+    _httpClient = http.Client();
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    _httpClient?.close();
+    super.dispose();
+  }
 
   List<Category> get items {
     return [..._items];
@@ -34,33 +51,65 @@ class Categories with ChangeNotifier {
   }
 
   Future<void> fetchCategories() async {
-    var url = '$baseUrl/api/categories';
-    try {
-      final response = await http.get(Uri.parse(url));
-      final extractedData = json.decode(response.body) as List;
-     
-      if (extractedData == null) {
-        return;
-      }
-      // print(extractedData);
-      final List<Category> loadedCategories = [];
-
-      for (var catData in extractedData) {
-        loadedCategories.add(Category(
-          id: catData['id'],
-          title: catData['title'],
-          thumbnail: catData['thumbnail'],
-          numberOfCourses: catData['number_of_courses'],
-          numberOfSubCategories: catData['number_of_sub_categories'],
-        ));
-
-        // print(catData['title']);
-      }
-      _items = loadedCategories;
-      notifyListeners();
-    } catch (error) {
-      rethrow;
+    // Prevent multiple simultaneous calls
+    if (_isLoadingCategories) {
+      return;
     }
+    
+    _isLoadingCategories = true;
+    
+    // Cancel any pending debounce timer
+    _debounceTimer?.cancel();
+    
+    // Add a small delay to debounce rapid calls
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () async {
+      var url = '$baseUrl/api/categories';
+      try {
+        final response = await _httpClient!.get(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ).timeout(const Duration(seconds: 10));
+        
+        if (response.statusCode == 200) {
+          // Check if response is HTML (error page) instead of JSON
+          if (response.body.trim().startsWith('<!DOCTYPE html>') || 
+              response.body.trim().startsWith('<html>')) {
+            throw Exception('Server returned HTML instead of JSON. Please try again later.');
+          }
+          
+          final extractedData = json.decode(response.body) as List;
+         
+          if (extractedData == null) {
+            return;
+          }
+          
+          final List<Category> loadedCategories = [];
+
+          for (var catData in extractedData) {
+            loadedCategories.add(Category(
+              id: catData['id'],
+              title: catData['title'],
+              thumbnail: catData['thumbnail'],
+              numberOfCourses: catData['number_of_courses'],
+              numberOfSubCategories: catData['number_of_sub_categories'],
+            ));
+          }
+          
+          _items = loadedCategories;
+          notifyListeners();
+        } else {
+          throw Exception('Failed to load categories: ${response.statusCode}');
+        }
+      } catch (error) {
+        print('Error fetching categories: $error');
+        rethrow;
+      } finally {
+        _isLoadingCategories = false;
+      }
+    });
   }
 
   Future<void> fetchSubCategories(int catId) async {

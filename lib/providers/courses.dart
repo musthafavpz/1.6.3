@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:academy_lms_app/models/cart_tools_model.dart';
 import 'package:flutter/cupertino.dart';
@@ -20,11 +21,26 @@ class Courses with ChangeNotifier {
   List<CourseDetails> _courseDetails = [];
   List<Map<String, dynamic>> _topInstructors = [];
   CartTools? _cartTools;
+  
+  // API call management
+  Timer? _debounceTimer;
+  http.Client? _httpClient;
+  bool _isLoadingTopCourses = false;
+  bool _isLoadingInstructors = false;
 
   Courses(
     this._items,
     this._topItems,
-  );
+  ) {
+    _httpClient = http.Client();
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    _httpClient?.close();
+    super.dispose();
+  }
 
   List<Course> get items {
     return [..._items];
@@ -65,20 +81,52 @@ class Courses with ChangeNotifier {
   }
 
   Future<void> fetchTopCourses() async {
-    var url = '$baseUrl/api/top_courses';
-    try {
-      final response = await http.get(Uri.parse(url));
-      final extractedData = json.decode(response.body) as List;
-      // ignore: unnecessary_null_comparison
-      if (extractedData == null) {
-        return;
-      }
-      // print(extractedData);
-      _topItems = buildCourseList(extractedData);
-      notifyListeners();
-    } catch (error) {
-      rethrow;
+    // Prevent multiple simultaneous calls
+    if (_isLoadingTopCourses) {
+      return;
     }
+    
+    _isLoadingTopCourses = true;
+    
+    // Cancel any pending debounce timer
+    _debounceTimer?.cancel();
+    
+    // Add a small delay to debounce rapid calls
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () async {
+      var url = '$baseUrl/api/top_courses';
+      try {
+        final response = await _httpClient!.get(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ).timeout(const Duration(seconds: 10));
+        
+        if (response.statusCode == 200) {
+          // Check if response is HTML (error page) instead of JSON
+          if (response.body.trim().startsWith('<!DOCTYPE html>') || 
+              response.body.trim().startsWith('<html>')) {
+            throw Exception('Server returned HTML instead of JSON. Please try again later.');
+          }
+          
+          final extractedData = json.decode(response.body) as List;
+          if (extractedData == null) {
+            return;
+          }
+          
+          _topItems = buildCourseList(extractedData);
+          notifyListeners();
+        } else {
+          throw Exception('Failed to load courses: ${response.statusCode}');
+        }
+      } catch (error) {
+        print('Error fetching top courses: $error');
+        rethrow;
+      } finally {
+        _isLoadingTopCourses = false;
+      }
+    });
   }
 
   Future<void> fetchCoursesByCategory(int categoryId) async {
@@ -585,58 +633,79 @@ Future<void> toggleCart(int courseId, bool removeItem) async {
   }
 
   Future<void> fetchTopInstructors() async {
+    // Prevent multiple simultaneous calls
+    if (_isLoadingInstructors) {
+      return;
+    }
+    
+    _isLoadingInstructors = true;
+    
     final prefs = await SharedPreferences.getInstance();
     final token = (prefs.getString('access_token') ?? '');
     var url = '$baseUrl/api/top_courses';
+    
     try {
-      final response = await http.get(Uri.parse(url), headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      });
-      final extractedData = json.decode(response.body) as List;
+      final response = await _httpClient!.get(
+        Uri.parse(url), 
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 10));
       
-      // Create a map to accumulate instructor data
-      final Map<String, Map<String, dynamic>> instructorsMap = {};
-      
-      // Process all courses to gather instructor data
-      for (var courseData in extractedData) {
-        final instructorName = courseData['instructor_name'];
-        final instructorImage = courseData['instructor_image'];
+      if (response.statusCode == 200) {
+        // Check if response is HTML (error page) instead of JSON
+        if (response.body.trim().startsWith('<!DOCTYPE html>') || 
+            response.body.trim().startsWith('<html>')) {
+          throw Exception('Server returned HTML instead of JSON. Please try again later.');
+        }
         
-        if (instructorName != null && instructorName.isNotEmpty) {
-          // If instructor already exists in map, update counts
-          if (instructorsMap.containsKey(instructorName)) {
-            instructorsMap[instructorName]!['courseCount'] = instructorsMap[instructorName]!['courseCount'] + 1;
-            instructorsMap[instructorName]!['totalEnrollment'] = (instructorsMap[instructorName]!['totalEnrollment'] ?? 0) + 
-                                                              (courseData['total_enrollment'] ?? 0);
-          } else {
-            // Add new instructor
-            instructorsMap[instructorName] = {
-              'name': instructorName,
-              'image': instructorImage,
-              'courseCount': 1,
-              'totalEnrollment': courseData['total_enrollment'] ?? 0,
-              'rating': courseData['average_rating'] ?? 0.0
-            };
+        final extractedData = json.decode(response.body) as List;
+        
+        // Create a map to accumulate instructor data
+        final Map<String, Map<String, dynamic>> instructorsMap = {};
+        
+        // Process all courses to gather instructor data
+        for (var courseData in extractedData) {
+          final instructorName = courseData['instructor_name'];
+          final instructorImage = courseData['instructor_image'];
+          
+          if (instructorName != null && instructorName.isNotEmpty) {
+            // If instructor already exists in map, update counts
+            if (instructorsMap.containsKey(instructorName)) {
+              instructorsMap[instructorName]!['courseCount'] = instructorsMap[instructorName]!['courseCount'] + 1;
+              instructorsMap[instructorName]!['totalEnrollment'] = (instructorsMap[instructorName]!['totalEnrollment'] ?? 0) + 
+                                                                (courseData['total_enrollment'] ?? 0);
+            } else {
+              // Add new instructor
+              instructorsMap[instructorName] = {
+                'name': instructorName,
+                'image': instructorImage,
+                'courseCount': 1,
+                'totalEnrollment': courseData['total_enrollment'] ?? 0,
+                'rating': courseData['average_rating'] ?? 0.0
+              };
+            }
           }
         }
+        
+        // Convert map to list
+        final instructorsList = instructorsMap.values.toList();
+        
+        // Sort by total enrollment (descending)
+        instructorsList.sort((a, b) => (b['totalEnrollment'] ?? 0).compareTo(a['totalEnrollment'] ?? 0));
+        
+        _topInstructors = instructorsList;
+        notifyListeners();
+      } else {
+        throw Exception('Failed to load instructors: ${response.statusCode}');
       }
-      
-      // Convert map to list
-      final instructorsList = instructorsMap.values.toList();
-      
-      // Sort by total enrollment (descending)
-      instructorsList.sort((a, b) => 
-        (b['totalEnrollment'] as int).compareTo(a['totalEnrollment'] as int));
-      
-      // Save to our provider
-      _topInstructors = instructorsList;
-      
-      notifyListeners();
     } catch (error) {
       print('Error fetching top instructors: $error');
       rethrow;
+    } finally {
+      _isLoadingInstructors = false;
     }
   }
 }
