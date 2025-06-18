@@ -432,49 +432,49 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ]);
       
       // Immediately update UI with the essential data
-          if (mounted) {
-            setState(() {
-              topCourses = Provider.of<Courses>(context, listen: false).topItems;
-              
-              // Sort courses by enrollment count (descending order)
-              topCourses.sort((a, b) {
-                int aEnrollment = _parseEnrollmentCount(a);
-                int bEnrollment = _parseEnrollmentCount(b);
-                return bEnrollment.compareTo(aEnrollment);
-              });
-              
+      if (mounted) {
+        setState(() {
+          topCourses = Provider.of<Courses>(context, listen: false).topItems;
+          
+          // Sort courses by enrollment count (descending order)
+          topCourses.sort((a, b) {
+            int aEnrollment = _parseEnrollmentCount(a);
+            int bEnrollment = _parseEnrollmentCount(b);
+            return bEnrollment.compareTo(aEnrollment);
+          });
+          
           // Still keep loading indicator for secondary data
           _isLoading = false;
-            });
-          }
+        });
+      }
         
       // Step 2: Load secondary data in the background
       // These calls won't block the UI from rendering
       try {
-      await Provider.of<Courses>(context, listen: false).fetchTopInstructors();
+        await Provider.of<Courses>(context, listen: false).fetchTopInstructors();
       } catch (error) {
         print('Error loading instructors: $error');
         // Don't fail the entire load for instructor data
       }
         
       // Step 3: Load user-specific data last, only if logged in
-        if (user != null) {
+      if (user != null) {
         try {
-        await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
+          await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
         } catch (error) {
           print('Error loading my courses: $error');
           // Don't fail the entire load for user-specific data
         }
-        }
+      }
       
     } catch (error) {
       print('Error in batch loading data: $error');
-        if (mounted) {
-          setState(() {
+      if (mounted) {
+        setState(() {
           _isLoading = false;
-          });
-        }
+        });
       }
+    }
   }
 
   // Helper method to safely parse enrollment count from various possible fields and types
@@ -535,13 +535,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       
       // Load data with better error handling
       try {
-      await Provider.of<Courses>(context, listen: false).fetchTopCourses();
+        await Provider.of<Courses>(context, listen: false).fetchTopCourses();
       } catch (error) {
         print('Error refreshing top courses: $error');
       }
       
       try {
-      await Provider.of<Courses>(context, listen: false).fetchTopInstructors();
+        await Provider.of<Courses>(context, listen: false).fetchTopInstructors();
       } catch (error) {
         print('Error refreshing instructors: $error');
       }
@@ -549,7 +549,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       // Only fetch my courses if user is logged in
       if (user != null) {
         try {
-      await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
+          await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
         } catch (error) {
           print('Error refreshing my courses: $error');
         }
@@ -613,57 +613,35 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Widget _buildWelcomeMessage() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
+        boxShadow: [
+          BoxShadow(
             color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
+            blurRadius: 10,
             offset: const Offset(0, 2),
-                ),
-              ],
-            ),
+          ),
+        ],
+      ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(
-              Icons.waving_hand,
-              color: Color(0xFF6366F1),
-              size: 20,
-            ),
+          Icon(
+            Icons.school_rounded,
+            color: const Color(0xFF6366F1),
+            size: 20,
           ),
           const SizedBox(width: 12),
           Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                  user != null ? 'Hello, $userName!' : 'Hello there!',
-                style: const TextStyle(
-                        fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  color: Color(0xFF333333),
-                ),
+            child: Text(
+              user != null ? 'Welcome back, $userName!' : 'Welcome to Elegance!',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF333333),
               ),
-                const SizedBox(height: 2),
-          Text(
-                  user != null 
-                      ? 'Ready to learn something new today?'
-                      : 'Welcome to Elegance Learning',
-            style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF666666),
-                  ),
-                ),
-              ],
             ),
           ),
         ],
@@ -1005,15 +983,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 width: 80,
                 height: double.infinity,
                 padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Color(0xFF6366F1),
-                                  Color(0xFF8B5CF6),
-                                ],
-                              ),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF6366F1),
+                      Color(0xFF8B5CF6),
+                    ],
+                  ),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(16),
                     bottomLeft: Radius.circular(16),
@@ -1031,28 +1009,28 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         backgroundColor: Colors.white.withOpacity(0.3),
                         valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                         strokeWidth: 5,
-                                ),
-                            ),
+                      ),
+                    ),
                     // Progress percentage text
                     Text(
-                                '${progress.toInt()}%',
-                                style: const TextStyle(
-                                  color: Colors.white,
+                      '${progress.toInt()}%',
+                      style: const TextStyle(
+                        color: Colors.white,
                         fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
-                            ),
-                          ),
+                ),
+              ),
               // Course information
-                          Expanded(
+              Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
+                    children: [
                       Text(
                         myCourse.title.toString(),
                         maxLines: 2,
@@ -1061,77 +1039,77 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF333333),
-                                      ),
-                                    ),
+                        ),
+                      ),
                       const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF6366F1).withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: const Icon(
-                                  Icons.book,
-                                  color: Color(0xFF6366F1),
-                                  size: 12,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF6366F1).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Icon(
+                              Icons.book,
+                              color: Color(0xFF6366F1),
+                              size: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                                '${myCourse.totalNumberOfCompletedLessons ?? 0}/${myCourse.totalNumberOfLessons ?? 0} Lessons',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: kGreyLightColor,
-                                  overflow: TextOverflow.ellipsis,
+                              '${myCourse.totalNumberOfCompletedLessons ?? 0}/${myCourse.totalNumberOfLessons ?? 0} Lessons',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: kGreyLightColor,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                                ),
-                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF6366F1),
+                              Color(0xFF8B5CF6),
                             ],
                           ),
-                      const SizedBox(height: 8),
-                          Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Color(0xFF6366F1),
-                                  Color(0xFF8B5CF6),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(30),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF6366F1).withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF6366F1).withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
                             ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.play_circle_filled,
-                                  color: Colors.white,
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.play_circle_filled,
+                              color: Colors.white,
                               size: 12,
-                                ),
-                                SizedBox(width: 4),
-                                Text(
-                                  'CONTINUE',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
                             ),
+                            SizedBox(width: 4),
+                            Text(
+                              'CONTINUE',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

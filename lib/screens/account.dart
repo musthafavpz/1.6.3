@@ -199,14 +199,14 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                          user?['name'] ?? 'No Name',
-                                          style: const TextStyle(
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
+                                    user?['name'] ?? 'No Name',
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 12),
                                   Container(
@@ -236,7 +236,7 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                                     ),
                                   ),
                                 ],
-                                ),
+                              ),
                             ),
                           ],
                         ),
