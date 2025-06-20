@@ -5,6 +5,9 @@ import 'package:http/http.dart' as http;
 import 'package:academy_lms_app/screens/course_detail.dart';
 import 'package:academy_lms_app/screens/my_course_detail.dart';
 import 'package:academy_lms_app/screens/instructor_screen.dart';
+import 'package:academy_lms_app/screens/my_courses.dart';
+import 'package:academy_lms_app/screens/trending_courses.dart';
+import 'package:academy_lms_app/screens/trending_instructors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -95,6 +98,32 @@ class _BannerCarouselState extends State<BannerCarousel> with SingleTickerProvid
     });
   }
   
+  // Helper method to handle enrollment URL clicks
+  void _handleEnrollClick(String enrollUrl) async {
+    // Check if enrollUrl is a course ID (number)
+    if (int.tryParse(enrollUrl) != null) {
+      // Navigate to course detail screen with the ID
+      Navigator.of(context).pushNamed(
+        CourseDetailScreen.routeName,
+        arguments: int.parse(enrollUrl),
+      );
+    } else {
+      // Handle as external URL
+      final Uri url = Uri.parse(enrollUrl);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Could not open enrollment link'),
+            ),
+          );
+        }
+      }
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -113,187 +142,174 @@ class _BannerCarouselState extends State<BannerCarousel> with SingleTickerProvid
               },
               itemBuilder: (context, index) {
                 final banner = widget.bannerItems[index];
+                // Get colors based on theme mode
+                bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+                Color textColor = isDarkMode ? Colors.white : const Color(0xFF333333);
+                Color backgroundColor = isDarkMode ? Colors.grey[850]! : Colors.white;
+                
                 return Container(
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: backgroundColor,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.1),
                         blurRadius: 15,
                         offset: const Offset(0, 5),
                       ),
                     ],
-                    border: Border.all(
-                      width: 2,
-                      color: banner.gradientColors[0],
-                    ),
                   ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: banner.backgroundType == 'color' 
-                          ? Color(int.tryParse('0xFF${banner.backgroundValue.substring(1)}') ?? 0xFFFFFFFF)
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        width: 1,
-                        color: banner.gradientColors[1],
+                  child: InkWell(
+                    onTap: () {
+                      // For image backgrounds, make the entire banner clickable
+                      if (banner.backgroundType == 'image') {
+                        _handleEnrollClick(banner.enrollUrl);
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(18),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: banner.backgroundType == 'color' 
+                            ? isDarkMode 
+                                ? Colors.grey[800]
+                                : Color(int.tryParse('0xFF${banner.backgroundValue.substring(1)}') ?? 0xFFFFFFFF)
+                            : backgroundColor,
+                        borderRadius: BorderRadius.circular(18),
+                        image: banner.backgroundType == 'image' 
+                            ? DecorationImage(
+                                image: NetworkImage(banner.backgroundValue),
+                                fit: BoxFit.cover,
+                                opacity: 1.0, // No opacity for image backgrounds
+                              )
+                            : null,
                       ),
-                      image: banner.backgroundType == 'image' 
-                          ? DecorationImage(
-                              image: NetworkImage(banner.backgroundValue),
-                              fit: BoxFit.cover,
-                              opacity: 0.2, // Semi-transparent to ensure text is readable
-                            )
-                          : null,
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(17),
-                      child: Stack(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  flex: 3,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        banner.title,
-                                        style: const TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF333333),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        banner.subtitle,
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w500,
-                                          color: banner.gradientColors[0],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 25),
-                                      Row(
-                                        children: [
-                                          // Enroll Now Button
-                                          InkWell(
-                                            onTap: () async {
-                                              // Check if enrollUrl is a course ID (number)
-                                              if (int.tryParse(banner.enrollUrl) != null) {
-                                                // Navigate to course detail screen with the ID
-                                                Navigator.of(context).pushNamed(
-                                                  CourseDetailScreen.routeName,
-                                                  arguments: int.parse(banner.enrollUrl),
-                                                );
-                                              } else {
-                                                // Handle as external URL
-                                                final Uri enrollUrl = Uri.parse(banner.enrollUrl);
-                                                if (await canLaunchUrl(enrollUrl)) {
-                                                  await launchUrl(enrollUrl, mode: LaunchMode.externalApplication);
-                                                } else {
-                                                  if (mounted) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      const SnackBar(
-                                                        content: Text('Could not open enrollment link'),
-                                                      ),
-                                                    );
-                                                  }
-                                                }
-                                              }
-                                            },
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 18),
-                                              decoration: BoxDecoration(
-                                                gradient: LinearGradient(
-                                                  begin: Alignment.topLeft,
-                                                  end: Alignment.bottomRight,
-                                                  colors: banner.gradientColors,
-                                                ),
-                                                borderRadius: BorderRadius.circular(30),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: banner.gradientColors[0].withOpacity(0.3),
-                                                    blurRadius: 8,
-                                                    offset: const Offset(0, 2),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Text(
-                                                banner.enrollButtonText,
-                                                style: const TextStyle(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(17),
+                        child: Stack(
+                          children: [
+                            // Only show content for non-image backgrounds
+                            if (banner.backgroundType != 'image')
+                            Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    flex: 3,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          banner.title,
+                                          style: TextStyle(
+                                            fontSize: 22,
+                                            fontWeight: FontWeight.bold,
+                                            color: textColor,
                                           ),
-                                          const SizedBox(width: 12),
-                                          // Preview Button
-                                          InkWell(
-                                            onTap: () {
-                                              widget.showVideoPreview(context, banner.previewVideoId, banner.title);
-                                            },
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 18),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius: BorderRadius.circular(30),
-                                                border: Border.all(
-                                                  color: banner.gradientColors[0],
-                                                  width: 1.5,
-                                                ),
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.play_circle_outline,
-                                                    color: banner.gradientColors[0],
-                                                    size: 18,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          banner.subtitle,
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                            color: isDarkMode ? banner.gradientColors[0].withOpacity(0.85) : banner.gradientColors[0],
+                                          ),
+                                        ),
+                                        const SizedBox(height: 25),
+                                        Row(
+                                          children: [
+                                            // Enroll Now Button
+                                            InkWell(
+                                              onTap: () => _handleEnrollClick(banner.enrollUrl),
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
+                                                    colors: banner.gradientColors,
                                                   ),
-                                                  const SizedBox(width: 5),
-                                                  Text(
-                                                    banner.previewButtonText,
-                                                    style: TextStyle(
-                                                      fontSize: 15,
-                                                      fontWeight: FontWeight.w600,
-                                                      color: banner.gradientColors[0],
+                                                  borderRadius: BorderRadius.circular(30),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: banner.gradientColors[0].withOpacity(0.3),
+                                                      blurRadius: 8,
+                                                      offset: const Offset(0, 2),
                                                     ),
+                                                  ],
+                                                ),
+                                                child: Text(
+                                                  banner.enrollButtonText,
+                                                  style: const TextStyle(
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.white,
                                                   ),
-                                                ],
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                            const SizedBox(width: 12),
+                                            // Preview Button
+                                            InkWell(
+                                              onTap: () {
+                                                widget.showVideoPreview(context, banner.previewVideoId, banner.title);
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 18),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius: BorderRadius.circular(30),
+                                                  border: Border.all(
+                                                    color: banner.gradientColors[0],
+                                                    width: 1.5,
+                                                  ),
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.play_circle_outline,
+                                                      color: banner.gradientColors[0],
+                                                      size: 18,
+                                                    ),
+                                                    const SizedBox(width: 5),
+                                                    Text(
+                                                      banner.previewButtonText,
+                                                      style: TextStyle(
+                                                        fontSize: 15,
+                                                        fontWeight: FontWeight.w600,
+                                                        color: banner.gradientColors[0],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                Expanded(
-                                  flex: 2,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(left: 10),
-                                    child: Image.asset(
-                                      banner.imageAsset,
-                                      fit: BoxFit.contain,
-                                      height: 180,
-                                      errorBuilder: (context, error, stackTrace) => SizedBox(
+                                  Expanded(
+                                    flex: 2,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 10),
+                                      child: Image.asset(
+                                        banner.imageAsset,
+                                        fit: BoxFit.contain,
                                         height: 180,
-                                        width: double.infinity,
+                                        errorBuilder: (context, error, stackTrace) => SizedBox(
+                                          height: 180,
+                                          width: double.infinity,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -301,23 +317,33 @@ class _BannerCarouselState extends State<BannerCarousel> with SingleTickerProvid
               },
             ),
           ),
-          // Pagination indicators
+          // Enhanced pagination indicators
           if (widget.bannerItems.length > 1)
             Container(
-              margin: const EdgeInsets.only(top: 5),
+              margin: const EdgeInsets.only(top: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
                   widget.bannerItems.length,
-                  (index) => Container(
-                    width: 8,
-                    height: 8,
+                  (index) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
                     margin: const EdgeInsets.symmetric(horizontal: 4),
+                    height: 8,
+                    width: _currentPage == index ? 24 : 8,
                     decoration: BoxDecoration(
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(12),
                       color: _currentPage == index
                           ? const Color(0xFF6366F1)
                           : const Color(0xFFCBD5E1),
+                      boxShadow: _currentPage == index 
+                          ? [
+                              BoxShadow(
+                                color: const Color(0xFF6366F1).withOpacity(0.3),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ] 
+                          : null,
                     ),
                   ),
                 ),
@@ -356,20 +382,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     getUserData();
     fetchBanners();
     
-    // Initialize animations
+    // Initialize animations with smoother curve
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _fadeAnimation = CurvedAnimation(
-      parent: _animationController!,
-      curve: Curves.easeInOut,
+      duration: const Duration(milliseconds: 600), // Slightly shorter for better UX
     );
     
-    // Only forward the animation if the widget is still mounted
-    if (mounted) {
-      _animationController!.forward();
-    }
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController!,
+      curve: Curves.easeOut, // Use easeOut for smoother appearance
+    );
+    
+    // Don't forward the animation yet - we'll do this after data is loaded
   }
 
   @override
@@ -425,13 +449,50 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   // Optimized batch loading for better performance and error handling
   Future<void> _batchLoadData() async {
     try {
+      // Set loading state once at the beginning
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+        });
+      }
+      
       // Step 1: Load essential data first (categories and top courses)
       await Future.wait([
         Provider.of<Categories>(context, listen: false).fetchCategories(),
+        // No need to separately await this - Future.wait does that for us
         Provider.of<Courses>(context, listen: false).fetchTopCourses(),
       ]);
       
-      // Immediately update UI with the essential data
+      // Step 2: Load secondary data in the background before updating UI
+      // This prevents multiple UI refreshes
+      List<Future> secondaryRequests = [];
+      
+      // Add instructors request
+      secondaryRequests.add(
+        Provider.of<Courses>(context, listen: false).fetchTopInstructors()
+          .catchError((error) {
+            print('Error loading instructors: $error');
+            // Swallow the error to continue
+            return null;
+          })
+      );
+      
+      // Step 3: Load user-specific data last, only if logged in
+      if (user != null) {
+        secondaryRequests.add(
+          Provider.of<MyCourses>(context, listen: false).fetchMyCourses()
+            .catchError((error) {
+              print('Error loading my courses: $error');
+              // Swallow the error to continue
+              return null;
+            })
+        );
+      }
+      
+      // Wait for all secondary requests to complete before updating UI
+      await Future.wait(secondaryRequests);
+        
+      // Now that all data is loaded, update the UI once
       if (mounted) {
         setState(() {
           topCourses = Provider.of<Courses>(context, listen: false).topItems;
@@ -443,36 +504,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             return bEnrollment.compareTo(aEnrollment);
           });
           
-          // Still keep loading indicator for secondary data
+          // Set loading to false as all data is loaded
           _isLoading = false;
         });
-      }
         
-      // Step 2: Load secondary data in the background
-      // These calls won't block the UI from rendering
-      try {
-        await Provider.of<Courses>(context, listen: false).fetchTopInstructors();
-      } catch (error) {
-        print('Error loading instructors: $error');
-        // Don't fail the entire load for instructor data
+        // Start animation after data is loaded and UI is updated
+        _startAnimation();
       }
-        
-      // Step 3: Load user-specific data last, only if logged in
-      if (user != null) {
-        try {
-          await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
-        } catch (error) {
-          print('Error loading my courses: $error');
-          // Don't fail the entire load for user-specific data
-        }
-      }
-      
     } catch (error) {
       print('Error in batch loading data: $error');
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
+        // Start animation even if there was an error
+        _startAnimation();
       }
     }
   }
@@ -530,31 +576,42 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         _isLoading = true;
       });
       
-      await getUserData();
-      await fetchBanners();
+      // Step 1: Load all data in parallel with proper error handling
+      List<Future> allRequests = [];
       
-      // Load data with better error handling
-      try {
-        await Provider.of<Courses>(context, listen: false).fetchTopCourses();
-      } catch (error) {
-        print('Error refreshing top courses: $error');
-      }
+      // Add essential requests
+      allRequests.add(getUserData().catchError((e) {
+        print('Error getting user data: $e');
+        return null;
+      }));
       
-      try {
-        await Provider.of<Courses>(context, listen: false).fetchTopInstructors();
-      } catch (error) {
-        print('Error refreshing instructors: $error');
-      }
+      allRequests.add(fetchBanners().catchError((e) {
+        print('Error fetching banners: $e');
+        return null;
+      }));
+      
+      allRequests.add(Provider.of<Courses>(context, listen: false).fetchTopCourses().catchError((e) {
+        print('Error refreshing top courses: $e');
+        return null;
+      }));
+      
+      allRequests.add(Provider.of<Courses>(context, listen: false).fetchTopInstructors().catchError((e) {
+        print('Error refreshing instructors: $e');
+        return null;
+      }));
       
       // Only fetch my courses if user is logged in
       if (user != null) {
-        try {
-          await Provider.of<MyCourses>(context, listen: false).fetchMyCourses();
-        } catch (error) {
-          print('Error refreshing my courses: $error');
-        }
+        allRequests.add(Provider.of<MyCourses>(context, listen: false).fetchMyCourses().catchError((e) {
+          print('Error refreshing my courses: $e');
+          return null;
+        }));
       }
 
+      // Wait for all requests to complete
+      await Future.wait(allRequests);
+      
+      // Update UI once with all loaded data
       if (mounted) {
         setState(() {
           topCourses = Provider.of<Courses>(context, listen: false).topItems;
@@ -571,6 +628,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           
           _isLoading = false;
         });
+        
+        // Start animation after refresh completes
+        _startAnimation();
       }
     } catch (error) {
       print('Error refreshing data: $error');
@@ -578,6 +638,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         setState(() {
           _isLoading = false;
         });
+        
+        // Start animation even if there was an error
+        _startAnimation();
         
         // Show a non-intrusive error message using a SnackBar instead of a dialog
         ScaffoldMessenger.of(context).showSnackBar(
@@ -607,41 +670,50 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         );
       }
     }
-
-    return;
   }
 
   Widget _buildWelcomeMessage() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    Color accentColor = const Color(0xFF6366F1);
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Row(
         children: [
-          Icon(
-            Icons.school_rounded,
-            color: const Color(0xFF6366F1),
-            size: 20,
+          Container(
+            padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+              color: accentColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+      ),
+            child: Icon(
+              user != null ? Icons.person_rounded : Icons.school_rounded,
+              color: accentColor,
+              size: 16,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              user != null ? 'Welcome back, $userName!' : 'Welcome to Elegance!',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF333333),
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user != null ? 'Hello, ${userName?.split(' ')[0] ?? 'there'}' : 'Welcome',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onBackground,
+                  ),
+                ),
+                if (user != null)
+                  Text(
+                    'Continue your learning journey',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onBackground.withOpacity(0.6),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
@@ -774,30 +846,126 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Widget _buildSectionTitle(String title) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+              Container(
+                width: 4,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(width: 8),
           Text(
             title,
-            style: const TextStyle(
+                style: TextStyle(
               fontSize: 18,
                   fontWeight: FontWeight.w700,
-              color: Color(0xFF333333),
+                  color: Theme.of(context).colorScheme.onBackground,
+                  letterSpacing: 0.2,
             ),
                   ),
-                ],
-              ),
-          const SizedBox(height: 5),
-          Container(
-            width: 35,
-            height: 3,
+              const Spacer(),
+          InkWell(
+                onTap: () {
+                  // Handle navigation based on section title
+                  if (title == 'Continue Learning') {
+                    // Navigate to My Courses screen
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const MyCoursesScreen(),
+                      ),
+                    );
+                  } else if (title == 'Trending Courses') {
+                    // Navigate to Trending Courses screen
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => TrendingCoursesScreen(
+                          courses: topCourses,
+                          title: 'Trending Courses',
+                        ),
+                      ),
+                    );
+                  } else if (title == 'Trending Instructors') {
+                    // Navigate to Trending Instructors screen
+                    final instructors = Provider.of<Courses>(context, listen: false).topInstructors;
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => TrendingInstructorsScreen(
+                          instructors: instructors,
+                          title: 'Trending Instructors',
+                        ),
+                      ),
+                    );
+                  } else if (title == 'Free Courses') {
+                    // Navigate to Free Courses screen
+                    final freeCourses = topCourses.where((course) => course.isPaid == 0).toList();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => TrendingCoursesScreen(
+                          courses: freeCourses,
+                          title: 'Free Courses',
+                        ),
+                      ),
+                    );
+                  } else if (title == 'Premium Courses') {
+                    // Navigate to Premium Courses screen
+                    final paidCourses = topCourses.where((course) => course.isPaid == 1).toList();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => TrendingCoursesScreen(
+                          courses: paidCourses,
+                          title: 'Premium Courses',
+                        ),
+                      ),
+                    );
+                  } else if (title == 'New Added Courses') {
+                    // Navigate to New Added Courses screen
+                    // Create a copy of topCourses and sort by ID (descending)
+                    final newAddedCourses = List.from(topCourses);
+                    newAddedCourses.sort((a, b) => b.id!.compareTo(a.id!));
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => TrendingCoursesScreen(
+                          courses: newAddedCourses,
+                          title: 'New Added Courses',
+                        ),
+                      ),
+                    );
+                  }
+                },
+                child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: const Color(0xFF6366F1),
-              borderRadius: BorderRadius.circular(10),
+                  color: const Color(0xFF6366F1).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
             ),
+                child: const Row(
+                  children: [
+                    Text(
+                      'View All',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF6366F1),
+                      ),
+                    ),
+                    SizedBox(width: 3),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 10,
+                      color: Color(0xFF6366F1),
+                    )
+                  ],
+                ),
+              ),
+            ),
+            ],
           ),
         ],
       ),
@@ -810,19 +978,48 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ? double.tryParse(course.average_rating) ?? 0.0
         : (course.average_rating ?? 0.0).toDouble();
     
-    // Build star rating
-    List<Widget> buildRatingStars() {
-      List<Widget> stars = [];
-      for (int i = 1; i <= 5; i++) {
-        stars.add(
+    // Format the price for better display
+    final price = course.price.toString();
+    final formattedPrice = price == "Free" || price == "0" || price == "\$0" 
+        ? "Free"
+        : price;
+    
+    // Check if dark mode is enabled
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    Color cardBackground = isDarkMode ? Colors.grey[850]! : Colors.white;
+    Color textColor = isDarkMode ? Colors.white : const Color(0xFF333333);
+    Color secondaryTextColor = isDarkMode ? Colors.grey[300]! : Theme.of(context).colorScheme.onSurface.withOpacity(0.7);
+    Color footerBackground = isDarkMode ? Colors.grey[900]! : Theme.of(context).colorScheme.background;
+    
+    // Build star rating with a more compact design
+    Widget buildRatingIndicator() {
+      return Row(
+        children: [
           Icon(
-            i <= rating ? Icons.star : Icons.star_border,
+            Icons.star_rounded,
             color: const Color(0xFFFFA000),
-            size: 14,
+            size: 16,
           ),
-        );
-      }
-      return stars;
+          const SizedBox(width: 3),
+          Text(
+            rating.toStringAsFixed(1),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: secondaryTextColor,
+            ),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            '(${_parseEnrollmentCount(course)})',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: secondaryTextColor,
+            ),
+          ),
+        ],
+      );
     }
 
     return Padding(
@@ -839,20 +1036,27 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           width: MediaQuery.of(context).size.width * .65,
           height: 280,
           decoration: BoxDecoration(
-            color: kWhiteColor,
+            color: cardBackground,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 15,
-                spreadRadius: 1,
+                color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.06),
+                blurRadius: 12,
+                spreadRadius: 0,
                 offset: const Offset(0, 5),
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.04),
+                blurRadius: 2,
+                spreadRadius: 0,
+                offset: const Offset(0, 1),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Course thumbnail with gradient overlay
               Stack(
                 children: [
                   Hero(
@@ -868,11 +1072,78 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       height: 140,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                    ),
+                        imageErrorBuilder: (context, error, stackTrace) => Container(
+                          height: 140,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Color(0xFF6366F1).withOpacity(isDarkMode ? 0.8 : 0.7),
+                                Color(0xFF8B5CF6).withOpacity(isDarkMode ? 0.8 : 0.7),
+                        ],
+                      ),
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.photo_rounded,
+                              color: Colors.white,
+                              size: 40,
                             ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Gradient overlay for better text readability if needed
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 40,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.black.withOpacity(isDarkMode ? 0.6 : 0.4),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Price tag
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: (isDarkMode ? Colors.grey[800]! : Colors.white).withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(isDarkMode ? 0.25 : 0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
+                      child: Text(
+                        formattedPrice,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF6366F1),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              // Course info section
               Expanded(
                 child: Padding(
                 padding: const EdgeInsets.all(12.0),
@@ -884,53 +1155,89 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         course.title.toString(),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF333333),
+                          height: 1.3,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(height: 8),
                       
-                      // Instructor Name
-                      Text(
+                      // Instructor with icon
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF6366F1).withOpacity(isDarkMode ? 0.2 : 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.person,
+                              color: const Color(0xFF6366F1),
+                              size: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
                         course.instructor ?? '',
-                        style: const TextStyle(
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
                           fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFF666666),
+                                fontWeight: FontWeight.w500,
+                          color: secondaryTextColor,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                          ),
+                        ],
+                      ),
                       
-                      // Star Rating and Enrollment Count
-                    Row(
-                      children: [
-                          ...buildRatingStars(),
-                          const SizedBox(width: 5),
-                            Text(
-                            '(${_parseEnrollmentCount(course)})',
-                              style: const TextStyle(
-                              fontSize: 12,
-                                fontWeight: FontWeight.w400,
-                              color: Color(0xFF666666),
+                      const Spacer(),
+                      
+                      // Footer with ratings and enrollment
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: footerBackground,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                            buildRatingIndicator(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: (isDarkMode ? Colors.grey[800]! : Colors.white).withOpacity(isDarkMode ? 0.2 : 0.1),
+                                borderRadius: BorderRadius.circular(4),
                               ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.play_circle_fill_rounded,
+                                    color: isDarkMode ? Colors.grey[800]! : Colors.white,
+                                    size: 12,
+                                  ),
+                                  const SizedBox(width: 4),
+                          Text(
+                                    'PREVIEW',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDarkMode ? Colors.grey[800]! : Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
                             ),
                           ],
                         ),
-                      const SizedBox(height: 8),
-                      
-                      // Price
-                      Text(
-                        course.price.toString(),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                              color: Color(0xFF6366F1),
-                              ),
-                            ),
-                          ],
-                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -943,12 +1250,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Widget _buildContinueLearningCard(dynamic myCourse) {
     // Calculate progress percentage
     double progress = (myCourse.courseCompletion ?? 0).toDouble();
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    // Adapt colors based on theme mode
+    Color cardBackground = isDarkMode ? Colors.grey[850]! : Colors.white;
+    Color textColor = isDarkMode ? Colors.white : const Color(0xFF333333);
+    Color secondaryTextColor = isDarkMode ? Colors.grey[300]! : const Color(0xFF666666);
     
     return Padding(
       padding: const EdgeInsets.only(right: 15.0),
       child: InkWell(
         onTap: () {
-          // Updated navigation to use MyCourseDetailScreen instead of CourseDetailScreen
+          // Navigate to course detail screen
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (_) {
@@ -965,114 +1278,145 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           width: MediaQuery.of(context).size.width * .75,
           constraints: const BoxConstraints(minHeight: 120, maxHeight: 140),
           decoration: BoxDecoration(
-            color: kWhiteColor,
+            color: cardBackground,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 15,
-                spreadRadius: 1,
+                color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.06),
+                blurRadius: 12,
+                spreadRadius: 0,
                 offset: const Offset(0, 5),
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.03),
+                blurRadius: 2,
+                spreadRadius: 0,
+                offset: const Offset(0, 1),
               ),
             ],
           ),
           child: Row(
             children: [
-              // Circular progress indicator
+              // Left side with circular progress
               Container(
                 width: 80,
                 height: double.infinity,
-                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                  gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Color(0xFF6366F1),
-                      Color(0xFF8B5CF6),
+                      const Color(0xFF6366F1),
+                      const Color(0xFF8B5CF6),
                     ],
                   ),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(16),
                     bottomLeft: Radius.circular(16),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6366F1).withOpacity(isDarkMode ? 0.4 : 0.2),
+                      blurRadius: 10,
+                      offset: const Offset(2, 0),
+                    ),
+                  ],
                 ),
+                child: Center(
+                  child: SizedBox(
+                    width: 60,
+                    height: 60,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    // Circular progress indicator
-                    SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: CircularProgressIndicator(
+                        // Background circle
+                        Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        // Progress indicator
+                        CircularProgressIndicator(
                         value: progress / 100,
-                        backgroundColor: Colors.white.withOpacity(0.3),
+                          backgroundColor: Colors.white.withOpacity(0.2),
                         valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                        strokeWidth: 5,
+                          strokeWidth: 4,
                       ),
-                    ),
-                    // Progress percentage text
+                        // Progress text
                     Text(
                       '${progress.toInt()}%',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 13,
+                            fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
               ),
+                ),
+              ),
+              
               // Course information
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      // Course title
                       Text(
                         myCourse.title.toString(),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF333333),
+                          height: 1.3,
+                          color: textColor,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
+                      
+                      // Lesson progress
                       Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF6366F1).withOpacity(0.1),
+                              color: const Color(0xFF6366F1).withOpacity(isDarkMode ? 0.2 : 0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: const Icon(
-                              Icons.book,
+                              Icons.menu_book_rounded,
                               color: Color(0xFF6366F1),
-                              size: 12,
+                              size: 13,
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               '${myCourse.totalNumberOfCompletedLessons ?? 0}/${myCourse.totalNumberOfLessons ?? 0} Lessons',
-                              style: const TextStyle(
-                                fontSize: 12,
+                              style: TextStyle(
+                                fontSize: 13,
                                 fontWeight: FontWeight.w500,
-                                color: kGreyLightColor,
+                                color: secondaryTextColor,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      
+                      const SizedBox(height: 10),
+                      
+                      // Continue button
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             begin: Alignment.topLeft,
@@ -1091,21 +1435,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             ),
                           ],
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Icons.play_circle_filled,
+                              Icons.play_circle_filled_rounded,
                               color: Colors.white,
                               size: 12,
                             ),
-                            SizedBox(width: 4),
+                            const SizedBox(width: 4),
                             Text(
-                              'CONTINUE',
+                              'Continue',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
+                                letterSpacing: 0.2,
                               ),
                             ),
                           ],
@@ -1329,19 +1674,48 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ? double.tryParse(course.average_rating) ?? 0.0
         : (course.average_rating ?? 0.0).toDouble();
     
-    // Build star rating
-    List<Widget> buildRatingStars() {
-      List<Widget> stars = [];
-      for (int i = 1; i <= 5; i++) {
-        stars.add(
+    // Format the price for better display
+    final price = course.price.toString();
+    final formattedPrice = price == "Free" || price == "0" || price == "\$0" 
+        ? "Free"
+        : price;
+    
+    // Check if dark mode is enabled
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    Color cardBackground = isDarkMode ? Colors.grey[850]! : Colors.white;
+    Color textColor = isDarkMode ? Colors.white : const Color(0xFF333333);
+    Color secondaryTextColor = isDarkMode ? Colors.grey[300]! : Theme.of(context).colorScheme.onSurface.withOpacity(0.7);
+    Color footerBackground = isDarkMode ? Colors.grey[900]! : Theme.of(context).colorScheme.background;
+    
+    // Build star rating with a more compact design
+    Widget buildRatingIndicator() {
+      return Row(
+        children: [
           Icon(
-            i <= rating ? Icons.star : Icons.star_border,
+            Icons.star_rounded,
             color: const Color(0xFFFFA000),
-            size: 14,
+            size: 16,
           ),
-        );
-      }
-      return stars;
+          const SizedBox(width: 3),
+          Text(
+            rating.toStringAsFixed(1),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: secondaryTextColor,
+            ),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            '(${_parseEnrollmentCount(course)})',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: secondaryTextColor,
+            ),
+          ),
+        ],
+      );
     }
 
     return Padding(
@@ -1358,20 +1732,27 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           width: MediaQuery.of(context).size.width * .65,
           height: 280,
           decoration: BoxDecoration(
-            color: kWhiteColor,
+            color: cardBackground,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 15,
-                spreadRadius: 1,
+                color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.06),
+                blurRadius: 12,
+                spreadRadius: 0,
                 offset: const Offset(0, 5),
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.04),
+                blurRadius: 2,
+                spreadRadius: 0,
+                offset: const Offset(0, 1),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Course thumbnail with gradient overlay
               Stack(
                 children: [
                   // Course thumbnail image
@@ -1390,18 +1771,111 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         fit: BoxFit.cover,
                         imageErrorBuilder: (context, error, stackTrace) => Container(
                           height: 140,
-                          color: const Color(0xFF6366F1).withOpacity(0.1),
-                          child: const Icon(
-                            Icons.image_not_supported_outlined,
-                            color: Color(0xFF6366F1),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                isFreeCourse 
+                                    ? const Color(0xFF10B981).withOpacity(isDarkMode ? 0.8 : 0.7)
+                                    : const Color(0xFF6366F1).withOpacity(isDarkMode ? 0.8 : 0.7),
+                                isFreeCourse 
+                                    ? const Color(0xFF059669).withOpacity(isDarkMode ? 0.8 : 0.7)
+                                    : const Color(0xFF8B5CF6).withOpacity(isDarkMode ? 0.8 : 0.7),
+                              ],
+                            ),
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.photo_rounded,
+                              color: Colors.white,
                             size: 40,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
                   
-                  // Free/Paid badge removed
+                  // Gradient overlay for better text readability
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 40,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.black.withOpacity(isDarkMode ? 0.6 : 0.4),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  // Course type badge (Free/Premium)
+                  Positioned(
+                    top: 10,
+                    left: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isFreeCourse
+                            ? const Color(0xFF10B981)
+                            : const Color(0xFF6366F1),
+                        borderRadius: BorderRadius.circular(4),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        isFreeCourse ? 'FREE' : 'PREMIUM',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  // Price tag
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: (isDarkMode ? Colors.grey[800]! : Colors.white).withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(isDarkMode ? 0.25 : 0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        formattedPrice,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: isFreeCourse 
+                              ? const Color(0xFF10B981) 
+                              : const Color(0xFF6366F1),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
               Expanded(
@@ -1415,49 +1889,95 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         course.title.toString(),
                         maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF333333),
+                          height: 1.3,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(height: 8),
                       
-                      // Instructor Name
-                      Text(
-                        course.instructor ?? '',
-                        style: const TextStyle(
-                          fontSize: 13,
-                              fontWeight: FontWeight.w400,
-                          color: Color(0xFF666666),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      
-                      // Star Rating and Enrollment Count
+                      // Instructor with icon
                       Row(
                         children: [
-                          ...buildRatingStars(),
-                          const SizedBox(width: 5),
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: (isFreeCourse 
+                                  ? const Color(0xFF10B981) 
+                                  : const Color(0xFF6366F1)).withOpacity(isDarkMode ? 0.2 : 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.person,
+                              color: isFreeCourse 
+                                  ? const Color(0xFF10B981)
+                                  : const Color(0xFF6366F1),
+                              size: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                        course.instructor ?? '',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                          color: secondaryTextColor,
+                        ),
+                      ),
+                          ),
+                        ],
+                      ),
+                      
+                      const Spacer(),
+                      
+                      // Footer with ratings and enrollment
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: footerBackground,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                            buildRatingIndicator(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: (isFreeCourse 
+                                    ? const Color(0xFF10B981) 
+                                    : const Color(0xFF6366F1)).withOpacity(isDarkMode ? 0.2 : 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.play_circle_fill_rounded,
+                                    color: isFreeCourse 
+                                        ? const Color(0xFF10B981)
+                                        : const Color(0xFF6366F1),
+                                    size: 12,
+                                  ),
+                                  const SizedBox(width: 4),
                           Text(
-                            '(${_parseEnrollmentCount(course)})',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xFF666666),
+                                    'PREVIEW',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: isFreeCourse 
+                                          ? const Color(0xFF10B981)
+                                          : const Color(0xFF6366F1),
                           ),
                         ),
                       ],
                     ),
-                      const SizedBox(height: 8),
-                      
-                      // Price
-                      Text(
-                        course.price.toString(),
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: isFreeCourse ? const Color(0xFF10B981) : const Color(0xFF6366F1),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -1606,6 +2126,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     }
   }
 
+  // Method to start animation after data is loaded
+  void _startAnimation() {
+    if (mounted && _animationController != null) {
+      // Reset animation if it was already run
+      if (_animationController!.isCompleted) {
+        _animationController!.reset();
+      }
+      _animationController!.forward();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height -
@@ -1614,15 +2145,36 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         50;
     return Container(
       height: MediaQuery.of(context).size.height,
-      color: const Color(0xFFF8F9FA), // Lighter background color
+      color: Theme.of(context).colorScheme.background,
       child: RefreshIndicator(
         color: const Color(0xFF6366F1),
         onRefresh: refreshList,
-        child: FadeTransition(
-          opacity: _fadeAnimation!,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          child: FutureBuilder(
+          child: Stack(
+            children: [
+              // Top shadow overlay
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: 6,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withOpacity(0.05),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Main content
+              FutureBuilder(
             future: Provider.of<Categories>(context, listen: false).fetchCategories(),
             builder: (ctx, dataSnapshot) {
               if (dataSnapshot.connectionState == ConnectionState.waiting || _isLoading) {
@@ -1634,8 +2186,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
                 );
-              } else {
-                if (dataSnapshot.error != null) {
+                  } else if (dataSnapshot.error != null) {
                   return _handleError(dataSnapshot.error, height);
                 } else {
                     // Filter courses by free/paid status
@@ -1647,15 +2198,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     newAddedCourses.sort((a, b) => b.id!.compareTo(a.id!));
                     final latestCourses = newAddedCourses.take(8).toList(); // Take top 8 newest courses
                     
-                  return Column(
+                    return FadeTransition(
+                      opacity: _fadeAnimation!,
+                      child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 5),
-                      // Custom Banner with Join Now button
-                      _buildCustomBanner(),
+                          const SizedBox(height: 10),
                       
                       // Welcome Message Section
                       _buildWelcomeMessage(),
+                          
+                          // Custom Banner with Join Now button
+                          _buildCustomBanner(),
                       
                       // Continue Learning Section
                       Consumer<MyCourses>(
@@ -1676,7 +2230,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                     _buildSectionTitle('Continue Learning'),
                                 Container(
                                       height: 120,
-                                  margin: const EdgeInsets.only(bottom: 10),
+                                      margin: const EdgeInsets.only(bottom: 20),
                                   child: ListView.builder(
                                     padding: const EdgeInsets.symmetric(horizontal: 20),
                                     scrollDirection: Axis.horizontal,
@@ -1697,7 +2251,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       
                       Container(
                           height: 280,
-                        margin: const EdgeInsets.only(bottom: 10),
+                            margin: const EdgeInsets.only(bottom: 25),
                         child: topCourses.isEmpty
                             ? const Center(child: Text('No trending courses available'))
                             : ListView.builder(
@@ -1715,7 +2269,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         
                         Container(
                           height: 140,
-                          margin: const EdgeInsets.only(bottom: 20),
+                            margin: const EdgeInsets.only(bottom: 25),
                           child: Consumer<Courses>(
                             builder: (ctx, coursesData, _) {
                               final instructors = coursesData.topInstructors;
@@ -1738,7 +2292,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           _buildSectionTitle('Free Courses'),
                           Container(
                             height: 280,
-                            margin: const EdgeInsets.only(bottom: 20),
+                              margin: const EdgeInsets.only(bottom: 25),
                             child: ListView.builder(
                               padding: const EdgeInsets.symmetric(horizontal: 20),
                               scrollDirection: Axis.horizontal,
@@ -1755,7 +2309,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           _buildSectionTitle('Premium Courses'),
                           Container(
                             height: 280,
-                            margin: const EdgeInsets.only(bottom: 20),
+                              margin: const EdgeInsets.only(bottom: 25),
                             child: ListView.builder(
                               padding: const EdgeInsets.symmetric(horizontal: 20),
                               scrollDirection: Axis.horizontal,
@@ -1772,7 +2326,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           _buildSectionTitle('New Added Courses'),
                           Container(
                             height: 280,
-                            margin: const EdgeInsets.only(bottom: 20),
+                              margin: const EdgeInsets.only(bottom: 25),
                             child: ListView.builder(
                               padding: const EdgeInsets.symmetric(horizontal: 20),
                               scrollDirection: Axis.horizontal,
@@ -1788,11 +2342,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       // Add proper bottom padding for menu tabs
                       const SizedBox(height: 80),
                     ],
+                      ),
                   );
-                }
               }
             },
             ),
+            ],
           ),
         ),
       ),

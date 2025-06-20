@@ -72,6 +72,8 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
 
 
   Widget _buildCategoryItem(dynamic category, int index) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return SlideTransition(
       position: _slideAnimation,
       child: FadeTransition(
@@ -99,17 +101,17 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.04),
                       blurRadius: 20,
                       offset: const Offset(0, 4),
                       spreadRadius: 0,
                     ),
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: Colors.black.withOpacity(isDarkMode ? 0.1 : 0.02),
                       blurRadius: 40,
                       offset: const Offset(0, 8),
                       spreadRadius: 0,
@@ -127,8 +129,8 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Color(0xFF667EEA).withOpacity(0.1),
-                            Color(0xFF764BA2).withOpacity(0.1),
+                            Color(0xFF667EEA).withOpacity(isDarkMode ? 0.2 : 0.1),
+                            Color(0xFF764BA2).withOpacity(isDarkMode ? 0.2 : 0.1),
                           ],
                         ),
                       ),
@@ -145,8 +147,8 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  Color(0xFF667EEA).withOpacity(0.1),
-                                  Color(0xFF764BA2).withOpacity(0.1),
+                                  Color(0xFF667EEA).withOpacity(isDarkMode ? 0.2 : 0.1),
+                                  Color(0xFF764BA2).withOpacity(isDarkMode ? 0.2 : 0.1),
                                 ],
                               ),
                             ),
@@ -168,10 +170,10 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
                             category.title.toString(),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w500,
-                              color: Color(0xFF1F2937),
+                              color: Theme.of(context).colorScheme.onSurface,
                               letterSpacing: -0.1,
                             ),
                           ),
@@ -179,7 +181,7 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
                           Text(
                             '${category.numberOfSubCategories} subcategories',
                             style: TextStyle(
-                              color: Color(0xFF6B7280),
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                               fontSize: 13,
                               fontWeight: FontWeight.w400,
                             ),
@@ -190,7 +192,7 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Color(0xFF667EEA).withOpacity(0.08),
+                        color: Color(0xFF667EEA).withOpacity(isDarkMode ? 0.2 : 0.08),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
@@ -210,6 +212,8 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
   }
 
   Widget _buildEmptyState() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return SliverToBoxAdapter(
       child: Container(
         padding: const EdgeInsets.all(40),
@@ -219,7 +223,7 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Color(0xFF667EEA).withOpacity(0.1),
+                color: Color(0xFF667EEA).withOpacity(isDarkMode ? 0.2 : 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Icon(
@@ -234,7 +238,7 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF1F2937),
+                color: Theme.of(context).colorScheme.onBackground,
               ),
             ),
             const SizedBox(height: 8),
@@ -242,7 +246,7 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
               'Pull down to refresh and discover new categories',
               style: TextStyle(
                 fontSize: 16,
-                color: Color(0xFF6B7280),
+                color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -253,6 +257,8 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
   }
 
   Widget _buildLoadingState() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return SliverToBoxAdapter(
       child: Container(
         padding: const EdgeInsets.all(60),
@@ -261,7 +267,7 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Color(0xFF667EEA).withOpacity(0.1),
+                color: Color(0xFF667EEA).withOpacity(isDarkMode ? 0.2 : 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: CupertinoActivityIndicator(
@@ -274,7 +280,7 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
               'Loading categories...',
               style: TextStyle(
                 fontSize: 16,
-                color: Color(0xFF6B7280),
+                color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -287,10 +293,10 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFFAFAFA),
+      backgroundColor: Theme.of(context).colorScheme.background,
       body: RefreshIndicator(
         color: Color(0xFF667EEA),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         strokeWidth: 2.5,
         onRefresh: refreshList,
         child: CustomScrollView(

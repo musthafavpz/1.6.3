@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
 import '../providers/auth.dart';
+import '../providers/theme_provider.dart';
 import '../widgets/custom_text.dart';
 import 'account_remove_screen.dart';
 import 'certificates_screen.dart';
@@ -89,7 +90,7 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Theme.of(context).colorScheme.background,
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFF6366F1)),
@@ -242,6 +243,57 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                         ),
                       ),
                       
+                      // Dark Mode Toggle Card
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Card(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          color: Theme.of(context).colorScheme.surface,
+                          child: Consumer<ThemeProvider>(
+                            builder: (context, themeProvider, _) => ListTile(
+                              onTap: () {
+                                themeProvider.toggleTheme();
+                              },
+                              leading: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: (themeProvider.isDarkMode 
+                                      ? const Color(0xFF8B5CF6) 
+                                      : const Color(0xFFFFA000)).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                                  size: 22,
+                                  color: themeProvider.isDarkMode 
+                                      ? const Color(0xFF8B5CF6) 
+                                      : const Color(0xFFFFA000),
+                                ),
+                              ),
+                              title: Text(
+                                'Dark Mode',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                              trailing: Switch(
+                                value: themeProvider.isDarkMode,
+                                onChanged: (_) {
+                                  themeProvider.toggleTheme();
+                                },
+                                activeColor: const Color(0xFF8B5CF6),
+                                activeTrackColor: const Color(0xFF8B5CF6).withOpacity(0.3),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      
                       // Quick Action Buttons
                       Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -294,9 +346,9 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                         child: Card(
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                            color: Colors.white,
+                          color: Theme.of(context).colorScheme.surface,
                           child: Column(
                             children: [
                               _buildProfileOption(
@@ -345,7 +397,7 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.surface,
                           child: Column(
                             children: [
                               _buildProfileOption(
@@ -395,15 +447,45 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                       ),
                       
                       // App Settings Section
-                        _buildSectionHeader("ABOUT US"),
+                      _buildSectionHeader("APP SETTINGS"),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: Card(
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                            color: Colors.white,
+                          color: Theme.of(context).colorScheme.surface,
+                          child: Column(
+                            children: [
+                              _buildProfileOption(
+                                title: 'Notifications',
+                                icon: Icons.notifications_outlined,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const NotificationsScreen(),
+                                    ),
+                                  );
+                                },
+                                iconColor: const Color(0xFF6366F1),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      
+                      // About Us Section
+                      _buildSectionHeader("ABOUT US"),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Card(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          color: Theme.of(context).colorScheme.surface,
                           child: Column(
                             children: [
                               _buildProfileOption(
@@ -447,9 +529,9 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                         child: Card(
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                            color: Colors.white,
+                          color: Theme.of(context).colorScheme.surface,
                           child: Column(
                             children: [
                               _buildProfileOption(
@@ -480,7 +562,7 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                       ),
                       
                       // Add bottom padding to avoid overlap with navigation bar
-                      const SizedBox(height: 80),
+                      const SizedBox(height: 120),
                     ],
                   ),
                   ),
@@ -495,10 +577,10 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF333333),
+              color: Theme.of(context).colorScheme.onBackground,
               letterSpacing: 0.5,
             ),
           ),
@@ -506,11 +588,11 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
           Expanded(
             child: Divider(
               thickness: 0.5,
-              color: Colors.grey.withOpacity(0.3),
+              color: Theme.of(context).dividerTheme.color,
             ),
           ),
         ],
-                ),
+      ),
     );
   }
 
@@ -527,7 +609,7 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -547,18 +629,18 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                 shape: BoxShape.circle,
               ),
               child: Icon(
-              icon,
+                icon,
                 size: 28,
-              color: iconColor,
+                color: iconColor,
               ),
             ),
             const SizedBox(height: 12),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF374151),
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],
@@ -572,10 +654,13 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
     required IconData icon,
     required VoidCallback onTap,
     Color iconColor = Colors.blue,
-    Color textColor = const Color(0xFF374151),
+    Color? textColor,
     bool showSubtitle = false,
     String subtitle = "",
+    Widget? trailing,
   }) {
+    final defaultTextColor = Theme.of(context).colorScheme.onSurface;
+    
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
@@ -605,7 +690,7 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
-                      color: textColor,
+                      color: textColor ?? defaultTextColor,
                     ),
                   ),
                   if (showSubtitle)
@@ -615,17 +700,17 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                         subtitle,
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.grey.shade600,
+                          color: Theme.of(context).textTheme.bodySmall?.color,
                         ),
                       ),
                     ),
                 ],
               ),
             ),
-            Icon(
+            trailing ?? Icon(
               Icons.chevron_right,
               size: 20,
-              color: Colors.grey.shade400,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
             ),
           ],
         ),
@@ -639,7 +724,7 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
       child: Divider(
         thickness: 0.5,
         height: 0.5,
-        color: Colors.grey.withOpacity(0.2),
+        color: Theme.of(context).dividerTheme.color,
       ),
     );
   }
@@ -653,7 +738,7 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
       backgroundColor: Colors.transparent,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -677,17 +762,18 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                    Icons.logout_rounded,
-                    color: Colors.red,
+                      Icons.logout_rounded,
+                      color: Colors.red,
                       size: 40,
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Text(
+                  Text(
                     "Log Out?",
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -696,7 +782,7 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 15,
-                      color: Colors.grey.shade600,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                     ),
                   ),
                 ],
@@ -714,14 +800,14 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        side: BorderSide(color: Colors.grey.shade300),
+                        side: BorderSide(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2)),
                       ),
-                      child: const Text(
+                      child: Text(
                         "Cancel",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
-                          color: Color(0xFF374151),
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ),
@@ -760,4 +846,50 @@ class _AccountScreenState extends State<AccountScreen> with SingleTickerProvider
       ),
     );
   }
+
+  Widget _buildSettingsItem({
+    required String title,
+    required IconData icon,
+    required Color iconColor,
+    required VoidCallback onTap,
+    Widget? trailing,
+  }) {
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      color: Theme.of(context).colorScheme.surface,
+      child: ListTile(
+        onTap: onTap,
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            color: iconColor,
+            size: 20,
+          ),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        trailing: trailing ?? Icon(
+          Icons.arrow_forward_ios, 
+          size: 16,
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+        ),
+      ),
+    );
+  }
 }
+

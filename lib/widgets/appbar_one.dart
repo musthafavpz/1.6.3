@@ -4,12 +4,15 @@ import 'package:academy_lms_app/screens/ai_assistant.dart'; // Add this import
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../constants.dart';
+import 'package:provider/provider.dart';
+import 'package:academy_lms_app/providers/theme_provider.dart';
 
 class AppBarOne extends StatefulWidget implements PreferredSizeWidget {
   @override
   final Size preferredSize;
   final dynamic title;
   final dynamic logo;
+  final bool useWhiteLogoFilter;
   final String? currentScreen;
   final String? screenDetails;
   
@@ -17,6 +20,7 @@ class AppBarOne extends StatefulWidget implements PreferredSizeWidget {
     super.key, 
     this.title, 
     this.logo,
+    this.useWhiteLogoFilter = false,
     this.currentScreen,
     this.screenDetails,
   }) : preferredSize = const Size.fromHeight(70.0);
@@ -37,9 +41,10 @@ class _AppBarOneState extends State<AppBarOne> {
     final currentRoute = ModalRoute.of(context)?.settings.name;
     final screenName = widget.currentScreen ?? currentRoute ?? 'Home';
     final screenDetails = widget.screenDetails ?? 'This is the ${widget.title ?? screenName} screen.';
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     return AppBar(
-      backgroundColor: kBackGroundColor,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       toolbarHeight: 70,
       leadingWidth: 80,
       centerTitle: false,
@@ -48,21 +53,21 @@ class _AppBarOneState extends State<AppBarOne> {
         padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10),
         child: GestureDetector(
           child: Card(
-            color: kBackGroundColor,
+            color: Theme.of(context).colorScheme.surface,
             elevation: 0,
             borderOnForeground: true,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10.0),
               side: BorderSide(
-                color: kBackButtonBorderColor.withOpacity(0.1),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
                 width: 1.0,
               ),
             ),
-            child: const Padding(
-              padding: EdgeInsets.only(left: 8.0),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8.0),
               child: Icon(
                 Icons.arrow_back_ios,
-                color: kBlackColor,
+                color: Theme.of(context).colorScheme.onSurface,
                 size: 18,
               ),
             ),
@@ -76,24 +81,51 @@ class _AppBarOneState extends State<AppBarOne> {
       title: widget.logo != null
           ? Padding(
               padding: const EdgeInsets.only(left: 0.0),
-              child: Image.asset(
-                'assets/images/${widget.logo}',
-                height: 35.0,
-                width: 140.0,
-                fit: BoxFit.contain,
-              ),
+              child: widget.useWhiteLogoFilter
+                  ? ColorFiltered(
+                      colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                      child: Image.asset(
+                        'assets/images/${widget.logo}',
+                        height: 35.0,
+                        width: 140.0,
+                        fit: BoxFit.contain,
+                      ),
+                    )
+                  : Image.asset(
+                      'assets/images/${widget.logo}',
+                      height: 35.0,
+                      width: 140.0,
+                      fit: BoxFit.contain,
+                    ),
             )
           : widget.title != null
               ? Text(
                   widget.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w500,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 )
               : null,
       // Actions on the right side
       actions: [
+        // Dark mode/light mode switch
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: Consumer<ThemeProvider>(
+            builder: (context, themeProvider, _) => IconButton(
+              tooltip: themeProvider.isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+              icon: Icon(
+                themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                color: themeProvider.isDarkMode ? const Color(0xFFFFA000) : const Color(0xFF8B5CF6),
+              ),
+              onPressed: () {
+                themeProvider.toggleTheme();
+              },
+            ),
+          ),
+        ),
         // Notification icon
         GestureDetector(
           onTap: () {

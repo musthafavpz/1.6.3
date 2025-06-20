@@ -1,4 +1,6 @@
 import 'package:academy_lms_app/constants.dart';
+import 'package:academy_lms_app/config/theme_config.dart';
+import 'package:academy_lms_app/providers/theme_provider.dart';
 import 'package:academy_lms_app/screens/login.dart';
 import 'package:academy_lms_app/screens/onboarding_screen.dart';
 import 'package:academy_lms_app/screens/splash.dart';
@@ -97,6 +99,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (ctx) => AIAssistantProvider(),
         ),
+        ChangeNotifierProvider(
+          create: (ctx) => ThemeProvider(),
+        ),
         ChangeNotifierProxyProvider<Auth, Courses>(
           create: (ctx) => Courses([], [],),
           update: (ctx, auth, prevoiusCourses) => Courses(
@@ -112,34 +117,12 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ],
-      child: Consumer<Auth>(
-        builder: (ctx, auth, _) => MaterialApp(
+      child: Consumer2<Auth, ThemeProvider>(
+        builder: (ctx, auth, themeProvider, _) => MaterialApp(
           title: 'Academy LMS App',
-          theme: ThemeData(
-            fontFamily: 'Poppins',
-            colorScheme: const ColorScheme.light(primary: kWhiteColor),
-            useMaterial3: true,
-            textSelectionTheme: const TextSelectionThemeData(
-              cursorColor: Colors.black,
-              selectionColor: Colors.black12,
-              selectionHandleColor: Colors.black54,
-            ),
-            inputDecorationTheme: const InputDecorationTheme(
-              filled: true,
-              fillColor: Color(0xFFF5F5F5),
-              hintStyle: TextStyle(color: Colors.grey),
-              labelStyle: TextStyle(color: Colors.black87),
-              floatingLabelStyle: TextStyle(color: Color(0xFF6366F1)),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFF6366F1)),
-                borderRadius: BorderRadius.all(Radius.circular(12.0)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey),
-                borderRadius: BorderRadius.all(Radius.circular(12.0)),
-              ),
-            ),
-          ),
+          themeMode: themeProvider.themeMode,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
           debugShowCheckedModeBanner: false,
           home: isLoggedIn 
                 ? const TabsScreen(pageIndex: 0) 

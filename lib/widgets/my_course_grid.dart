@@ -25,6 +25,8 @@ class _MyCourseGridState extends State<MyCourseGrid> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return InkWell(
       onTap: () {
         Navigator.of(context).push(MaterialPageRoute(builder: (_) {
@@ -42,14 +44,14 @@ class _MyCourseGridState extends State<MyCourseGrid> {
             decoration: BoxDecoration(
               boxShadow: [
                 BoxShadow(
-                  color: kBackButtonBorderColor.withOpacity(0.07),
+                  color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.07),
                   blurRadius: 10,
                   offset: const Offset(0, 0),
                 ),
               ],
             ),
             child: Card(
-              color: kWhiteColor,
+              color: Theme.of(context).colorScheme.surface,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -107,9 +109,10 @@ class _MyCourseGridState extends State<MyCourseGrid> {
                           widget.myCourse!.title!,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ),
@@ -134,7 +137,7 @@ class _MyCourseGridState extends State<MyCourseGrid> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
-                              color: kGreyLightColor,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                             ),
                           ),
                         ),
@@ -145,7 +148,7 @@ class _MyCourseGridState extends State<MyCourseGrid> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
-                              color: kGreyLightColor,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                             ),
                           ),
                         ),
@@ -161,7 +164,9 @@ class _MyCourseGridState extends State<MyCourseGrid> {
                       lineHeight: 8.0,
                       percent: widget.myCourse!.courseCompletion! / 100,
                       progressColor: const Color(0xFF6366F1),
-                      backgroundColor: Colors.grey.withOpacity(0.2),
+                      backgroundColor: isDarkMode 
+                          ? Colors.grey.withOpacity(0.3) 
+                          : Colors.grey.withOpacity(0.2),
                       barRadius: const Radius.circular(8),
                     ),
                   ),
@@ -176,19 +181,19 @@ class _MyCourseGridState extends State<MyCourseGrid> {
                           flex: 1,
                           child: Text(
                             '${(widget.myCourse!.courseCompletion!).toString()}% completed',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
-                              color: kGreyLightColor,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                             ),
                           ),
                         ),
                         Text(
                           '${widget.myCourse!.totalNumberOfCompletedLessons}/${widget.myCourse!.totalNumberOfLessons}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w400,
-                            color: kGreyLightColor,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                           ),
                         ),
                       ],

@@ -140,23 +140,25 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
+        statusBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor: Theme.of(context).colorScheme.surface,
+        systemNavigationBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
       ),
       child: Scaffold(
         extendBody: true, // This ensures content goes behind the bottom nav bar
         appBar: AppBarOne(
           logo: 'light_logo.png',
+          useWhiteLogoFilter: isDarkMode,
           currentScreen: _getScreenName(),
           screenDetails: _getScreenDetails(),
         ),
         body: _isInit
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1)))
+            ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
             : PageView(
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(), // Keep this to prevent swipe gestures
@@ -164,7 +166,7 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
               ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
@@ -179,24 +181,24 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
               topRight: Radius.circular(25.0),
             ),
             child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-            ),
-            child: BottomNavigationBar(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+              ),
+              child: BottomNavigationBar(
                 backgroundColor: Colors.transparent,
                 selectedItemColor: const Color(0xFF6366F1),
-                unselectedItemColor: Colors.grey.shade600,
-              showUnselectedLabels: true,
-              type: BottomNavigationBarType.fixed,
-              currentIndex: _selectedPageIndex,
-              onTap: _selectPage,
-              elevation: 0,
-              items: [
-                _buildNavItem('Home', 'assets/icons/home.svg'),
-                _buildNavItem('Explore', 'assets/icons/explore.svg'),
-                _buildNavItem('My Courses', 'assets/icons/my_courses.svg'),
-                _buildNavItem('Account', 'assets/icons/account.svg'),
-              ],
+                unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                showUnselectedLabels: true,
+                type: BottomNavigationBarType.fixed,
+                currentIndex: _selectedPageIndex,
+                onTap: _selectPage,
+                elevation: 0,
+                items: [
+                  _buildNavItem('Home', 'assets/icons/home.svg'),
+                  _buildNavItem('Explore', 'assets/icons/explore.svg'),
+                  _buildNavItem('My Courses', 'assets/icons/my_courses.svg'),
+                  _buildNavItem('Account', 'assets/icons/account.svg'),
+                ],
               ),
             ),
           ),
@@ -250,13 +252,13 @@ class _TabsScreenState extends State<TabsScreen> with TickerProviderStateMixin {
               scale: isSelected ? _tabScaleAnimation : const AlwaysStoppedAnimation(1.0),
               child: FadeTransition(
                 opacity: isSelected ? _tabFadeAnimation : const AlwaysStoppedAnimation(1.0),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SvgPicture.asset(
-            iconPath,
-            colorFilter: ColorFilter.mode(
-                      isSelected ? Colors.white : Colors.grey.shade600,
-              BlendMode.srcIn,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SvgPicture.asset(
+                    iconPath,
+                    colorFilter: ColorFilter.mode(
+                      isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                      BlendMode.srcIn,
                     ),
                   ),
                 ),

@@ -51,8 +51,15 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
     final categoryId = routeArgs['category_id'] as int;
     final title = routeArgs['title'];
     
+    // Check if dark mode is enabled
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    Color backgroundColor = isDarkMode ? const Color(0xFF1F2937) : const Color(0xFFF8F9FA);
+    Color cardColor = isDarkMode ? const Color(0xFF374151) : Colors.white;
+    Color textColor = isDarkMode ? Colors.white : const Color(0xFF1F2937);
+    Color secondaryTextColor = isDarkMode ? Colors.grey[300]! : const Color(0xFF6B7280);
+    
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: backgroundColor,
       appBar: AppBarOne(title: title),
       body: SafeArea(
         child: FutureBuilder(
@@ -61,9 +68,9 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
             if (dataSnapshot.connectionState == ConnectionState.waiting) {
               return _buildLoadingShimmer();
             } else if (dataSnapshot.error != null) {
-              return _buildErrorView();
+              return _buildErrorView(isDarkMode);
             } else {
-              return _buildContent(categoryId, title);
+              return _buildContent(categoryId, title, isDarkMode, cardColor, textColor, secondaryTextColor);
             }
           },
         ),
@@ -150,18 +157,19 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
     );
   }
   
-  Widget _buildErrorView() {
+  Widget _buildErrorView(bool isDarkMode) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.error_outline, size: 50, color: Colors.red[300]),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Oops! Something went wrong',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
+              color: isDarkMode ? Colors.white : Colors.black87,
             ),
           ),
           const SizedBox(height: 8),
@@ -180,7 +188,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
     );
   }
   
-  Widget _buildContent(int categoryId, String title) {
+  Widget _buildContent(int categoryId, String title, bool isDarkMode, Color cardColor, Color textColor, Color secondaryTextColor) {
     return Consumer<Categories>(
       builder: (context, categoryDetails, child) {
         final loadedCategoryDetail = categoryDetails.getCategoryDetail;
@@ -204,9 +212,11 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
                     },
                   );
                 },
+                textColor,
+                secondaryTextColor
               ),
               const SizedBox(height: 16),
-              _buildSubCategoriesList(loadedCategoryDetail),
+              _buildSubCategoriesList(loadedCategoryDetail, isDarkMode, cardColor, textColor, secondaryTextColor),
               const SizedBox(height: 24),
               _buildSectionHeader(
                 'Courses',
@@ -221,9 +231,11 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
                     },
                   );
                 },
+                textColor,
+                secondaryTextColor
               ),
               const SizedBox(height: 16),
-              _buildCoursesList(loadedCategoryDetail),
+              _buildCoursesList(loadedCategoryDetail, isDarkMode, cardColor, textColor, secondaryTextColor),
               const SizedBox(height: 20),
             ],
           ),
@@ -232,16 +244,16 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
     );
   }
   
-  Widget _buildSectionHeader(String title, String actionText, VoidCallback onAction) {
+  Widget _buildSectionHeader(String title, String actionText, VoidCallback onAction, Color textColor, Color secondaryTextColor) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF1F2937),
+            color: textColor,
           ),
         ),
         TextButton(
@@ -254,9 +266,10 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
             children: [
               Text(
                 actionText,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
+                  color: secondaryTextColor,
                 ),
               ),
               const SizedBox(width: 4),
@@ -271,7 +284,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
     );
   }
   
-  Widget _buildSubCategoriesList(dynamic loadedCategoryDetail) {
+  Widget _buildSubCategoriesList(dynamic loadedCategoryDetail, bool isDarkMode, Color cardColor, Color textColor, Color secondaryTextColor) {
     return SizedBox(
       height: 100,
       child: ListView.builder(
@@ -296,7 +309,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
                   curve: Interval(0.1 * index, 0.1 * index + 0.5, curve: Curves.easeOut),
                 ),
               ),
-              child: _buildSubCategoryCard(loadedCategoryDetail, index),
+              child: _buildSubCategoryCard(loadedCategoryDetail, index, isDarkMode, cardColor, textColor, secondaryTextColor),
             ),
           );
         },
@@ -304,7 +317,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
     );
   }
   
-  Widget _buildSubCategoryCard(dynamic loadedCategoryDetail, int index) {
+  Widget _buildSubCategoryCard(dynamic loadedCategoryDetail, int index, bool isDarkMode, Color cardColor, Color textColor, Color secondaryTextColor) {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).pushNamed(
@@ -320,7 +333,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
         margin: const EdgeInsets.only(right: 12),
         width: MediaQuery.of(context).size.width * 0.45,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardColor,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -374,10 +387,11 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
                       loadedCategoryDetail.mSubCategory![index].title.toString(),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         height: 1.2,
+                        color: textColor,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -389,8 +403,8 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
                       ),
                       child: Text(
                         "${loadedCategoryDetail.mSubCategory![index].numberOfCourses.toString()} Courses",
-                        style: const TextStyle(
-                          color: Color(0xFF6366F1),
+                        style: TextStyle(
+                          color: const Color(0xFF6366F1),
                           fontSize: 9,
                           fontWeight: FontWeight.w500,
                         ),
@@ -406,7 +420,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
     );
   }
   
-  Widget _buildCoursesList(dynamic loadedCategoryDetail) {
+  Widget _buildCoursesList(dynamic loadedCategoryDetail, bool isDarkMode, Color cardColor, Color textColor, Color secondaryTextColor) {
     return AnimationLimiter(
       child: ListView.builder(
       shrinkWrap: true,
@@ -419,7 +433,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
             child: SlideAnimation(
               verticalOffset: 50.0,
               child: FadeInAnimation(
-            child: _buildCourseCard(loadedCategoryDetail, index),
+            child: _buildCourseCard(loadedCategoryDetail, index, isDarkMode, cardColor, textColor, secondaryTextColor),
               ),
           ),
         );
@@ -428,7 +442,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
     );
   }
   
-  Widget _buildCourseCard(dynamic loadedCategoryDetail, int index) {
+  Widget _buildCourseCard(dynamic loadedCategoryDetail, int index, bool isDarkMode, Color cardColor, Color textColor, Color secondaryTextColor) {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).pushNamed(
@@ -439,7 +453,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -457,10 +471,10 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
                 loadedCategoryDetail.mCourse![index].title.toString(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F2937),
+                  color: textColor,
                   fontFamily: 'Inter',
                 ),
                 maxLines: 2,
@@ -549,10 +563,10 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
                             ),
                             Text(
                               loadedCategoryDetail.mCourse![index].instructor.toString(),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
-                                color: Color(0xFF4B5563),
+                                color: secondaryTextColor,
                                 fontFamily: 'Inter',
                               ),
                               maxLines: 1,
@@ -586,7 +600,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
                             const SizedBox(width: 4),
                       Text(
                         loadedCategoryDetail.mCourse![index].average_rating.toString(),
-                        style: const TextStyle(
+                        style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 color: Color(0xFF6366F1),
@@ -595,7 +609,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
                             ),
                             Text(
                               ' (${loadedCategoryDetail.mCourse![index].total_reviews})',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
                                 color: Color(0xFF6B7280),
                                 fontFamily: 'Inter',
@@ -624,7 +638,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
                             const SizedBox(width: 4),
                       Text(
                               '${loadedCategoryDetail.mCourse![index].numberOfEnrollment} students',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 color: Color(0xFF10B981),
@@ -654,7 +668,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: isDarkMode ? const Color(0xFF374151) : Colors.white,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
                                 color: const Color(0xFF6366F1),
@@ -746,6 +760,13 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> with Sing
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF6366F1).withOpacity(isDarkMode ? 0.4 : 0.2),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: Center(
                               child: Text(

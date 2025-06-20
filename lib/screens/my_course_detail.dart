@@ -37,6 +37,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import '../constants.dart';
 import '../models/lesson.dart';
 import '../providers/my_courses.dart';
+import '../providers/theme_provider.dart';
 import '../widgets/common_functions.dart';
 import '../widgets/from_network.dart';
 import '../widgets/live_class_tab_widget.dart';
@@ -626,6 +627,14 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Check if dark mode is enabled
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    Color backgroundColor = isDarkMode ? const Color(0xFF1F2937) : const Color(0xFFF8F9FA);
+    Color cardColor = isDarkMode ? const Color(0xFF374151) : Colors.white;
+    Color textColor = isDarkMode ? Colors.white : const Color(0xFF333333);
+    Color secondaryTextColor = isDarkMode ? Colors.grey[300]! : Colors.grey[600]!;
+    Color dividerColor = isDarkMode ? Colors.grey[700]! : Colors.grey[200]!;
+    
     final myLoadedCourse = Provider.of<MyCourses>(context, listen: false)
         .findById(widget.courseId);
     final sections =
@@ -634,41 +643,70 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
-        title: Image.asset(
-          'assets/images/light_logo.png',
-          height: 32,
-        ),
+        backgroundColor: isDarkMode ? const Color(0xFF1F2937) : Colors.white,
+        title: isDarkMode 
+          ? ColorFiltered(
+              colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              child: Image.asset(
+                'assets/images/light_logo.png',
+                height: 32,
+              ),
+            )
+          : Image.asset(
+              'assets/images/light_logo.png',
+              height: 32,
+            ),
         centerTitle: true,
         leading: IconButton(
           icon: Container(
             padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
+              border: Border.all(color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300),
             ),
-            child: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFF6366F1)),
+            child: Icon(
+              Icons.arrow_back_ios_new, 
+              size: 18, 
+              color: const Color(0xFF6366F1)
+            ),
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          // Dark mode toggle button
+          Consumer<ThemeProvider>(
+            builder: (context, themeProvider, _) => IconButton(
+              tooltip: themeProvider.isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+              icon: Icon(
+                themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                color: themeProvider.isDarkMode ? const Color(0xFFFFA000) : const Color(0xFF8B5CF6),
+              ),
+              onPressed: () {
+                themeProvider.toggleTheme();
+              },
+            ),
+          ),
+        ],
       ),
       body: Stack(
         children: [
           // Main content
           Container(
             height: MediaQuery.of(context).size.height,
-            color: const Color(0xFFF8F9FA),
+            color: backgroundColor,
             child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF6366F1)),
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: const Color(0xFF6366F1),
+                    ),
                   )
                 : SingleChildScrollView(
                     controller: _scrollController,
                     child: Column(
                       children: [
-                        _buildCourseHeader(myLoadedCourse),
-                        _buildLessonsContent(sections, myLoadedCourse),
-                        _buildCertificateSection(myLoadedCourse),
+                        _buildCourseHeader(myLoadedCourse, isDarkMode, textColor, secondaryTextColor),
+                        _buildLessonsContent(sections, myLoadedCourse, isDarkMode, cardColor, textColor, secondaryTextColor, dividerColor),
+                        _buildCertificateSection(myLoadedCourse, isDarkMode, cardColor, textColor, secondaryTextColor),
                       ],
                     ),
                   ),
@@ -679,7 +717,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
             top: 100, // Position near the thumbnail area
             right: 20,
             child: GestureDetector(
-              onTap: _showAIChatDialog,
+              onTap: () => _showAIChatDialog(isDarkMode),
               child: Container(
                 width: 60,
                 height: 60,
@@ -734,7 +772,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
     );
   }
 
-  Widget _buildCourseHeader(dynamic myLoadedCourse) {
+  Widget _buildCourseHeader(dynamic myLoadedCourse, bool isDarkMode, Color textColor, Color secondaryTextColor) {
     // Calculate progress percentage
     double progressPercent = myLoadedCourse.courseCompletion != null
         ? myLoadedCourse.courseCompletion / 100
@@ -995,7 +1033,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                     style: GoogleFonts.montserrat(
                       fontSize: 18, // Reduced from 20
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF333333),
+                      color: textColor,
                     ),
                   ),
                 ],
@@ -1023,9 +1061,9 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
     );
   }
 
-  Widget _buildLessonsContent(List sections, dynamic myLoadedCourse) {
+  Widget _buildLessonsContent(List sections, dynamic myLoadedCourse, bool isDarkMode, Color cardColor, Color textColor, Color secondaryTextColor, Color dividerColor) {
     return Container(
-      color: const Color(0xFFF8F9FA),
+      color: isDarkMode ? const Color(0xFF1F2937) : const Color(0xFFF8F9FA),
       child: AnimationLimiter(
         child: ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -1058,11 +1096,11 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 18), // Increased from 15
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: cardColor,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.05),
                           blurRadius: 12,
                           offset: const Offset(0, 3),
                         ),
@@ -1092,7 +1130,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                     ],
                                   )
                                 : null, // No gradient for incomplete sections
-                              color: allLessonsCompleted ? null : Colors.white, // White background for incomplete sections
+                              color: allLessonsCompleted ? null : cardColor, // Card background for incomplete sections
                               borderRadius: isExpanded
                                 ? const BorderRadius.only(
                                     topLeft: Radius.circular(16),
@@ -1108,7 +1146,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                   decoration: BoxDecoration(
                                     color: allLessonsCompleted 
                                       ? Colors.white.withOpacity(0.2) 
-                                      : const Color(0xFF6366F1).withOpacity(0.1), // Light purple for incomplete
+                                      : const Color(0xFF6366F1).withOpacity(isDarkMode ? 0.2 : 0.1), // Light purple for incomplete
                                     shape: BoxShape.circle,
                                   ),
                                   child: Center(
@@ -1122,7 +1160,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                             '${index + 1}',
                                             style: TextStyle(
                                               fontFamily: 'Arial',
-                                              color: const Color(0xFF6366F1), // Purple number for incomplete
+                                              color: isDarkMode ? const Color(0xFF818CF8) : const Color(0xFF6366F1), // Lighter purple in dark mode
                                               fontWeight: FontWeight.bold,
                                               fontSize: 15,
                                             ),
@@ -1142,7 +1180,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                           fontSize: 15, // Increased from 14
                                           color: allLessonsCompleted 
                                             ? Colors.white // White text for completed sections
-                                            : const Color(0xFF333333), // Dark text for incomplete sections
+                                            : textColor, // Theme-based text color for incomplete sections
                                         ),
                                       ),
                                       const SizedBox(height: 4),
@@ -1157,7 +1195,9 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                 decoration: BoxDecoration(
                                                   color: allLessonsCompleted 
                                                     ? Colors.white.withOpacity(0.2) 
-                                                    : kTimeBackColor.withOpacity(0.12),
+                                                    : isDarkMode 
+                                                        ? const Color(0xFF374151).withOpacity(0.6)
+                                                        : kTimeBackColor.withOpacity(0.12),
                                                   borderRadius: BorderRadius.circular(5),
                                                 ),
                                                 padding: const EdgeInsets.symmetric(
@@ -1174,7 +1214,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                       fontWeight: FontWeight.w400,
                                                       color: allLessonsCompleted 
                                                         ? Colors.white
-                                                        : kTimeColor,
+                                                        : isDarkMode ? Colors.grey[300] : kTimeColor,
                                                     ),
                                                   ),
                                                 ),
@@ -1187,7 +1227,9 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                 decoration: BoxDecoration(
                                                   color: allLessonsCompleted 
                                                     ? Colors.white.withOpacity(0.2) 
-                                                    : kLessonBackColor.withOpacity(0.12),
+                                                    : isDarkMode
+                                                        ? const Color(0xFF374151).withOpacity(0.6)
+                                                        : kLessonBackColor.withOpacity(0.12),
                                                   borderRadius: BorderRadius.circular(5),
                                                 ),
                                                 padding: const EdgeInsets.symmetric(
@@ -1202,7 +1244,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                       fontWeight: FontWeight.w400,
                                                       color: allLessonsCompleted 
                                                         ? Colors.white
-                                                        : kLessonColor,
+                                                        : isDarkMode ? Colors.grey[300] : kLessonColor,
                                                     ),
                                                   ),
                                                 ),
@@ -1222,8 +1264,12 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                   borderRadius: BorderRadius.circular(10),
                                                   child: LinearProgressIndicator(
                                                     value: sectionCompletionPercentage,
-                                                    backgroundColor: const Color(0xFFE0E0E0), // Light gray background
-                                                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)), // Purple progress
+                                                    backgroundColor: isDarkMode 
+                                                        ? Colors.grey[700] 
+                                                        : const Color(0xFFE0E0E0), // Theme-based background
+                                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                                      isDarkMode ? const Color(0xFF818CF8) : const Color(0xFF6366F1)
+                                                    ), // Purple progress
                                                     minHeight: 4,
                                                   ),
                                                 ),
@@ -1235,7 +1281,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                   fontFamily: 'Arial',
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.bold,
-                                                  color: const Color(0xFF6366F1), // Purple text
+                                                  color: isDarkMode ? const Color(0xFF818CF8) : const Color(0xFF6366F1), // Purple text
                                                 ),
                                               ),
                                             ],
@@ -1249,7 +1295,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                   decoration: BoxDecoration(
                                     color: allLessonsCompleted 
                                       ? Colors.white.withOpacity(0.2) 
-                                      : const Color(0xFF6366F1).withOpacity(0.1), // Light purple for incomplete
+                                      : const Color(0xFF6366F1).withOpacity(isDarkMode ? 0.2 : 0.1), // Light purple for incomplete
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Icon(
@@ -1274,7 +1320,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                             itemCount: sections[index].mLesson!.length,
                             separatorBuilder: (context, index) => Divider(
                               height: 1,
-                              color: Colors.grey.shade200,
+                              color: dividerColor,
                             ),
                             itemBuilder: (ctx, i) {
                               final lesson = sections[index].mLesson![i];
@@ -1297,8 +1343,8 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                     decoration: BoxDecoration(
                                       color: isActive 
-                                        ? const Color(0xFF6366F1).withOpacity(0.05) 
-                                        : Colors.white,
+                                        ? const Color(0xFF6366F1).withOpacity(isDarkMode ? 0.2 : 0.05) 
+                                        : Colors.transparent,
                                     ),
                                     child: Row(
                                       children: [
@@ -1320,7 +1366,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                               side: BorderSide(
                                                 color: isCompleted 
                                                     ? const Color(0xFF10B981)
-                                                    : Colors.grey.shade400,
+                                                    : isDarkMode ? Colors.grey.shade500 : Colors.grey.shade400,
                                                 width: 2,
                                               ),
                                               // Make quiz checkboxes appear slightly disabled
@@ -1329,7 +1375,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                       if (states.contains(MaterialState.selected)) {
                                                         return const Color(0xFF10B981).withOpacity(0.7); // Semi-transparent green when selected
                                                       }
-                                                      return Colors.grey.shade300; // Light grey when not selected
+                                                      return isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300; // Light grey when not selected
                                                     })
                                                   : null,
                                               onChanged: (val) {
@@ -1397,10 +1443,10 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                         fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
                                                         fontSize: 14,
                                                         color: isActive 
-                                                          ? const Color(0xFF6366F1)
+                                                          ? isDarkMode ? const Color(0xFF818CF8) : const Color(0xFF6366F1)
                                                           : isCompleted
-                                                              ? const Color(0xFF10B981)
-                                                              : const Color(0xFF333333),
+                                                              ? isDarkMode ? const Color(0xFF34D399) : const Color(0xFF10B981)
+                                                              : textColor,
                                                       ),
                                                     ),
                                                   ),
@@ -1414,7 +1460,9 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                       decoration: BoxDecoration(
                                                         color: isActive 
                                                           ? kTimeBackColor.withOpacity(0.2)
-                                                          : kTimeBackColor.withOpacity(0.12),
+                                                          : isDarkMode
+                                                              ? const Color(0xFF374151).withOpacity(0.6)
+                                                              : kTimeBackColor.withOpacity(0.12),
                                                         borderRadius: BorderRadius.circular(5),
                                                       ),
                                                       child: Text(
@@ -1424,7 +1472,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                           fontWeight: FontWeight.w400,
                                                           color: isActive 
                                                             ? kTimeColor
-                                                            : kTimeColor.withOpacity(0.8),
+                                                            : isDarkMode ? Colors.grey[300] : kTimeColor.withOpacity(0.8),
                                                         ),
                                                       ),
                                                     ),
@@ -1442,7 +1490,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                     style: TextStyle(
                                                       fontFamily: 'Arial',
                                                       fontSize: 12,
-                                                      color: Colors.grey.shade600,
+                                                      color: secondaryTextColor,
                                                     ),
                                                   ),
                                                 ),
@@ -1458,7 +1506,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                           decoration: BoxDecoration(
                                             color: isActive 
                                               ? const Color(0xFF6366F1).withOpacity(0.1)
-                                              : Colors.grey.shade100,
+                                              : isDarkMode ? Colors.grey.shade800 : Colors.grey.shade100,
                                             borderRadius: BorderRadius.circular(10),
                                           ),
                                           child: Material(
@@ -1477,7 +1525,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                                   colorFilter: ColorFilter.mode(
                                                     isActive 
                                                       ? const Color(0xFF6366F1) 
-                                                      : Colors.grey.shade600,
+                                                      : isDarkMode ? Colors.grey.shade300 : Colors.grey.shade600,
                                                     BlendMode.srcIn,
                                                   ),
                                                   width: 18,
@@ -1504,7 +1552,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                         if (isExpanded && sections[index].mLesson != null && sections[index].mLesson!.isNotEmpty)
                           Divider(
                             height: 1,
-                            color: Colors.grey.shade200,
+                            color: dividerColor,
                           ),
                       ],
                     ),
@@ -1960,7 +2008,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
     return a < b ? a : b;
   }
 
-  Widget _buildCertificateSection(dynamic myLoadedCourse) {
+  Widget _buildCertificateSection(dynamic myLoadedCourse, bool isDarkMode, Color cardColor, Color textColor, Color secondaryTextColor) {
     // Calculate progress percentage
     double progressPercent = myLoadedCourse.courseCompletion != null
         ? myLoadedCourse.courseCompletion / 100
@@ -1981,7 +2029,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withOpacity(0.1),
+                  color: const Color(0xFF6366F1).withOpacity(isDarkMode ? 0.2 : 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -1996,7 +2044,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                 style: GoogleFonts.montserrat(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF333333),
+                  color: textColor,
                 ),
               ),
             ],
@@ -2007,11 +2055,11 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardColor,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -2167,7 +2215,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                       style: GoogleFonts.montserrat(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF333333),
+                        color: textColor,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -2193,7 +2241,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                               "${myLoadedCourse.totalNumberOfCompletedLessons ?? 0}/${myLoadedCourse.totalNumberOfLessons ?? 0} lessons",
                               style: GoogleFonts.montserrat(
                                 fontSize: 12,
-                                color: Colors.grey[600],
+                                color: secondaryTextColor,
                               ),
                             ),
                           ],
@@ -2210,7 +2258,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                   height: 10,
                                   width: double.infinity,
                                   decoration: BoxDecoration(
-                                    color: Colors.grey[200],
+                                    color: isDarkMode ? Colors.grey[700] : Colors.grey[200],
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
@@ -2276,7 +2324,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                 ),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
+                                backgroundColor: isDarkMode ? const Color(0xFF374151) : Colors.white,
                                 foregroundColor: const Color(0xFF6366F1),
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(
@@ -2297,10 +2345,10 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                       Container(
                         padding: const EdgeInsets.all(15),
                         decoration: BoxDecoration(
-                          color: Colors.grey[100],
+                          color: isDarkMode ? const Color(0xFF1F2937) : Colors.grey[100],
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: Colors.grey[300]!,
+                            color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
                             width: 1,
                           ),
                         ),
@@ -2317,7 +2365,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                                 "Complete all lessons and quizzes to unlock your certificate of completion",
                                 style: GoogleFonts.montserrat(
                                   fontSize: 13,
-                                  color: Colors.grey[800],
+                                  color: secondaryTextColor,
                                 ),
                               ),
                             ),
@@ -2390,7 +2438,10 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
   }
 
   // Show AI Chat Dialog
-  void _showAIChatDialog() {
+  void _showAIChatDialog([bool isDarkMode = false]) {
+    // Get the current theme's brightness
+    isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -2406,7 +2457,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                 body: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOutQuad,
-                  child: _buildChatDialog(context, setState),
+                  child: _buildChatDialog(context, setState, isDarkMode),
                 ),
               );
             },
@@ -2417,12 +2468,18 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
   }
   
   // Build the chat dialog content
-  Widget _buildChatDialog(BuildContext context, StateSetter setState) {
+  Widget _buildChatDialog(BuildContext context, StateSetter setState, bool isDarkMode) {
+    Color backgroundColor = isDarkMode ? const Color(0xFF1F2937) : Colors.white;
+    Color cardColor = isDarkMode ? const Color(0xFF374151) : Colors.white;
+    Color textColor = isDarkMode ? Colors.white : const Color(0xFF333333);
+    Color secondaryTextColor = isDarkMode ? Colors.grey[400]! : Colors.grey[600]!;
+    Color inputBackgroundColor = isDarkMode ? const Color(0xFF374151) : Colors.grey[100]!;
+    
     return Container(
       height: MediaQuery.of(context).size.height,
       width: MediaQuery.of(context).size.width,
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: backgroundColor,
       ),
       child: Column(
         children: [
@@ -2498,17 +2555,30 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                       context: context,
                       builder: (BuildContext context) {
                         return AlertDialog(
-                          title: const Text('Clear Chat'),
-                          content: const Text('Are you sure you want to clear the chat history?'),
+                          backgroundColor: isDarkMode ? const Color(0xFF1F2937) : Colors.white,
+                          title: Text(
+                            'Clear Chat',
+                            style: TextStyle(color: textColor),
+                          ),
+                          content: Text(
+                            'Are you sure you want to clear the chat history?',
+                            style: TextStyle(color: textColor),
+                          ),
                           actions: [
                             TextButton(
-                              child: const Text('Cancel'),
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(color: const Color(0xFF6366F1)),
+                              ),
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },
                             ),
                             TextButton(
-                              child: const Text('Clear'),
+                              child: Text(
+                                'Clear',
+                                style: TextStyle(color: isDarkMode ? Colors.red[300] : Colors.red),
+                              ),
                               onPressed: () {
                                 setState(() {
                                   _chatMessages.clear();
@@ -2531,7 +2601,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
           if (_lessonNames.isNotEmpty) 
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: Colors.grey[50],
+            color: isDarkMode ? const Color(0xFF111827) : Colors.grey[50],
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -2540,7 +2610,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                   style: GoogleFonts.montserrat(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF333333),
+                    color: textColor,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -2565,7 +2635,9 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                             ),
                           ),
                           selected: isSelected,
-                          backgroundColor: const Color(0xFF6366F1).withOpacity(0.08),
+                          backgroundColor: isDarkMode 
+                              ? const Color(0xFF374151)
+                              : const Color(0xFF6366F1).withOpacity(0.08),
                           selectedColor: const Color(0xFF6366F1),
                           onSelected: (selected) {
                             setState(() {
@@ -2600,7 +2672,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                     style: GoogleFonts.montserrat(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF333333),
+                      color: textColor,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -2613,6 +2685,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                         prompt['prefix'], 
                         setState,
                         iconName: prompt['icon'],
+                        isDarkMode: isDarkMode,
                       );
                     }).toList(),
                   ),
@@ -2640,7 +2713,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                           'Ask me anything about your course lessons',
                           style: GoogleFonts.montserrat(
                             fontSize: 14,
-                            color: Colors.grey[600],
+                            color: secondaryTextColor,
                             fontWeight: FontWeight.w500,
                           ),
                           textAlign: TextAlign.center,
@@ -2650,7 +2723,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                           'Your conversations are saved locally',
                           style: GoogleFonts.montserrat(
                             fontSize: 12,
-                            color: Colors.grey[400],
+                            color: isDarkMode ? Colors.grey[500] : Colors.grey[400],
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -2660,7 +2733,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                 : Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      color: Colors.grey[50],
+                      color: isDarkMode ? const Color(0xFF111827) : Colors.grey[50],
                     ),
                     child: ListView.builder(
                       reverse: false,
@@ -2668,7 +2741,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       itemBuilder: (context, index) {
                         final message = _chatMessages[index];
-                        return _buildChatMessage(message);
+                        return _buildChatMessage(message, isDarkMode);
                       },
                     ),
                   ),
@@ -2678,7 +2751,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
           if (_isAILoading)
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-              color: Colors.white,
+              color: backgroundColor,
               child: Row(
                 children: [
                   Container(
@@ -2714,10 +2787,10 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: backgroundColor,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.1),
                   spreadRadius: 1,
                   blurRadius: 2,
                   offset: const Offset(0, -1),
@@ -2729,24 +2802,28 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                 Expanded(
                   child: TextField(
                     controller: _chatTextController,
+                    style: TextStyle(color: textColor),
                     decoration: InputDecoration(
                       hintText: 'Type your question here...',
                       hintStyle: GoogleFonts.montserrat(
                         fontSize: 14,
-                        color: Colors.grey[400],
+                        color: isDarkMode ? Colors.grey[500] : Colors.grey[400],
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: Colors.grey[100],
+                      fillColor: inputBackgroundColor,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 12,
                       ),
                       suffixIcon: IconButton(
-                        icon: const Icon(Icons.mic, color: Color(0xFF6366F1)),
+                        icon: Icon(
+                          Icons.mic, 
+                          color: const Color(0xFF6366F1),
+                        ),
                         onPressed: () {
                           // Voice input functionality could be added here
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -2799,7 +2876,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
   }
   
   // Build a suggestion chip
-  Widget _buildSuggestionChip(String label, String prefix, StateSetter setState, {String? iconName}) {
+  Widget _buildSuggestionChip(String label, String prefix, StateSetter setState, {String? iconName, bool isDarkMode = false}) {
     // Map string icon names to actual Icons
     IconData getIconData(String? name) {
       switch (name) {
@@ -2824,10 +2901,14 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFF6366F1).withOpacity(0.08),
+          color: isDarkMode 
+              ? const Color(0xFF374151)
+              : const Color(0xFF6366F1).withOpacity(0.08),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: const Color(0xFF6366F1).withOpacity(0.2),
+            color: isDarkMode 
+                ? const Color(0xFF6366F1).withOpacity(0.4)
+                : const Color(0xFF6366F1).withOpacity(0.2),
             width: 1,
           ),
         ),
@@ -2855,8 +2936,11 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
   }
   
   // Build a single chat message
-  Widget _buildChatMessage(AIChatMessage message) {
+  Widget _buildChatMessage(AIChatMessage message, bool isDarkMode) {
     final isUser = message.isUser;
+    Color userBubbleColor = const Color(0xFF6366F1);
+    Color aiBubbleColor = isDarkMode ? const Color(0xFF374151) : Colors.white;
+    Color aiTextColor = isDarkMode ? Colors.white : const Color(0xFF333333);
     
     // Process formatting in the message content - only bold text wrapped in **text**
     Widget buildFormattedText(String content) {
@@ -2884,7 +2968,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
           spans.add(TextSpan(
             text: content.substring(lastMatchEnd, match.start),
             style: GoogleFonts.montserrat(
-              color: const Color(0xFF333333),
+              color: aiTextColor,
               fontSize: 14,
             ),
           ));
@@ -2895,7 +2979,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
         spans.add(TextSpan(
           text: boldText,
           style: GoogleFonts.montserrat(
-            color: const Color(0xFF333333),
+            color: aiTextColor,
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),
@@ -2909,7 +2993,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
         spans.add(TextSpan(
           text: content.substring(lastMatchEnd),
           style: GoogleFonts.montserrat(
-            color: const Color(0xFF333333),
+            color: aiTextColor,
             fontSize: 14,
           ),
         ));
@@ -2920,7 +3004,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
         spans.add(TextSpan(
           text: content,
           style: GoogleFonts.montserrat(
-            color: const Color(0xFF333333),
+            color: aiTextColor,
             fontSize: 14,
           ),
         ));
@@ -2970,9 +3054,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: isUser 
-                          ? const Color(0xFF6366F1)
-                          : Colors.white,
+                      color: isUser ? userBubbleColor : aiBubbleColor,
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(isUser ? 18 : 4),
                         topRight: Radius.circular(isUser ? 4 : 18),
@@ -2981,7 +3063,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.05),
                           blurRadius: 5,
                           offset: const Offset(0, 2),
                         )
@@ -2996,7 +3078,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
                           // Format time as HH:MM
                           '${message.timestamp.hour.toString().padLeft(2, '0')}:${message.timestamp.minute.toString().padLeft(2, '0')}',
                           style: GoogleFonts.montserrat(
-                            color: isUser ? Colors.white.withOpacity(0.7) : Colors.grey[400],
+                            color: isUser ? Colors.white.withOpacity(0.7) : isDarkMode ? Colors.grey[500] : Colors.grey[400],
                             fontSize: 10,
                           ),
                           textAlign: TextAlign.right,
@@ -3079,7 +3161,7 @@ class _MyCourseDetailScreenState extends State<MyCourseDetailScreen>
   }
 
   // Add this method for LinkedIn sharing
-  Future<void> _shareToLinkedIn(BuildContext context, dynamic myLoadedCourse) async {
+  Future<void> _shareToLinkedIn(BuildContext context, dynamic myLoadedCourse, [bool isDarkMode = false]) async {
     try {
       // Show loading indicator
       Fluttertoast.showToast(

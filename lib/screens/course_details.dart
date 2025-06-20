@@ -192,15 +192,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                 ),
                               ],
                             ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 15.0, vertical: 15),
-                        child: VerticalDivider(
-                          thickness: 1.0, // Adjust the thickness of the divider
-                          color:
-                              kGreyLightColor, // Adjust the color of the divider
-                        ),
-                      ),
                       loadedCourseDetails.isPurchased!
                           ? SizedBox()
                           : loadedCourseDetails.isPaid == 1

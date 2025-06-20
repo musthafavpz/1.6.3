@@ -44,7 +44,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
     return Scaffold(
       body: Container(
         height: MediaQuery.of(context).size.height,
-        color: const Color(0xFFF8F9FA),
+        color: Theme.of(context).colorScheme.background,
         child: RefreshIndicator(
           color: const Color(0xFF6366F1),
           onRefresh: () async {
@@ -219,7 +219,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
       margin: const EdgeInsets.symmetric(vertical: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -232,12 +232,12 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Your Certificate',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF333333),
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 16),
@@ -253,11 +253,11 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Completed on May 24, 2025',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Color(0xFF666666),
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                 ),
               ),
               ElevatedButton.icon(
@@ -307,31 +307,37 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(
-                      Icons.error_outline_rounded,
+                    Icons.error_outline_rounded,
                     color: Colors.red,
                     size: 60,
                   ),
                   const SizedBox(height: 15),
                   Text(
-                      'Something went wrong while loading courses',
+                    'Something went wrong while loading courses',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Error details: ${dataSnapshot.error.toString().substring(0, min(100, dataSnapshot.error.toString().length))}',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontWeight: FontWeight.w500,
                     ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Error details: ${dataSnapshot.error.toString().substring(0, min(100, dataSnapshot.error.toString().length))}',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12, 
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                  ),
                   const SizedBox(height: 15),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF6366F1),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                        elevation: 0,
+                      elevation: 0,
                     ),
                     onPressed: () {
                       setState(() {});
@@ -339,7 +345,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                     child: const Text('Retry'),
                   ),
                 ],
-                ),
+              ),
               ),
             );
           } else {
@@ -359,17 +365,21 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                             color: const Color(0xFF6366F1).withOpacity(0.7),
                           ),
                           const SizedBox(height: 20),
-                          const Text(
+                          Text(
                             'No courses yet',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 10),
-                          const Text(
+                          Text(
                             'Explore and enroll in courses to get started',
                             textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                            ),
                           ),
                           const SizedBox(height: 20),
                           ElevatedButton(
@@ -381,9 +391,9 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                                 vertical: 12,
                               ),
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                                elevation: 0,
+                              elevation: 0,
                             ),
                             onPressed: () {
                               // Navigate to explore courses screen
@@ -413,8 +423,8 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                       // Tab Bar
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.05),
@@ -426,7 +436,7 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                         child: TabBar(
                           indicatorSize: TabBarIndicatorSize.tab,
                           indicator: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(12),
                             gradient: const LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -435,13 +445,13 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                                 Color(0xFF8B5CF6),
                               ],
                             ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF6366F1).withOpacity(0.25),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF6366F1).withOpacity(0.25),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           unselectedLabelStyle: const TextStyle(
                             fontWeight: FontWeight.w500,
@@ -452,7 +462,9 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                             fontSize: 16,
                             color: Colors.white,
                           ),
-                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+                          unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                          labelColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
                           dividerHeight: 0,
                           tabs: [
                             Tab(
@@ -506,16 +518,16 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         Icon(
-                                            Icons.play_circle_outline_rounded,
+                                          Icons.play_circle_outline_rounded,
                                           size: 60,
-                                          color: Colors.grey[400],
+                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                                         ),
                                         const SizedBox(height: 16),
-                                        const Text(
+                                        Text(
                                           'No courses in progress',
                                           style: TextStyle(
                                             fontSize: 16,
-                                            color: Colors.grey,
+                                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                                           ),
                                         ),
                                       ],
@@ -548,20 +560,20 @@ class _MyCoursesScreenState extends State<MyCoursesScreen> with SingleTickerProv
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         Icon(
-                                            Icons.check_circle_outline_rounded,
+                                          Icons.check_circle_outline_rounded,
                                           size: 60,
-                                          color: Colors.grey[400],
+                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                                         ),
                                         const SizedBox(height: 16),
-                                        const Text(
+                                        Text(
                                           'No completed courses yet',
                                           style: TextStyle(
                                             fontSize: 16,
-                                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
+                                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   )
                                 : SingleChildScrollView(
                                     physics: const BouncingScrollPhysics(),

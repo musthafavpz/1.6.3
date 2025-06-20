@@ -30,6 +30,7 @@ import '../widgets/tab_view_details.dart';
 import '../widgets/util.dart';
 import 'filter_screen.dart';
 import 'payment_webview.dart';
+import '../providers/theme_provider.dart';
 
 class CourseDetailScreen extends StatefulWidget {
   static const routeName = '/course-details';
@@ -175,6 +176,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Check if dark mode is enabled
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    Color backgroundColor = isDarkMode ? const Color(0xFF1F2937) : const Color(0xFFF8F9FA);
+    Color cardColor = isDarkMode ? const Color(0xFF374151) : Colors.white;
+    Color textColor = isDarkMode ? Colors.white : const Color(0xFF1F2937);
+    Color secondaryTextColor = isDarkMode ? Colors.grey[300]! : const Color(0xFF6B7280);
+    Color dividerColor = isDarkMode ? Colors.grey[700]! : Colors.grey[300]!;
+    
     // final courseId = ModalRoute.of(context)!.settings.arguments as int;
     // final loadedCourse = Provider.of<Courses>(
     //   context,
@@ -212,8 +221,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                 IconButton(
                                     icon: SvgPicture.asset(
                                       'assets/icons/account.svg',
-                                      colorFilter: const ColorFilter.mode(
-                                          kGreyLightColor, BlendMode.srcIn),
+                                      colorFilter: ColorFilter.mode(
+                                          isDarkMode ? Colors.white70 : kGreyLightColor, BlendMode.srcIn),
                                     ),
                                     onPressed: () {
                                       // Handle account icon tap
@@ -228,25 +237,16 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                     },
                                     visualDensity: const VisualDensity(
                                         horizontal: -4, vertical: -4)),
-                                const Text(
+                                Text(
                                   'Account',
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
-                                    color: kGreyLightColor,
+                                    color: isDarkMode ? Colors.white70 : kGreyLightColor,
                                   ),
                                 ),
                               ],
                             ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 15.0, vertical: 15),
-                        child: VerticalDivider(
-                          thickness: 1.0, // Adjust the thickness of the divider
-                          color:
-                              kGreyLightColor, // Adjust the color of the divider
-                        ),
-                      ),
                       loadedCourseDetails.isPurchased!
                           ? SizedBox()
                           : loadedCourseDetails.isPaid == 1
@@ -496,33 +496,53 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: kBackGroundColor,
+        backgroundColor: isDarkMode ? const Color(0xFF1F2937) : kBackGroundColor,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: kDefaultColor,
-          ),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        title: const Text(
-          'Course Details',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: IconButton(
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: isDarkMode ? Colors.white : const Color(0xFF6366F1),
+              size: 20,
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+            splashRadius: 22,
+            tooltip: 'Back',
           ),
         ),
+        title: isDarkMode 
+          ? ColorFiltered(
+              colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              child: Image.asset(
+                'assets/images/light_logo.png',
+                height: 32,
+              ),
+            )
+          : Image.asset(
+              'assets/images/light_logo.png',
+              height: 32,
+            ),
         actions: [
-          // AI Assistant icon removed from here
+          // Dark mode toggle button
+          Consumer<ThemeProvider>(
+            builder: (context, themeProvider, _) => IconButton(
+              tooltip: themeProvider.isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+              icon: Icon(
+                themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                color: themeProvider.isDarkMode ? const Color(0xFFFFA000) : const Color(0xFF8B5CF6),
+              ),
+              onPressed: () {
+                themeProvider.toggleTheme();
+              },
+            ),
+          ),
         ],
       ),
       body: Container(
         height: MediaQuery.of(context).size.height * 1,
-        color: const Color(0xFFF8F9FA),
+        color: backgroundColor,
         child: _isLoading
             ? const Center(
                 child: CircularProgressIndicator(color: kDefaultColor),
@@ -533,7 +553,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                 try {
                   loadedCourseDetails = courses.getCourseDetail;
                   if (loadedCourseDetails == null) {
-                    return const Center(
+                    return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -545,7 +565,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                             'Loading course details...',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Color(0xFF6B7280),
+                              color: secondaryTextColor,
                             ),
                           ),
                         ],
@@ -554,7 +574,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                   }
                   loadedCourseDetail = loadedCourseDetails;
                 } catch (e) {
-                  return const Center(
+                  return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -569,7 +589,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                           style: TextStyle(
                             fontSize: 18,
                         fontWeight: FontWeight.bold,
-                            color: Color(0xFF374151),
+                            color: textColor,
                           ),
                         ),
                         SizedBox(height: 8),
@@ -577,7 +597,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                           'Please try again later',
                       style: TextStyle(
                         fontSize: 16,
-                            color: Color(0xFF6B7280),
+                            color: secondaryTextColor,
                       ),
                     ),
             ],
@@ -748,15 +768,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                             margin: const EdgeInsets.only(top: 15, bottom: 15),
                                                     padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                                                     decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: cardColor,
                               borderRadius: BorderRadius.circular(16),
                                                       border: Border.all(
-                                                        color: const Color(0xFF6366F1).withOpacity(0.2),
+                                                        color: const Color(0xFF6366F1).withOpacity(isDarkMode ? 0.3 : 0.2),
                                                         width: 1,
                                                       ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.05),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -768,7 +788,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                                           width: 40,
                                                           height: 40,
                                                           decoration: BoxDecoration(
-                                                            color: const Color(0xFF6366F1).withOpacity(0.1),
+                                                            color: const Color(0xFF6366F1).withOpacity(isDarkMode ? 0.2 : 0.1),
                                                             shape: BoxShape.circle,
                                                           ),
                                                           child: loadedCourseDetails.instructorImage != null &&
@@ -808,18 +828,18 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                                               ),
                                                         Text(
                                                                 loadedCourseDetails.instructor!,
-                                                          style: const TextStyle(
+                                                          style: TextStyle(
                                                             fontSize: 16,
                                           fontWeight: FontWeight.normal,
-                                                                  color: Color(0xFF374151),
+                                                                  color: textColor,
                                                                 ),
                                                               ),
                                                             ],
                                                           ),
                                                         ),
-                                                        const Icon(
+                                                        Icon(
                                                           Icons.chevron_right,
-                                                          color: Color(0xFF6B7280),
+                                                          color: secondaryTextColor,
                                                           size: 20,
                                                         ),
                                                       ],
@@ -831,15 +851,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                                       margin: const EdgeInsets.only(bottom: 20),
                                                       padding: const EdgeInsets.all(15),
                                                       decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: cardColor,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: const Color(0xFF6366F1).withOpacity(0.2),
+                              color: const Color(0xFF6366F1).withOpacity(isDarkMode ? 0.3 : 0.2),
                               width: 1,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.05),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -911,7 +931,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                                         boxShadow: [
                                                           BoxShadow(
                                       color: kBackButtonBorderColor
-                                          .withOpacity(0.07),
+                                          .withOpacity(isDarkMode ? 0.1 : 0.07),
                                       blurRadius: 15,
                                       offset: const Offset(0, 0),
                                     ),
@@ -919,6 +939,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                 ),
                                 child: Card(
                                   elevation: 0,
+                                  color: cardColor,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
                                                       ),
@@ -940,10 +961,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                               ],
                                             ),
                                           ),
-                                          unselectedLabelStyle: const TextStyle(
+                                          unselectedLabelStyle: TextStyle(
                                                                                     fontWeight: FontWeight.w500,
                                             fontSize: 16,
-                                                                                    color: Color(0xFF6B7280),
+                                                                                    color: secondaryTextColor,
                                                                                   ),
                                           labelStyle: const TextStyle(
                                             fontWeight: FontWeight.w600,
@@ -998,16 +1019,19 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                               titleText: 'What is Included',
                                               listText: loadedCourseDetails
                                                   .courseIncludes,
+                                              isDarkMode: isDarkMode,
                                             ),
                                             TabViewDetails(
                                               titleText: 'What you will learn',
                                               listText: loadedCourseDetails
                                                   .courseOutcomes,
+                                              isDarkMode: isDarkMode,
                                             ),
                                             TabViewDetails(
                                               titleText: 'Course Requirements',
                                               listText: loadedCourseDetails
                                                   .courseRequirements,
+                                              isDarkMode: isDarkMode,
                                                           ),
                                                         ],
                                                       ),
@@ -1016,14 +1040,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                             ),
                                                 ),
                                               ),
-                              const Padding(
+                              Padding(
                                 padding: EdgeInsets.symmetric(
                                     vertical: 20, horizontal: 10),
                                 child: Text(
                                   'Course curriculum',
                                                       style: TextStyle(
                                                         fontSize: 18,
-                                      fontWeight: FontWeight.w500),
+                                      fontWeight: FontWeight.w500,
+                                      color: textColor),
                                 ),
                               ),
                                                     ListView.builder(
@@ -1263,15 +1288,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                 margin: const EdgeInsets.only(top: 20, bottom: 20),
                                 padding: const EdgeInsets.all(15),
                                                                                   decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: cardColor,
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: const Color(0xFF6366F1).withOpacity(0.2),
+                                    color: const Color(0xFF6366F1).withOpacity(isDarkMode ? 0.3 : 0.2),
                                     width: 1,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
+                                      color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.05),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     ),
@@ -1285,7 +1310,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFF6366F1).withOpacity(0.1),
+                                            color: const Color(0xFF6366F1).withOpacity(isDarkMode ? 0.2 : 0.1),
                                             borderRadius: BorderRadius.circular(20),
                                           ),
                                           child: const Row(
@@ -1311,20 +1336,20 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                                                                                     ],
                                                                                   ),
                                     const SizedBox(height: 15),
-                                    const Text(
+                                    Text(
                                       'Certificate You Will Get',
                                                                                       style: TextStyle(
                                         fontSize: 18,
                                                                                         fontWeight: FontWeight.bold,
-                                        color: Color(0xFF374151),
+                                        color: textColor,
                                       ),
                                     ),
                                     const SizedBox(height: 10),
-                                    const Text(
+                                    Text(
                                       'Upon successful completion of this course, you will receive a certificate of completion that you can share with your professional network.',
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: Color(0xFF6B7280),
+                                        color: secondaryTextColor,
                                         height: 1.5,
                                       ),
                                     ),
@@ -1359,8 +1384,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
               }),
       ),
       floatingActionButton: Container(
-        margin: const EdgeInsets.only(bottom: 100), // Add margin to avoid overlap with bottom nav
+        margin: const EdgeInsets.only(bottom: 80), // Increase margin to avoid overlap with bottom nav
         child: FloatingActionButton(
+          mini: true, // Make the FAB smaller to reduce space usage
           onPressed: () {
             showModalBottomSheet(
               context: context,
@@ -1368,9 +1394,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
               backgroundColor: Colors.transparent,
               builder: (context) => Container(
                 height: MediaQuery.of(context).size.height * 0.85,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  color: isDarkMode ? const Color(0xFF1F2937) : Colors.white,
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(20),
                     topRight: Radius.circular(20),
                   ),
@@ -1383,7 +1409,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color: isDarkMode ? Colors.grey[600] : Colors.grey[300],
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -1442,13 +1468,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
               const Icon(
                 Icons.smart_toy_rounded,
                 color: Colors.white,
+                size: 20, // Smaller icon size
               ),
               Positioned(
                 top: 0,
                 right: 0,
                 child: Container(
-                  width: 8,
-                  height: 8,
+                  width: 6, // Smaller indicator
+                  height: 6,
                   decoration: const BoxDecoration(
                     color: Colors.green,
                     shape: BoxShape.circle,
@@ -1459,136 +1486,139 @@ class _CourseDetailScreenState extends State<CourseDetailScreen>
           ),
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat, // Position FAB at the end
       bottomNavigationBar: Consumer<Courses>(builder: (context, courses, child) {
         final loadedCourseDetails = courses.getCourseDetail;
-        return Container(
-          height: 80,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, -2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              // Price display
-              Expanded(
-                flex: 4,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Price',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF6B7280),
-                      ),
-                    ),
-                    Text(
-                      loadedCourseDetails.price.toString(),
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
+        return SafeArea(
+          child: Container(
+            height: 90, // Increased height for better visibility
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            decoration: BoxDecoration(
+              color: isDarkMode ? const Color(0xFF1F2937) : Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, -2),
                 ),
-              ),
-              
-              // Buy Now or Enroll button
-              Expanded(
-                flex: 3,
-                child: GestureDetector(
-                  onTap: () async {
-                    final prefs = await SharedPreferences.getInstance();
-                    final authToken = (prefs.getString('access_token') ?? '');
-                    if (authToken.isNotEmpty) {
-                      if (loadedCourseDetails.isPurchased!) {
-                        // Already purchased, go to my courses
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => const MyCoursesScreen()
-                          ),
-                        );
-                      } else if (loadedCourseDetails.isPaid == 1) {
-                        // Paid course, go to payment
-                        final emailPre = prefs.getString('email');
-                        final passwordPre = prefs.getString('password');
-                        var email = emailPre;
-                        var password = passwordPre;
-                        DateTime currentDateTime = DateTime.now();
-                        int currentTimestamp = (currentDateTime.millisecondsSinceEpoch / 1000).floor();
-                        
-                        String authToken = 'Basic ${base64Encode(utf8.encode('$email:$password:$currentTimestamp'))}';
-                        final url = '$baseUrl/payment/web_redirect_to_pay_fee?auth=$authToken&unique_id=academylaravelbycreativeitem';
-                        
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                            builder: (context) => PaymentWebView(url: url),
-                          ),
-                        );
-                        
-                        CommonFunctions.showSuccessToast('Processing payment...');
-                        if (!loadedCourseDetails.is_cart!) {
-                          Provider.of<Courses>(context, listen: false)
-                              .toggleCart(loadedCourseDetails.courseId!, false);
+              ],
+            ),
+            child: Row(
+              children: [
+                // Price display
+                Expanded(
+                  flex: 4,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Price',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: secondaryTextColor,
+                        ),
+                      ),
+                      Text(
+                        loadedCourseDetails.price.toString(),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Buy Now or Enroll button
+                Expanded(
+                  flex: 3,
+                  child: GestureDetector(
+                    onTap: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      final authToken = (prefs.getString('access_token') ?? '');
+                      if (authToken.isNotEmpty) {
+                        if (loadedCourseDetails.isPurchased!) {
+                          // Already purchased, go to my courses
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                              builder: (context) => const MyCoursesScreen(),
+                            ),
+                          );
+                        } else if (loadedCourseDetails.isPaid == 1) {
+                          // Paid course, go to payment
+                          final emailPre = prefs.getString('email');
+                          final passwordPre = prefs.getString('password');
+                          var email = emailPre;
+                          var password = passwordPre;
+                          DateTime currentDateTime = DateTime.now();
+                          int currentTimestamp = (currentDateTime.millisecondsSinceEpoch / 1000).floor();
+                          
+                          String authToken = 'Basic ${base64Encode(utf8.encode('$email:$password:$currentTimestamp'))}';
+                          final url = '$baseUrl/payment/web_redirect_to_pay_fee?auth=$authToken&unique_id=academylaravelbycreativeitem';
+                          
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PaymentWebView(url: url),
+                            ),
+                          );
+                          
+                          CommonFunctions.showSuccessToast('Processing payment...');
+                          if (!loadedCourseDetails.is_cart!) {
+                            Provider.of<Courses>(context, listen: false)
+                                .toggleCart(loadedCourseDetails.courseId!, false);
+                          }
+                        } else {
+                          // Free course, enroll
+                          await getEnroll(loadedCourseDetails.courseId.toString());
+                          CommonFunctions.showSuccessToast('Course Successfully Enrolled');
                         }
                       } else {
-                        // Free course, enroll
-                        await getEnroll(loadedCourseDetails.courseId.toString());
-                        CommonFunctions.showSuccessToast('Course Successfully Enrolled');
+                        CommonFunctions.showWarningToast('Please login first');
                       }
-                    } else {
-                      CommonFunctions.showWarningToast('Please login first');
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Color(0xFF3B82F6),
-                          Color(0xFF2563EB),
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF3B82F6),
+                            Color(0xFF2563EB),
+                          ],
+                        ),
+                        color: null,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF3B82F6).withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
                         ],
                       ),
-                      color: null,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF3B82F6).withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        loadedCourseDetails.isPurchased!
-                            ? 'Go to Course'
-                            : loadedCourseDetails.isPaid == 1
-                                ? 'Buy Now'
-                                : 'Enroll Now',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                      child: Center(
+                        child: Text(
+                          loadedCourseDetails.isPurchased!
+                              ? 'Go to Course'
+                              : loadedCourseDetails.isPaid == 1
+                                  ? 'Buy Now'
+                                  : 'Enroll Now',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       }),

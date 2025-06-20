@@ -91,6 +91,9 @@ class Courses with ChangeNotifier {
     // Cancel any pending debounce timer
     _debounceTimer?.cancel();
     
+    // Use a Completer to ensure we only resolve the Future when the data is actually loaded
+    final completer = Completer<void>();
+    
     // Add a small delay to debounce rapid calls
     _debounceTimer = Timer(const Duration(milliseconds: 300), () async {
       var url = '$baseUrl/api/top_courses';
@@ -112,21 +115,28 @@ class Courses with ChangeNotifier {
           
           final extractedData = json.decode(response.body) as List;
           if (extractedData == null) {
+            completer.complete();
             return;
           }
           
           _topItems = buildCourseList(extractedData);
           notifyListeners();
+          completer.complete();
         } else {
-          throw Exception('Failed to load courses: ${response.statusCode}');
+          final error = Exception('Failed to load courses: ${response.statusCode}');
+          completer.completeError(error);
+          throw error;
         }
       } catch (error) {
         print('Error fetching top courses: $error');
+        completer.completeError(error);
         rethrow;
       } finally {
         _isLoadingTopCourses = false;
       }
     });
+    
+    return completer.future;
   }
 
   Future<void> fetchCoursesByCategory(int categoryId) async {
@@ -640,6 +650,9 @@ Future<void> toggleCart(int courseId, bool removeItem) async {
     
     _isLoadingInstructors = true;
     
+    // Use a Completer to ensure we only resolve the Future when the data is actually loaded
+    final completer = Completer<void>();
+    
     final prefs = await SharedPreferences.getInstance();
     final token = (prefs.getString('access_token') ?? '');
     var url = '$baseUrl/api/top_courses';
@@ -658,7 +671,9 @@ Future<void> toggleCart(int courseId, bool removeItem) async {
         // Check if response is HTML (error page) instead of JSON
         if (response.body.trim().startsWith('<!DOCTYPE html>') || 
             response.body.trim().startsWith('<html>')) {
-          throw Exception('Server returned HTML instead of JSON. Please try again later.');
+          final error = Exception('Server returned HTML instead of JSON. Please try again later.');
+          completer.completeError(error);
+          throw error;
         }
         
         final extractedData = json.decode(response.body) as List;
@@ -698,14 +713,20 @@ Future<void> toggleCart(int courseId, bool removeItem) async {
         
         _topInstructors = instructorsList;
         notifyListeners();
+        completer.complete();
       } else {
-        throw Exception('Failed to load instructors: ${response.statusCode}');
+        final error = Exception('Failed to load instructors: ${response.statusCode}');
+        completer.completeError(error);
+        throw error;
       }
     } catch (error) {
       print('Error fetching top instructors: $error');
+      completer.completeError(error);
       rethrow;
     } finally {
       _isLoadingInstructors = false;
     }
+    
+    return completer.future;
   }
 }
